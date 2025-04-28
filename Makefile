@@ -1,57 +1,55 @@
-# Nombre del ejecutable final de tu proyecto
-TARGET = DarkerGraph
+# Directorio donde se construirán los ejecutables de prueba
+TEST_BIN_DIR = test/bin
+BUILD_DIR = build  # Directorio temporal de objetos (opcional ahora para los tests)
 
-# Directorio donde se construirán los objetos de tu proyecto
-BUILD_DIR = build
+# Archivo fuente principal y su ejecutable (en la carpeta principal)
+MAIN_SRC = main.cpp
+MAIN_TARGET = DarkerGraph  # El ejecutable estará en la raíz
 
-# Directorios de código fuente de tu proyecto
-SRC_DIRS = lib/src
+# Directorio de archivos fuente de prueba
+TEST_SRC_DIR = test/src
+TEST_SOURCES = $(wildcard $(addsuffix /*.cpp, $(TEST_SRC_DIR)))
+TEST_TARGETS = $(patsubst $(TEST_SRC_DIR)/%.cpp, $(TEST_BIN_DIR)/%, $(TEST_SOURCES:.cpp=))
 
-# Directorios de archivos de encabezado de tu proyecto
+# Directorios de archivos de encabezado
 INC_DIRS = lib/include external/DeSIGNAR-2.0.0/include
 
 # Directorio de la biblioteca DeSIGNAR (después de la compilación)
 DESIGNAR_LIB_DIR = external/DeSIGNAR-2.0.0/lib
 
-# Nombre de la biblioteca DeSIGNAR (estática, según el README)
+# Nombre de la biblioteca DeSIGNAR
 DESIGNAR_LIB_NAME = Designar
 
-# Flags del compilador para tu proyecto (añade las que necesites)
+# Flags del compilador
 CXXFLAGS = -std=c++17 -Wall -Wextra -g -I$(INC_DIRS)
 
-# Flags del enlazador para tu proyecto (añade las que necesites)
-LDFLAGS = -L$(DESIGNAR_LIB_DIR) -l$(DESIGNAR_LIB_NAME)
+# Flags del enlazador
+LDFLAGS = -L$(DESIGNAR_LIB_DIR)
 
 # Compilador a usar
 CXX = g++
 
-# Obtener la lista de archivos fuente .cpp de tu proyecto
-SOURCES = $(wildcard $(addsuffix /*.cpp, $(SRC_DIRS)))
+# Regla principal para construir todos los ejecutables
+all: $(MAIN_TARGET) $(TEST_TARGETS)
 
-# Obtener la lista de archivos objeto .o basados en los archivos fuente de tu proyecto
-OBJECTS = $(patsubst $(SRC_DIRS)/%.cpp, $(BUILD_DIR)/%.o, $(SOURCES))
+# Regla para construir el ejecutable del archivo fuente principal (en la raíz)
+$(MAIN_TARGET): $(MAIN_SRC) $(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $< -l$(DESIGNAR_LIB_NAME)
 
-# Regla principal para construir el ejecutable de tu proyecto EN LA CARPETA PRINCIPAL
-$(TARGET): $(OBJECTS) $(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a
-	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(LDFLAGS) -o $@ $^
+# Regla para construir los ejecutables de los archivos fuente de prueba (en test/bin/)
+$(TEST_BIN_DIR)/%: $(TEST_SRC_DIR)/%.cpp $(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a
+	@mkdir -p $(TEST_BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $< -l$(DESIGNAR_LIB_NAME)
 
-# Regla para compilar archivos .cpp de tu proyecto a .o
-$(BUILD_DIR)/%.o: $(SRC_DIRS)/%.cpp
-	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Regla para construir la biblioteca DeSIGNAR
+# Regla para construir la biblioteca DeSIGNAR (si es necesario)
 $(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a: external/DeSIGNAR-2.0.0/CMakeLists.txt
 	@echo "Construyendo la biblioteca DeSIGNAR..."
 	@mkdir -p external/DeSIGNAR-2.0.0/build
 	cd external/DeSIGNAR-2.0.0/build && cmake ..
 	$(MAKE) -C external/DeSIGNAR-2.0.0/build
 
-# Regla para limpiar los archivos de construcción de tu proyecto y DeSIGNAR
+# Regla para limpiar todos los ejecutables y el directorio de construcción
 clean:
-	rm -rf $(BUILD_DIR) external/DeSIGNAR-2.0.0/build $(TARGET)
+	rm -rf $(TEST_BIN_DIR) $(MAIN_TARGET)
 
 .PHONY: all clean
-
-all: $(TARGET)
