@@ -1,9 +1,11 @@
 # Directorio donde se construirán los ejecutables de prueba
 TEST_BIN_DIR = test/bin
+
+# Direcciones
 DSG = external/DeSiGNAR-2.0.0
 BUILD_DIR = build
+LIB_SRC_DIR = lib/src
 
-# Archivo fuente principal y su ejecutable (en la carpeta principal)
 MAIN_SRC = main.cpp
 MAIN_TARGET = DarkerGraph  # El ejecutable estará en la raíz
 
@@ -11,6 +13,10 @@ MAIN_TARGET = DarkerGraph  # El ejecutable estará en la raíz
 TEST_SRC_DIR = test/src
 TEST_SOURCES = $(wildcard $(addsuffix /*.cpp, $(TEST_SRC_DIR)))
 TEST_TARGETS = $(patsubst $(TEST_SRC_DIR)/%.cpp, $(TEST_BIN_DIR)/%, $(TEST_SOURCES))
+
+# Archivos fuente de lib
+LIB_SOURCES = $(wildcard $(addsuffix /*.cpp, $(LIB_SRC_DIR)))
+LIB_OBJECTS = $(LIB_SOURCES:$(LIB_SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
 # Directorios de archivos de encabezado
 INC_DIRS = lib/include $(DSG)/include
@@ -32,10 +38,19 @@ CXX = g++
 all: $(MAIN_TARGET) $(TEST_TARGETS)
 
 # Regla para construir el ejecutable del archivo fuente principal (en la raíz)
-$(MAIN_TARGET): $(MAIN_SRC) $(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a
+$(MAIN_TARGET): $(BUILD_DIR)/$(notdir $(MAIN_SRC:.cpp=.o)) $(LIB_OBJECTS) $(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a
 	@mkdir -p $(BUILD_DIR)
-	$(CXX) -I$(INC_DIRS) $(CXXFLAGS) -c $< -o $(BUILD_DIR)/$(notdir $(MAIN_SRC:.cpp=.o))
-	$(CXX) $(LDFLAGS) -o $@ $(BUILD_DIR)/$(notdir $(MAIN_SRC:.cpp=.o)) -l$(DESIGNAR_LIB_NAME)
+	$(CXX) $(LDFLAGS) -o $@ $(BUILD_DIR)/$(notdir $(MAIN_SRC:.cpp=.o)) $(LIB_OBJECTS) -l$(DESIGNAR_LIB_NAME)
+
+# Regla para construir el objeto del archivo fuente principal
+$(BUILD_DIR)/$(notdir $(MAIN_SRC:.cpp=.o)): $(MAIN_SRC)
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Regla para construir los objetos de la librería
+$(BUILD_DIR)/%.o: $(LIB_SRC_DIR)/%.cpp
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(TEST_BIN_DIR)/%: $(TEST_SRC_DIR)/%.cpp $(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a
 	@mkdir -p $(TEST_BIN_DIR)
