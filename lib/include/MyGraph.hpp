@@ -3,12 +3,12 @@
 #include "Room.hpp"
 #include <random>
 
-class Graph
+class MyGraph
 {
     public:
 
-        Graph();
-        ~Graph();
+        MyGraph();
+        ~MyGraph();
 
         Designar::Graph<int> createMap();
 

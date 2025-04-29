@@ -1,6 +1,6 @@
-#include <Graph.hpp>
+#include <MyGraph.hpp>
 
-Graph::Graph()
+MyGraph::MyGraph()
 {
     numRooms = -1;
     maxRooms = -1;
@@ -8,9 +8,9 @@ Graph::Graph()
     even_odd = {0,0};
 }
 
-Graph::~Graph(){};
+MyGraph::~MyGraph(){};
 
-Designar::Graph<int> Graph::createMap()
+Designar::Graph<int>MyGraph::createMap()
 {
     getData();
     if(numRooms>0)
@@ -64,7 +64,7 @@ Designar::Graph<int> Graph::createMap()
     return map;
 }
 
-void Graph::getData()
+void MyGraph::getData()
 {
     std::cout<<"TRY Grafo con camino euleriano"<<std::endl;
     std::cout<<"Numero de Cuartos a Generar: ";
@@ -82,7 +82,7 @@ void Graph::getData()
     else if(maxRooms<0){maxRooms=0;}
 }
 
-void Graph::insertRoom(Designar::Graph<int>::Node*& room)
+void MyGraph::insertRoom(Designar::Graph<int>::Node*& room)
 {
     auto newRoom = map.insert_node(map.get_num_nodes()+1);
     roomsReference.push_back(newRoom);
@@ -97,7 +97,7 @@ void Graph::insertRoom(Designar::Graph<int>::Node*& room)
     else{++even_odd.second;}
 }
 
-void Graph::generateEntry(std::mt19937 random, std::uniform_real_distribution<double> distribution)
+void MyGraph::generateEntry(std::mt19937 random, std::uniform_real_distribution<double> distribution)
 {
     auto room = map.insert_node(1);
     roomsReference.push_back(room);
@@ -116,7 +116,7 @@ void Graph::generateEntry(std::mt19937 random, std::uniform_real_distribution<do
     }   
 }
 
-void Graph::generateEvenRooms(Designar::Graph<int>::Node*& room, std::mt19937 random, std::uniform_real_distribution<double> distribution)
+void MyGraph::generateEvenRooms(Designar::Graph<int>::Node*& room, std::mt19937 random, std::uniform_real_distribution<double> distribution)
 {
     while(room->get_num_arcs()<maxRooms)
     {
@@ -135,12 +135,12 @@ void Graph::generateEvenRooms(Designar::Graph<int>::Node*& room, std::mt19937 ra
     }
 }
 
-bool Graph::limitRoom(Designar::Graph<int>::Node*& room)
+bool MyGraph::limitRoom(Designar::Graph<int>::Node*& room)
 {
     return map.get_num_nodes()+2<=numRooms && room->get_num_arcs()+2<=maxRooms;
 }
 
-void Graph::printMap()
+void MyGraph::printMap()
 {
     map.for_each_node([&](Designar::Graph<int>::Node* room)
     {

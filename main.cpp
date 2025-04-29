@@ -1,8 +1,9 @@
-#include "Graph.hpp"
+#include "lib/include/MyGraph.hpp"
 
 int main()
 {
-    Graph creator;
+    MyGraph creator;
     auto map1 = creator.createMap();
+    std::cout<<"Grafo creado!"<<std::endl;
     return 0;
 }
