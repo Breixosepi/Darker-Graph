@@ -2,35 +2,30 @@
 
 MyGraph::MyGraph()
 {
-    numRooms = -1;
-    maxRooms = -1;
-    probability = -1.0;
+    numRooms = 6;
+    maxRooms = 4;
+    probability = 50.0;
     even_odd = {0,0};
 }
 
 MyGraph::~MyGraph(){};
 
-Designar::Graph<int>MyGraph::createMap()
+Designar::Graph<Room>MyGraph::createMap(const bool& custom)
 {
-    getData();
+    if(custom){getData();}
     if(numRooms>0)
     {
-        if(map.get_num_nodes()>0)
-        {
-            map.clear();
-            roomsReference.clear();
-            while(!queue.empty()){queue.pop();}
-        }
+        if(map.get_num_nodes()>0){reset();}
         std::mt19937 random(std::random_device{}());
         std::uniform_real_distribution<double> distribution(0, 1.0);
 
         generateEntry(random,distribution);
         while(!queue.empty())
         {
-            auto room = queue.front();
+            if(map.get_num_nodes()==numRooms){break;}
+            Designar::Graph<Room>::Node* room = queue.front();
             queue.pop();
             generateEvenRooms(room,random,distribution);
-            if(map.get_num_nodes()==numRooms){break;}
         }
 
         printMap();
@@ -82,9 +77,9 @@ void MyGraph::getData()
     else if(maxRooms<0){maxRooms=0;}
 }
 
-void MyGraph::insertRoom(Designar::Graph<int>::Node*& room)
+void MyGraph::insertRoom(Designar::Graph<Room>::Node*& room)
 {
-    auto newRoom = map.insert_node(map.get_num_nodes()+1);
+    Designar::Graph<Room>::Node* newRoom = map.insert_node(map.get_num_nodes()+1);
     roomsReference.push_back(newRoom);
     queue.push(newRoom);
     map.insert_arc(room,newRoom);
@@ -99,7 +94,8 @@ void MyGraph::insertRoom(Designar::Graph<int>::Node*& room)
 
 void MyGraph::generateEntry(std::mt19937 random, std::uniform_real_distribution<double> distribution)
 {
-    auto room = map.insert_node(1);
+    std::cout<<"Generando entrada..."<<std::endl;
+    Designar::Graph<Room>::Node* room = map.insert_node(1);
     roomsReference.push_back(room);
     if(maxRooms>0)
     {
@@ -113,18 +109,20 @@ void MyGraph::generateEntry(std::mt19937 random, std::uniform_real_distribution<
             }
             else{break;}
         }
-    }   
+    }
+    std::cout<<"Entrada Generada!"<<std::endl;
 }
 
-void MyGraph::generateEvenRooms(Designar::Graph<int>::Node*& room, std::mt19937 random, std::uniform_real_distribution<double> distribution)
+void MyGraph::generateEvenRooms(Designar::Graph<Room>::Node*& room, std::mt19937 random, std::uniform_real_distribution<double> distribution)
 {
+    std::cout<<"Convirtiendo Cuarto "<<"("<<room->get_info().getIndex()<<")"<<" en Grado par..."<<std::endl;
     while(room->get_num_arcs()<maxRooms)
     {
-        if(room->get_num_arcs()%2!=0) //Impar
+        if(room->get_num_arcs()%2!=0) //Grado Impar
         {
             insertRoom(room);
         }
-        else //Par
+        else //Grado Par
         {
             if(distribution(random)<=probability/100.0 && limitRoom(room))
             {
@@ -133,31 +131,42 @@ void MyGraph::generateEvenRooms(Designar::Graph<int>::Node*& room, std::mt19937 
             else{break;}
         }  
     }
+    std::cout<<"("<<room->get_info().getIndex()<<")"<<" es par!"<<std::endl;
 }
 
-bool MyGraph::limitRoom(Designar::Graph<int>::Node*& room)
+bool MyGraph::limitRoom(Designar::Graph<Room>::Node*& room)
 {
     return map.get_num_nodes()+2<=numRooms && room->get_num_arcs()+2<=maxRooms;
 }
 
 void MyGraph::printMap()
 {
-    map.for_each_node([&](Designar::Graph<int>::Node* room)
+    map.for_each_node([&](Designar::Graph<Room>::Node* room)
     {
-        std::cout<<"Num of Room: "<<room->get_info();
+        std::cout<<"Num of Room: "<<room->get_info().getIndex();
         for(auto arc : map.adjacent_arcs(room))
         {
-            if(arc->get_src_node()->get_info()!=room->get_info())
+            if(arc->get_src_node()->get_info().getIndex()!=room->get_info().getIndex())
             {
-                std::cout<<" "<<arc->get_tgt_node()->get_info()<<" -> "<<arc->get_src_node()->get_info();
+                std::cout<<" "<<arc->get_tgt_node()->get_info().getIndex()<<" -> "<<arc->get_src_node()->get_info().getIndex();
             }
             else
             {
-                std::cout<<" "<<arc->get_src_node()->get_info()<<" -> "<<arc->get_tgt_node()->get_info();
+                std::cout<<" "<<arc->get_src_node()->get_info().getIndex()<<" -> "<<arc->get_tgt_node()->get_info().getIndex();
             }
         }
         if(room->get_num_arcs()%2==0){std::cout<<"  Grado Par";}
         else{std::cout<<"  Grado Impar";}
         std::cout<<std::endl;
     });
+}
+
+void MyGraph::reset()
+{
+    std::cout<<"Limpiando..."<<std::endl;
+    map.clear();
+    roomsReference.clear();
+    while(!queue.empty()){queue.pop();}
+    even_odd.first = 0;
+    even_odd.second = 0;
 }

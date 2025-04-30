@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Room.hpp"
+#include <Room.hpp>
 #include <random>
 
 class MyGraph
@@ -10,7 +10,7 @@ class MyGraph
         MyGraph();
         ~MyGraph();
 
-        Designar::Graph<int> createMap();
+        Designar::Graph<Room> createMap(const bool& custom);
 
     private:
 
@@ -19,19 +19,21 @@ class MyGraph
         double probability;
         std::pair<int,int> even_odd;
 
-        Designar::Graph<int> map;
-        std::vector<Designar::Graph<int>::Node*> roomsReference;
-        std::queue<Designar::Graph<int>::Node*> queue;
+        Designar::Graph<Room> map;
+        std::vector<Designar::Graph<Room>::Node*> roomsReference;
+        std::queue<Designar::Graph<Room>::Node*> queue;
 
         void getData();
 
         void printMap();
 
-        void insertRoom(Designar::Graph<int>::Node*& room);
+        void insertRoom(Designar::Graph<Room>::Node*& room);
 
         void generateEntry(std::mt19937 random, std::uniform_real_distribution<double> distribution);
 
-        void generateEvenRooms(Designar::Graph<int>::Node*& room, std::mt19937 random, std::uniform_real_distribution<double> distribution);
+        void generateEvenRooms(Designar::Graph<Room>::Node*& room, std::mt19937 random, std::uniform_real_distribution<double> distribution);
 
-        bool limitRoom(Designar::Graph<int>::Node*& room);
+        bool limitRoom(Designar::Graph<Room>::Node*& room);
+
+        void reset();
 };
