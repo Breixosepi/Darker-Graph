@@ -18,6 +18,8 @@ class Level
         void setShortestPath(Designar::Graph<Room> value);
         void setEulerianPath(Designar::Graph<Room> value);
         void setMatrix(std::vector<std::vector<int>> value);
+
+        void printMapConsole();
     
     private:
         Designar::Graph<Room> map;

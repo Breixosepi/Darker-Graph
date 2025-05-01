@@ -13,7 +13,11 @@ class Room
         ~Room();
 
         int getIndex();
+        std::pair<int,int> getPos();
+
+        void setPos(std::pair<int,int> value);
 
     private:
         int index;
+        std::pair<int,int> posInMatrix;
 };
