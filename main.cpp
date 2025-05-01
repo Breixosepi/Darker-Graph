@@ -1,7 +1,13 @@
 #include <MyGraph.hpp>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 int main()
 {
+    /*if(SDL_Init(SDL_INIT_VIDEO)<0){std::cout<<"Error Init SDL"<<std::endl;};
+    int imgFlags = IMG_INIT_PNG;
+    if((IMG_Init(imgFlags)&imgFlags)!=imgFlags){std::cout<<"Error Init IMG"<<std::endl;};*/
+
     MyGraph creator;
     std::vector<Designar::Graph<Room>> levels;
     bool exit = false;
