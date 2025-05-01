@@ -10,6 +10,6 @@ Room::Room(const int& num)
     index = num;
 }
 
-Room::~Room(){};
+Room::~Room(){}
 
 int Room::getIndex(){return index;}
