@@ -16,8 +16,7 @@ Un juego de terminal donde **los grafos gobiernan todo**: desde la generación p
 
 ## 🛠️ Instalación
 Ubuntu: sudo apt update
-        sudo apt install libsdl2-dev
-        sudo apt install libsdl2-image-dev
+sudo apt-get install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev
 
 # Ejecutar
 ./Darker_Graph
