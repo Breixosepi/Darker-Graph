@@ -1,70 +1,57 @@
-# Directorio donde se construirán los ejecutables de prueba
-TEST_BIN_DIR = test/bin
+# Configuración básica
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -Ilib/include -Iexternal/DeSiGNAR-2.0.0/include
+LDFLAGS = -Lexternal/DeSiGNAR-2.0.0/build -lDesignar
 
-# Direcciones
-DSG = external/DeSiGNAR-2.0.0
+# Directorios
 BUILD_DIR = build
 LIB_SRC_DIR = lib/src
-
-MAIN_SRC = main.cpp
-MAIN_TARGET = DarkerGraph  # El ejecutable estará en la raíz
-
-# Directorio de archivos fuente de prueba
+TEST_BIN_DIR = test/bin
 TEST_SRC_DIR = test/src
-TEST_SOURCES = $(wildcard $(addsuffix /*.cpp, $(TEST_SRC_DIR)))
-TEST_TARGETS = $(patsubst $(TEST_SRC_DIR)/%.cpp, $(TEST_BIN_DIR)/%, $(TEST_SOURCES))
 
-# Archivos fuente de lib
-LIB_SOURCES = $(wildcard $(addsuffix /*.cpp, $(LIB_SRC_DIR)))
-LIB_OBJECTS = $(LIB_SOURCES:$(LIB_SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
+# Archivos fuente
+MAIN_SRC = main.cpp
+MAIN_TARGET = DarkerGraph
+LIB_SOURCES = $(wildcard $(LIB_SRC_DIR)/*.cpp)
+LIB_OBJECTS = $(patsubst $(LIB_SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(LIB_SOURCES))
+TEST_SOURCES = $(wildcard $(TEST_SRC_DIR)/*.cpp)
+TEST_TARGETS = $(patsubst $(TEST_SRC_DIR)/%.cpp,$(TEST_BIN_DIR)/%,$(TEST_SOURCES))
 
-# Directorios de archivos de encabezado
-INC_DIRS = lib/include $(DSG)/include $(shell pkg-config --cflags sdl2) $(shell pkg-config --cflags sdl2_image)
+# Detección de SDL2
+SDL_CFLAGS := $(shell pkg-config --cflags sdl2 SDL2_image SDL2_ttf)
+SDL_LIBS := $(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf)
 
-# Directorio de la biblioteca DeSiGNAR (después de la compilación)
-DESIGNAR_LIB_DIR = $(DSG)/build
-DESIGNAR_LIB_NAME = Designar
+# Flags completas
+CXXFLAGS += $(SDL_CFLAGS)
+LDFLAGS += $(SDL_LIBS)
 
-# Flags del compilador
-CXXFLAGS = -std=c++17 -Wall -Wextra -g -Iexternal/DeSiGNAR-2.0.0/include -Ilib/include $(shell pkg-config --cflags sdl2) $(shell pkg-config --cflags sdl2_image) -Wcast-align -Wno-sign-compare -Wno-write-strings -Wno-parentheses -Wfloat-equal -pedantic
-
-# Flags del enlazador
-LDFLAGS = -L$(DESIGNAR_LIB_DIR) $(shell pkg-config --libs sdl2 sdl2_image)
-
-# Compilador a usar
-CXX = g++
-
-# Regla principal para construir todos los ejecutables
+# Reglas principales
 all: $(MAIN_TARGET) $(TEST_TARGETS)
 
-# Regla para construir el ejecutable del archivo fuente principal (en la raíz)
-$(MAIN_TARGET): $(BUILD_DIR)/$(notdir $(MAIN_SRC:.cpp=.o)) $(LIB_OBJECTS) $(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a
-	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(LDFLAGS) -o $@ $(BUILD_DIR)/$(notdir $(MAIN_SRC:.cpp=.o)) $(LIB_OBJECTS) -l$(DESIGNAR_LIB_NAME) -lSDL2 -lSDL2_image
+$(MAIN_TARGET): $(BUILD_DIR)/$(notdir $(MAIN_SRC:.cpp=.o)) $(LIB_OBJECTS)
+	@mkdir -p $(@D)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
-# Regla para construir el objeto del archivo fuente principal
-$(BUILD_DIR)/$(notdir $(MAIN_SRC:.cpp=.o)): $(MAIN_SRC)
-	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Regla para construir los objetos de la librería
 $(BUILD_DIR)/%.o: $(LIB_SRC_DIR)/%.cpp
-	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(TEST_BIN_DIR)/%: $(TEST_SRC_DIR)/%.cpp $(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a
-	@mkdir -p $(TEST_BIN_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $(BUILD_DIR)/$(basename $(notdir $<)).o
-	$(CXX) $(LDFLAGS) -o $@ $(BUILD_DIR)/$(basename $(notdir $@)).o -l$(DESIGNAR_LIB_NAME) -lSDL2 -lSDL2_image
+$(BUILD_DIR)/%.o: %.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Regla para construir la biblioteca DeSIGNAR (si es necesario)
-$(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a: $(DSG)/CMakeLists.txt
+$(TEST_BIN_DIR)/%: $(TEST_SRC_DIR)/%.cpp $(LIB_OBJECTS)
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -c $< -o $(BUILD_DIR)/$(notdir $(<:.cpp=.o))
+	$(CXX) -o $@ $(BUILD_DIR)/$(notdir $(<:.cpp=.o)) $(LIB_OBJECTS) $(LDFLAGS)
+
+# Construir biblioteca DeSiGNAR
+$(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a:
 	@echo "Construyendo la biblioteca DeSIGNAR..."
 	@mkdir -p $(DSG)/build
 	cd $(DSG)/build && cmake ..
 	$(MAKE) -C $(DSG)/build
 
-# Regla para limpiar todos los ejecutables
 clean:
 	rm -rf $(MAIN_TARGET) $(BUILD_DIR)
 	find $(TEST_BIN_DIR) -type f -not -name ".empty" -delete
