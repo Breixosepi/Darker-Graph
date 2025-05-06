@@ -1,6 +1,6 @@
 #include <Game.hpp>
 
-Game::Game()
+Game::Game() : isRunning(false), window(nullptr), renderer(nullptr)
 {
 
 }
@@ -9,16 +9,14 @@ Game::~Game()
 
 void Game::initialize(const char* title,int x_pos,int y_pos, int width, int height, bool fullscreen)
 {
-    int flags = 0;
-    if(fullscreen)
-    {
-        flags = SDL_WINDOW_FULLSCREEN;
-    }
+    Uint32 flags = fullscreen ? SDL_WINDOW_FULLSCREEN : 0;
 
     if(SDL_Init(SDL_INIT_EVERYTHING) == 0)
     {
-        window = SDL_CreateWindow(title, x_pos, y_pos, width, height, flags);
-        renderer = SDL_CreateRenderer(window, -1, 0);
+        WindowPtr winPtr(SDL_CreateWindow(title, x_pos, y_pos, width, height, flags));
+        RendererPtr RenderPtr(SDL_CreateRenderer(window, -1, 0));  
+        window = winPtr.release();
+        renderer = RenderPtr.release();
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         isRunning = true;
     }
@@ -50,11 +48,22 @@ void Game::render()
 }
 void Game::cleanup()
 {
-    SDL_DestroyWindow(window);
-    SDL_DestroyRenderer(renderer);
+    if (renderer) 
+    {
+        SDL_DestroyRenderer(renderer);
+        renderer = nullptr;
+    }
+    if (window) 
+    {
+        SDL_DestroyWindow(window);
+        window = nullptr;
+    }
     SDL_Quit();
+    isRunning = false;
 }
+
 bool Game::running()
 {
     return isRunning;
+
 }

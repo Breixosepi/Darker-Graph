@@ -1,5 +1,25 @@
 #pragma once
 #include <SDL2/SDL.h>
+#include <memory>
+#include <stdexcept>
+
+constexpr int SCREEN_WIDTH = 800;
+constexpr int SCREEN_HEIGHT = 600;
+
+struct SDL_Deleter 
+{
+    void operator()(SDL_Window* window) const 
+    { 
+        if (window) SDL_DestroyWindow(window); 
+    }
+    void operator()(SDL_Renderer* renderer) const 
+    {
+        if (renderer) SDL_DestroyRenderer(renderer); 
+    }
+};
+
+using WindowPtr = std::unique_ptr<SDL_Window, SDL_Deleter>;
+using RendererPtr = std::unique_ptr<SDL_Renderer, SDL_Deleter>;
 
 class Game
 {
