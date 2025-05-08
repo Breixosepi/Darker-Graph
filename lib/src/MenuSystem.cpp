@@ -1,7 +1,7 @@
 #include "MenuSystem.hpp"
 #include <iostream>
 
-MenuSystem::MenuSystem(const RendererPtr& render, const FontPtr& fonts) : renderer(render.get()), font(fonts.get()),head(nullptr),tail(nullptr),current(nullptr) 
+MenuSystem::MenuSystem(const RendererPtr& render, const FontPtr& fonts) : renderer(render.get()), font(fonts.get()),head(nullptr),tail(nullptr),current(nullptr)
 {
 
 }
@@ -51,16 +51,17 @@ void MenuSystem::handleEvent(const SDL_Event& event)
 
 void MenuSystem::render() const 
 {
-    if (!renderer || !font || widgets.empty()) 
+    if (!renderer) return;
+    
+    
+    if (font && !widgets.empty()) 
     {
-        return;
-    }
-    for (const std::unique_ptr<Widget>& widget : widgets) 
-    {
-        widget->render(renderer, font, widget.get() == current);
+        for (const auto& widget : widgets) 
+        {
+            widget->render(renderer, font, widget.get() == current);
+        }
     }
 }
-
 void MenuSystem::navigateUp() 
 {
     if (!current) 
@@ -97,10 +98,20 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
     {
         std::cout << "Juego iniciado!\n";
     });
+
+    menu->addWidget("load", "Cargar Partida", []() 
+    {
+        std::cout << "Partida cargada!\n";
+    });
     
     menu->addWidget("options", "Opciones", []() 
     {
         std::cout << "Opciones seleccionadas\n";
+    });
+
+    menu->addWidget("credits", "Creditos", []() 
+    {
+        std::cout << "todo: Eugenio El musculoso!\n" << "Nada : Francisco el negro\n" ;
     });
     
     menu->addWidget("exit", "Salir", []() 

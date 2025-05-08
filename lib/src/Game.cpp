@@ -20,14 +20,15 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
             throw std::runtime_error("No se pudo crear la ventana SDL");
             return;
         }
-        renderer.reset(SDL_CreateRenderer(window.get(), -1, 0));
+        
+        renderer.reset(SDL_CreateRenderer(window.get(), -1, SDL_RENDERER_ACCELERATED));
         if (!renderer)
         {
             isRunning = false;
             throw std::runtime_error("No se pudo crear el render SDL");
             return;
         }
-        font.reset(TTF_OpenFont("assets/fonts/times.ttf", 100));
+        font.reset(TTF_OpenFont("assets/fonts/VT323.ttf", 80));
         if (!font)
         {
             isRunning = false;
@@ -38,9 +39,10 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
         TTF_SetFontOutline(font.get(), 0);  
         TTF_SetFontHinting(font.get(), TTF_HINTING_LIGHT);
 
+
         mainMenu = MenuSystem::createMainMenu(renderer, font);
 
-        SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 255);
+        SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 0);
         isRunning = true;
     }
     else

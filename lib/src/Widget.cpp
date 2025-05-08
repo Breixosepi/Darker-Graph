@@ -7,7 +7,7 @@ Widget::Widget(const std::string& name, int x, int y, const std::string& label) 
 
 void Widget::render(const RendererPtr& renderer, const FontPtr& font, bool isActive) const 
 {
-    SDL_Color color = isActive ? SDL_Color{255, 0, 0, 255} : SDL_Color{255, 255, 255, 255};
+    SDL_Color color = isActive ? SDL_Color{0, 255, 0, 255} : SDL_Color{255, 255, 255, 255};
 
     SurfacePtr surface(TTF_RenderText_Blended(font.get(), label.c_str(), color));
     if (!surface) 

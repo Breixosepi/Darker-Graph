@@ -24,4 +24,5 @@ class MenuSystem
         Widget* head;
         Widget* tail;
         Widget* current;
-    };
+        
+};
