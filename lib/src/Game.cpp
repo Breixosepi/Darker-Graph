@@ -1,6 +1,6 @@
 #include <Game.hpp>
 
-Game::Game() : isRunning(false), window(nullptr), renderer(nullptr)
+Game::Game() : isRunning(false)
 {
 
 }
@@ -10,14 +10,37 @@ Game::~Game()
 void Game::initialize(const char* title,int x_pos,int y_pos, int width, int height, bool fullscreen)
 {
     Uint32 flags = fullscreen ? SDL_WINDOW_FULLSCREEN : 0;
-
     if(SDL_Init(SDL_INIT_EVERYTHING) == 0)
     {
-        WindowPtr winPtr(SDL_CreateWindow(title, x_pos, y_pos, width, height, flags));
-        RendererPtr RenderPtr(SDL_CreateRenderer(window, -1, 0));  
-        window = winPtr.release();
-        renderer = RenderPtr.release();
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        TTF_Init();
+        window.reset(SDL_CreateWindow(title, x_pos, y_pos, width, height, flags));
+        if (!window)
+        {
+            isRunning = false;
+            throw std::runtime_error("No se pudo crear la ventana SDL");
+            return;
+        }
+        renderer.reset(SDL_CreateRenderer(window.get(), -1, 0));
+        if (!renderer)
+        {
+            isRunning = false;
+            throw std::runtime_error("No se pudo crear el render SDL");
+            return;
+        }
+        font.reset(TTF_OpenFont("assets/fonts/times.ttf", 100));
+        if (!font)
+        {
+            isRunning = false;
+            throw std::runtime_error("No se pudo cargar la fuente: " + std::string(TTF_GetError()));
+            return;
+        }
+        TTF_SetFontStyle(font.get(), TTF_STYLE_NORMAL);
+        TTF_SetFontOutline(font.get(), 0);  
+        TTF_SetFontHinting(font.get(), TTF_HINTING_LIGHT);
+
+        mainMenu = MenuSystem::createMainMenu(renderer, font);
+
+        SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 255);
         isRunning = true;
     }
     else
@@ -25,17 +48,20 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
         isRunning = false;
     }
 }
-void Game::handleEvents()
+void Game::handleEvents() 
 {
     SDL_Event event;
-    SDL_PollEvent(&event);
-    switch(event.type)
+    while (SDL_PollEvent(&event)) 
     {
-        case SDL_QUIT:
-            isRunning = false;
-            break;
-        default:
-            break;
+        switch (event.type) 
+        {
+            case SDL_QUIT:
+                isRunning = false;
+                break;
+            default:
+                if (mainMenu) mainMenu->handleEvent(event);
+                break;
+        }
     }
 }
 void Game::update()
@@ -43,21 +69,20 @@ void Game::update()
 }
 void Game::render()
 {
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
+    SDL_RenderClear(renderer.get());
+    
+    if (mainMenu) 
+    {
+        mainMenu->render();
+    }
+    
+    SDL_RenderPresent(renderer.get());
+    
 }
 void Game::cleanup()
 {
-    if (renderer) 
-    {
-        SDL_DestroyRenderer(renderer);
-        renderer = nullptr;
-    }
-    if (window) 
-    {
-        SDL_DestroyWindow(window);
-        window = nullptr;
-    }
+    mainMenu.reset();
+    TTF_Quit();
     SDL_Quit();
     isRunning = false;
 }

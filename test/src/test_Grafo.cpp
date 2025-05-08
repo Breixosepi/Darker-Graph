@@ -5,7 +5,8 @@
 constexpr int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
-struct SDL_Deleter {
+struct SDL_Deleter 
+{
     void operator()(SDL_Window* window) const { SDL_DestroyWindow(window); }
     void operator()(SDL_Renderer* renderer) const { SDL_DestroyRenderer(renderer); }
 };

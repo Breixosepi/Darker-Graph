@@ -8,7 +8,7 @@ Game *game = nullptr;
 
 int main(int argc , const char * argv[])
 {
-    game = new Game();
+    std::unique_ptr<Game> game = std::make_unique<Game>();
     game->initialize("Darker Graph", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, false);
     
     while(game->running())
@@ -18,7 +18,6 @@ int main(int argc , const char * argv[])
         game->render();
     }
     game->cleanup();
-    delete game;
     
     return 0;
     /*if(SDL_Init(SDL_INIT_VIDEO)<0){std::cout<<"Error Init SDL"<<std::endl;};
