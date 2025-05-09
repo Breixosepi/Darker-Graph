@@ -105,7 +105,7 @@ void MenuSystem::render() const
         {
             widget->render(renderer, font, widget.get() == current);
         }
-    }
+    }     
 }
 void MenuSystem::navigateUp() 
 {
@@ -139,69 +139,7 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
 {
     std::unique_ptr<MenuSystem> menu = std::make_unique<MenuSystem>(renderer, font);
 
-    menu->addWidget("start", "Iniciar Juego", [&]() 
-    {
-        MyGraph creator;
-        Level firstLevel(creator.createMap(false));
-        SDL_RenderClear(renderer.get());
-        auto lol = IMG_Load("assets/screenshots/tileSet.png");
-        SDL_Texture* god;
-        if(lol)
-        {
-            god = SDL_CreateTextureFromSurface(renderer.get(),lol);
-        }
-        
-        int dimensiones = -1;
-        auto pos = firstLevel.shapesToDrawMap(800,800,dimensiones);
-        SDL_Rect origen;
-        SDL_Rect destino;
-        for(auto xd : pos)
-        {
-            if(xd.second==0)
-            {
-                origen = {832,207,32,32};
-                destino.h = destino.w = dimensiones;
-            }
-            else if(xd.second==1)
-            {
-                origen = {486,202,80,80};
-                destino.h = destino.w = dimensiones;
-            }
-            else if(xd.second==2)
-            {
-                origen = {832,416,64,64};
-                destino.h = dimensiones/2;
-                destino.w = dimensiones;
-            }
-            else if(xd.second==3)
-            {
-                origen = {832,416,64,64};
-                destino.h = dimensiones;
-                destino.w = dimensiones/2;
-            }
-            destino.x = xd.first.first;
-            destino.y = xd.first.second;
-            SDL_RenderCopy(renderer.get(),god,&origen,&destino);
-        }
-        SDL_RenderPresent(renderer.get());
-        SDL_Event event;
-        bool waiting = true;
-        while (waiting) 
-        {
-            while (SDL_PollEvent(&event)) 
-            {
-                if (event.type == SDLK_ESCAPE || event.type == SDL_QUIT) 
-                {
-                    waiting = false;
-                }
-            }
-        }
-    });
-
-    /*menu->addWidget("start", "Iniciar Juego", []() 
-    {
-
-    });*/
+    menu->addWidget("start", "Iniciar Juego", [](){});
 
     static SDL_Rect square = {375, 375, 50, 50}; 
 
