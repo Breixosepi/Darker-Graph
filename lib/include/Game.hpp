@@ -22,6 +22,7 @@ private:
     RendererPtr renderer;
     FontPtr font;
     std::unique_ptr<MenuSystem> mainMenu;
-
+    SDL_Surface* surfaceBackground;
+    SDL_Texture* textureBackground;
 };
 

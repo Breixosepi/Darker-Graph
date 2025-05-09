@@ -55,11 +55,11 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
 
     if((IMG_Init(IMG_INIT_PNG))&IMG_INIT_PNG)
     {
-        /*surfaceImageDungeon = IMG_Load("assets/screenshots/tileSet.png");
-        if(surfaceImageDungeon)
+        surfaceBackground = IMG_Load("assets/screenshots/background-title.png");
+        if(surfaceBackground)
         {
-            textureImageDungeon = SDL_CreateTextureFromSurface(renderer,surfaceImageDungeon);
-            if(!textureImageDungeon)
+            textureBackground = SDL_CreateTextureFromSurface(renderer.get(),surfaceBackground);
+            if(!textureBackground)
             {
                 isRunning = false;
             }
@@ -67,7 +67,7 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
         else
         {
             isRunning = false;
-        }*/
+        }
     }
     else
     {
@@ -113,6 +113,7 @@ void Game::render()
     
     if (mainMenu) 
     {
+        SDL_RenderCopy(renderer.get(),textureBackground,NULL,NULL);
         mainMenu->render();
     }
     

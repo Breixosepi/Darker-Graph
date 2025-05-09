@@ -1,5 +1,7 @@
 #pragma once 
 #include <Widget.hpp>
+#include <Level.hpp>
+#include <MyGraph.hpp>
 
 class MenuSystem 
 {
@@ -24,5 +26,4 @@ class MenuSystem
         Widget* head;
         Widget* tail;
         Widget* current;
-        
 };

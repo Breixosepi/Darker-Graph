@@ -68,7 +68,6 @@ void MenuSystem::render() const
 {
     if (!renderer) return;
     
-    
     if (font && !widgets.empty()) 
     {
         for (const auto& widget : widgets) 
@@ -108,11 +107,58 @@ void MenuSystem::executeCurrent()
 std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& renderer, const FontPtr& font) 
 {
     std::unique_ptr<MenuSystem> menu = std::make_unique<MenuSystem>(renderer, font);
-    
-    menu->addWidget("start", "Iniciar Juego", []() 
+
+    menu->addWidget("start", "Iniciar Juego", [&]() 
     {
-        std::cout << "Juego iniciado!\n";
+        MyGraph creator;
+        Level firstLevel(creator.createMap(false));
+        SDL_RenderClear(renderer.get());
+        auto lol = IMG_Load("assets/screenshots/tileSet.png");
+        SDL_Texture* god;
+        if(lol)
+        {
+            god = SDL_CreateTextureFromSurface(renderer.get(),lol);
+        }
+        
+        int dimensiones = -1;
+        auto pos = firstLevel.shapesToDrawMap(800,800,dimensiones);
+        SDL_Rect origen;
+        SDL_Rect destino;
+        for(auto xd : pos)
+        {
+            if(xd.second==0)
+            {
+                origen = {832,207,32,32};
+                destino.h = destino.w = dimensiones;
+            }
+            else if(xd.second==1)
+            {
+                origen = {486,202,80,80};
+                destino.h = destino.w = dimensiones;
+            }
+            else if(xd.second==2)
+            {
+                origen = {832,416,64,64};
+                destino.h = dimensiones/2;
+                destino.w = dimensiones;
+            }
+            else if(xd.second==3)
+            {
+                origen = {832,416,64,64};
+                destino.h = dimensiones;
+                destino.w = dimensiones/2;
+            }
+            destino.x = xd.first.first;
+            destino.y = xd.first.second;
+            SDL_RenderCopy(renderer.get(),god,&origen,&destino);
+        }
+        SDL_RenderPresent(renderer.get());
     });
+
+    /*menu->addWidget("start", "Iniciar Juego", []() 
+    {
+
+    });*/
 
     menu->addWidget("load", "Cargar Partida", []() 
     {
