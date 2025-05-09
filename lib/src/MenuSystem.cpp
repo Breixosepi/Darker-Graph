@@ -8,12 +8,19 @@ MenuSystem::MenuSystem(const RendererPtr& render, const FontPtr& fonts) : render
 
 void MenuSystem::addWidget(const std::string& name, const std::string& label, std::function<void()> action) 
 {
-    const int startY = 200;    
+    const int startY = 150;    
     const int stepY = 50;      
     const int centerX = 400;  
 
     std::unique_ptr<Widget> widget = std::make_unique<Widget>(name, centerX, startY + 2*(widgets.size() * stepY), label);
     widget->setAction(action);
+
+    SDL_Rect rect;
+    rect.x = centerX - (label.length() * 10); 
+    rect.y = startY + 2*(widgets.size() * stepY) - 25;
+    rect.w = label.length() * 20;
+    rect.h = 50;
+    widget->setRect(rect);
 
     if (!head) 
     {
@@ -58,6 +65,30 @@ void MenuSystem::handleEvent(const SDL_Event& event)
                         SDL_SetWindowSize(window, 800, 800); 
                     }
                 }
+                break;
+            }
+        }
+    }
+    if (event.type == SDL_MOUSEMOTION) 
+    {
+        for (auto& widget : widgets) 
+        {
+            if (widget->containsPoint(event.motion.x, event.motion.y)) 
+            {
+                current = widget.get();
+                break;
+            }
+        }
+    }
+    
+    if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) 
+    {
+        for (auto& widget : widgets) 
+        {
+            if (widget->containsPoint(event.button.x, event.button.y)) 
+            {
+                current = widget.get();
+                executeCurrent();
                 break;
             }
         }

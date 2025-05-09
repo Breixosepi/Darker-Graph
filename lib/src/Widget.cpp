@@ -2,9 +2,17 @@
 
 Widget::Widget(const std::string& name, int x, int y, const std::string& label) : name(name), x(x), y(y), label(label), next(nullptr), prev(nullptr) 
 {
-
+    boundingBox = {0, 0, 0, 0};
 }
 
+void Widget::setRect(const SDL_Rect& rect) {
+    boundingBox = rect;
+}
+
+bool Widget::containsPoint(int x, int y) const {
+    return (x >= boundingBox.x && x <= boundingBox.x + boundingBox.w &&
+            y >= boundingBox.y && y <= boundingBox.y + boundingBox.h);
+}
 void Widget::render(const RendererPtr& renderer, const FontPtr& font, bool isActive) const 
 {
     SDL_Color color = isActive ? SDL_Color{0, 255, 0, 255} : SDL_Color{255, 255, 255, 255};
@@ -31,6 +39,7 @@ void Widget::render(const RendererPtr& renderer, const FontPtr& font, bool isAct
         surface->w,                    
         surface->h                      
     };
+    const_cast<Widget*>(this)->boundingBox = rect;
     SDL_RenderCopy(renderer.get(), texture.get(), nullptr, &rect);
     
     if (isActive) 
