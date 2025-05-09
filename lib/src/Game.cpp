@@ -13,7 +13,7 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
     if(SDL_Init(SDL_INIT_EVERYTHING) == 0)
     {
         TTF_Init();
-        window.reset(SDL_CreateWindow(title, x_pos, y_pos, width, height, flags));
+        window.reset(SDL_CreateWindow(title, x_pos, y_pos, width, height, flags  ));
         if (!window)
         {
             isRunning = false;
@@ -28,7 +28,7 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
             throw std::runtime_error("No se pudo crear el render SDL");
             return;
         }
-        font.reset(TTF_OpenFont("assets/fonts/VT323.ttf", 80));
+        font.reset(TTF_OpenFont("assets/fonts/VT323.ttf", 60));
         if (!font)
         {
             isRunning = false;
@@ -59,6 +59,18 @@ void Game::handleEvents()
         {
             case SDL_QUIT:
                 isRunning = false;
+                break;
+            case SDL_WINDOWEVENT:
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
+                {
+                    int newWidth = std::max(event.window.data1, 800);
+                    int newHeight = std::max(event.window.data2, 800);
+                    
+                    if (event.window.data1 < 800 || event.window.data2 < 800) 
+                    {
+                        SDL_SetWindowSize(window.get(), newWidth, newHeight);
+                    }
+                }
                 break;
             default:
                 if (mainMenu) mainMenu->handleEvent(event);

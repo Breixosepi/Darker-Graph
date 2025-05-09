@@ -21,8 +21,16 @@ void Widget::render(const RendererPtr& renderer, const FontPtr& font, bool isAct
         throw std::runtime_error("Error en la textura");
     }
 
-    
-    SDL_Rect rect{(800 - surface->w) / 2 + 30, y, surface->w,surface->h};
+    int screenWidth, screenHeight;
+    SDL_GetRendererOutputSize(renderer.get(), &screenWidth, &screenHeight);
+
+    SDL_Rect rect
+    {
+        (screenWidth - surface->w) / 2,  
+        (screenHeight / 100) + y,         
+        surface->w,                    
+        surface->h                      
+    };
     SDL_RenderCopy(renderer.get(), texture.get(), nullptr, &rect);
     
     if (isActive) 
@@ -33,7 +41,13 @@ void Widget::render(const RendererPtr& renderer, const FontPtr& font, bool isAct
             TexturePtr arrowTexture(SDL_CreateTextureFromSurface(renderer.get(), arrowSurface.get()));
             if (arrowTexture) 
             {
-                SDL_Rect arrowRect{(800 - surface->w)/2 - 30, y, arrowSurface->w, arrowSurface->h};
+                SDL_Rect arrowRect
+                {
+                    rect.x - arrowSurface->w - 10,  
+                    rect.y,                         
+                    arrowSurface->w,              
+                    arrowSurface->h                 
+                };
                 SDL_RenderCopy(renderer.get(), arrowTexture.get(), nullptr, &arrowRect);
             }
         }

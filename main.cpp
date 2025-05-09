@@ -9,7 +9,7 @@ Game *game = nullptr;
 int main(int argc , const char * argv[])
 {
     std::unique_ptr<Game> game = std::make_unique<Game>();
-    game->initialize("Darker Graph", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, false);
+    game->initialize("Darker Graph", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 800, false);
     
     while(game->running())
     {

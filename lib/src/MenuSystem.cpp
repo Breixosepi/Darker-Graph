@@ -45,6 +45,21 @@ void MenuSystem::handleEvent(const SDL_Event& event)
             case SDLK_UP: navigateUp(); break;
             case SDLK_DOWN: navigateDown(); break;
             case SDLK_RETURN: executeCurrent(); break;
+            case SDLK_f:
+            {
+                static bool isFullscreen = false;
+                isFullscreen = !isFullscreen;
+                SDL_Window* window = SDL_GetWindowFromID(event.window.windowID);
+                if (window) 
+                {
+                    SDL_SetWindowFullscreen(window, isFullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+                    if (!isFullscreen) 
+                    {
+                        SDL_SetWindowSize(window, 800, 800); 
+                    }
+                }
+                break;
+            }
         }
     }
 }
