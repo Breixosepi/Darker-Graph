@@ -184,6 +184,18 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
             SDL_RenderCopy(renderer.get(),god,&origen,&destino);
         }
         SDL_RenderPresent(renderer.get());
+        SDL_Event event;
+        bool waiting = true;
+        while (waiting) 
+        {
+            while (SDL_PollEvent(&event)) 
+            {
+                if (event.type == SDLK_ESCAPE || event.type == SDL_QUIT) 
+                {
+                    waiting = false;
+                }
+            }
+        }
     });
 
     /*menu->addWidget("start", "Iniciar Juego", []() 
@@ -191,9 +203,42 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
 
     });*/
 
-    menu->addWidget("load", "Cargar Partida", []() 
+    static SDL_Rect square = {375, 375, 50, 50}; 
+
+    menu->addWidget("load", "Cargar Partida", [&]() 
     {
-        std::cout << "Partida cargada!\n";
+        SDL_Event event;
+        bool running = true;
+
+        while (running) 
+        {
+            while (SDL_PollEvent(&event)) 
+            {
+                if (event.type == SDL_QUIT) 
+                {
+                    running = false;
+                }
+                else if (event.type == SDL_KEYDOWN) 
+                {
+                    switch (event.key.keysym.sym) 
+                    {
+                        case SDLK_UP: square.y -= 10; break;
+                        case SDLK_DOWN: square.y += 10; break;
+                        case SDLK_LEFT: square.x -= 10; break;
+                        case SDLK_RIGHT: square.x += 10; break;
+                        case SDLK_ESCAPE: running = false; break;
+                    }
+                }
+            }
+
+            SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 255);
+            SDL_RenderClear(renderer.get());
+
+            SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 255); 
+            SDL_RenderFillRect(renderer.get(), &square);
+
+            SDL_RenderPresent(renderer.get());
+        }
     });
     
     menu->addWidget("options", "Opciones", []() 
