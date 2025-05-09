@@ -12,12 +12,15 @@ class Room
         Room(const int& index);
         ~Room();
 
-        int getIndex();
-        std::pair<int,int> getPos();
+        const int* getIndex();
+        const std::vector<bool>* getPaths();
+        const std::pair<int,int>* getPos();
 
-        void setPos(std::pair<int,int> value);
+        void setPos(const std::pair<int,int>& value);
+        void setPath(const int& side);
 
     private:
         int index;
         std::pair<int,int> posInMatrix;
+        std::vector<bool> paths;
 };

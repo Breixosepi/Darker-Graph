@@ -10,7 +10,7 @@ class MyGraph
         MyGraph();
         ~MyGraph();
 
-        std::pair<Designar::Graph<Room>,std::vector<std::vector<int>>> createMap(const bool& custom);
+        std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>::Node*>,std::vector<std::vector<int>>> createMap(const bool& custom);
 
     private:
 
@@ -38,7 +38,9 @@ class MyGraph
 
         bool limitRoom(Designar::Graph<Room>::Node*& room);
 
-        bool verifyInsert(int side, std::pair<int,int>& pos);
+        bool verifyInsert(int& side, std::pair<int,int>& pos);
+
+        Designar::Graph<Room>::Node* doInsert(const std::pair<int,int>& pos);
         
         void reset();
 };

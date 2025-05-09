@@ -2,10 +2,13 @@
 
 Game::Game() : isRunning(false)
 {
-
+    //levels.push_back(creator.createMap(false));
+    //levels[0].printMapConsole();
 }
 Game::~Game()
-{}
+{
+
+}
 
 void Game::initialize(const char* title,int x_pos,int y_pos, int width, int height, bool fullscreen)
 {
@@ -49,6 +52,29 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
     {
         isRunning = false;
     }
+
+    if((IMG_Init(IMG_INIT_PNG))&IMG_INIT_PNG)
+    {
+        /*surfaceImageDungeon = IMG_Load("assets/screenshots/tileSet.png");
+        if(surfaceImageDungeon)
+        {
+            textureImageDungeon = SDL_CreateTextureFromSurface(renderer,surfaceImageDungeon);
+            if(!textureImageDungeon)
+            {
+                isRunning = false;
+            }
+        }
+        else
+        {
+            isRunning = false;
+        }*/
+    }
+    else
+    {
+        isRunning = false;
+    }
+
+    //SDL_GetWindowSize(window,&windowWidth,&windowHeight);
 }
 void Game::handleEvents() 
 {
