@@ -139,7 +139,61 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
 {
     std::unique_ptr<MenuSystem> menu = std::make_unique<MenuSystem>(renderer, font);
 
-    menu->addWidget("start", "Iniciar Juego", [](){});
+    menu->addWidget("start", "Iniciar Juego", [&]()
+    {
+        MyGraph creator;
+        Level level(creator.createMap(false));
+        SDL_Rect origen;
+        SDL_Rect destino;
+        SDL_Surface* surface = IMG_Load("assets/screenshots/tileSet.png");
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer.get(),surface);
+        int dimensiones = -1;
+        auto pos = level.shapesToDrawMap(800,800,dimensiones);
+        SDL_Event event;
+        bool running = true;
+        SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 255);
+        while (running) 
+        {
+            while (SDL_PollEvent(&event)) 
+            {
+                if (event.type == SDL_QUIT) 
+                {
+                    running = false;
+                }
+            }
+
+            SDL_RenderClear(renderer.get());
+            for(auto xd : pos)
+            {
+                if(xd.second==0)
+                {
+                    origen = {832,207,32,32};
+                    destino.h = destino.w = dimensiones;
+                }
+                else if(xd.second==1)
+                {
+                    origen = {486,202,80,80};
+                    destino.h = destino.w = dimensiones;
+                }
+                else if(xd.second==2)
+                {
+                    origen = {832,416,64,64};
+                    destino.h = dimensiones/2;
+                    destino.w = dimensiones;
+                }
+                else if(xd.second==3)
+                {
+                    origen = {832,416,64,64};
+                    destino.h = dimensiones;
+                    destino.w = dimensiones/2;
+                }
+                    destino.x = xd.first.first;
+                    destino.y = xd.first.second;
+                    SDL_RenderCopy(renderer.get(),texture,&origen,&destino);
+            }  
+            SDL_RenderPresent(renderer.get());
+        }
+    });
 
     static SDL_Rect square = {375, 375, 50, 50}; 
 
