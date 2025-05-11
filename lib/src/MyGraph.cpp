@@ -2,10 +2,10 @@
 
 MyGraph::MyGraph()
 {
-    numRooms = 8;
+    numRooms = 8; //Bug a partir de 10
     maxGrade = 4;
-    probability = 50.0;
-    even_odd = {0,0};
+    probability = 80.0;
+    evenOdd = {numRooms,0};
 }
 
 MyGraph::~MyGraph(){};
@@ -16,7 +16,6 @@ std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>::Node*>,std::
     if(numRooms>0)
     {
         if(map.get_num_nodes()>0){reset();}
-
         std::mt19937 random(std::random_device{}());
         std::uniform_int_distribution<int> chooseSide(0, 3); // 0:Izquierda, 1:Arriba, 2:Derecha, 3:Abajo
         std::uniform_real_distribution<double> probabilityAdd(0, 1.0);
@@ -63,32 +62,37 @@ void MyGraph::insertRoom(Designar::Graph<Room>::Node*& room, int side)
     std::pair<int,int> pos = *room->get_info().getPos();
     if(verifyInsert(side,pos))
     { 
-        Designar::Graph<Room>::Node* newRoom = doInsert(pos);
-        queue.push(newRoom);
-        map.insert_arc(room,newRoom);
-        
-        room->get_info().setPath(side);
-        side += 2;
-        if(side>3){side -= 4;}
-        newRoom->get_info().setPath(side);
-
-        ++even_odd.second;
-        if(room->get_num_arcs()%2==0)
-        {
-            ++even_odd.first;
-            --even_odd.second;
-        }
-        else{++even_odd.second;}
+        Designar::Graph<Room>::Node* neighbor = helperInsert(pos);
+        queue.push(neighbor);
+        insertPath(room,neighbor,side);
+    }
+    else if(!verifyPath(side,pos))
+    {
+        std::cout<<"Error al Insertar Room Numero: "<<*room->get_info().getIndex()+1<<" en Room numero: "<<*room->get_info().getIndex()<<std::endl;
     }
 }
 
-Designar::Graph<Room>::Node* MyGraph::doInsert(const std::pair<int,int>& pos)
+Designar::Graph<Room>::Node* MyGraph::helperInsert(const std::pair<int,int>& pos)
 {
     Designar::Graph<Room>::Node* room = map.insert_node(map.get_num_nodes()+1);
     roomsReference.push_back(room);
     room->get_info().setPos(pos);
     matrix[pos.first][pos.second] = *room->get_info().getIndex();
     return room;
+}
+
+void MyGraph::countEvenOdd(Designar::Graph<Room>::Node*& room)
+{
+    if(room->get_num_arcs()%2==0)
+    {
+        ++evenOdd.first;
+        --evenOdd.second;
+    }
+    else
+    {
+        --evenOdd.first;
+        ++evenOdd.second;
+    }
 }
 
 bool MyGraph::verifyInsert(int& side, std::pair<int,int>& pos)
@@ -98,16 +102,16 @@ bool MyGraph::verifyInsert(int& side, std::pair<int,int>& pos)
     {
         switch (side)
         {
-            case 0:
+            case 0: //Izquierda
                 --pos.second;
             break;
-            case 1:
+            case 1: //Arriba
                 --pos.first;
             break;
-            case 2:
+            case 2: //Derecha
                 ++pos.second;
             break;
-            case 3:
+            case 3: //Abajo
                 ++pos.first;
             break;
         }
@@ -119,10 +123,53 @@ bool MyGraph::verifyInsert(int& side, std::pair<int,int>& pos)
     return false;
 }
 
+void MyGraph::insertPath(Designar::Graph<Room>::Node*& room, Designar::Graph<Room>::Node*& neighbor, int side)
+{
+    map.insert_arc(room,neighbor);
+    room->get_info().setPath(side);
+    side += 2;
+    if(side>3){side -= 4;}
+    neighbor->get_info().setPath(side);
+    countEvenOdd(room);
+    countEvenOdd(neighbor);
+}
+
+bool MyGraph::verifyPath(int& side, std::pair<int,int>& pos)
+{
+    Designar::Graph<Room>::Node* room = roomsReference[(matrix[pos.first][pos.second])-1];
+    for(int i=0; i<4; ++i)
+    {
+        if(!(*(room->get_info()).getPaths())[side])
+        {
+            switch (side)
+            {
+                case 0: //Izquierda
+                    --pos.first;
+                break;
+                case 1: //Arriba
+                    ++pos.second;
+                break;
+                case 2: //Derecha
+                    ++pos.first;
+                break;
+                case 3: //Abajo
+                    --pos.second;
+                break;
+            }
+            Designar::Graph<Room>::Node* neighbor = roomsReference[(matrix[pos.first][pos.second])-1];
+            insertPath(room,neighbor,side);
+            return true;
+        }
+        ++side;
+        if(side==4){side -= 4;}
+    }
+    return false;
+}
+
 void MyGraph::generateEntry(std::mt19937 random, std::uniform_real_distribution<double> add, std::uniform_int_distribution<int> side)
 {
     std::cout<<"Generando entrada..."<<std::endl;
-    Designar::Graph<Room>::Node* room = doInsert({numRooms-1,numRooms-1});
+    Designar::Graph<Room>::Node* room = helperInsert({numRooms-1,numRooms-1});
     if(maxGrade>0)
     {
         insertRoom(room,side(random));
@@ -141,11 +188,11 @@ void MyGraph::generateEntry(std::mt19937 random, std::uniform_real_distribution<
 
 void MyGraph::generateEvenRooms(Designar::Graph<Room>::Node*& room, std::mt19937 random, std::uniform_real_distribution<double> add, std::uniform_int_distribution<int> side)
 {
-    std::cout<<"Convirtiendo Cuarto "<<"("<<room->get_info().getIndex()<<")"<<" en Grado par..."<<std::endl;
+    std::cout<<"Convirtiendo Cuarto "<<"("<<*room->get_info().getIndex()<<")"<<" en Grado par..."<<std::endl;
     while(room->get_num_arcs()<maxGrade)
     {
         if(room->get_num_arcs()%2!=0) //Grado Impar
-        {
+        { 
             insertRoom(room,side(random));
         }
         else //Grado Par
@@ -157,7 +204,7 @@ void MyGraph::generateEvenRooms(Designar::Graph<Room>::Node*& room, std::mt19937
             else{break;}
         }  
     }
-    std::cout<<"("<<room->get_info().getIndex()<<")"<<" es par!"<<std::endl;
+    std::cout<<"("<<*room->get_info().getIndex()<<")"<<" es par!"<<std::endl;
 }
 
 bool MyGraph::limitRoom(Designar::Graph<Room>::Node*& room)
@@ -167,65 +214,68 @@ bool MyGraph::limitRoom(Designar::Graph<Room>::Node*& room)
 
 void MyGraph::fixMap(std::mt19937 random, std::uniform_int_distribution<int> side)
 {
-    printWrittenGraph();
-    if(even_odd.second==2){std::cout<<"Hay un camino euleriano!"<<std::endl;}
+    if(evenOdd.second==2){std::cout<<"Hay un camino euleriano!"<<std::endl;}
     else
     {
         std::cout<<"Corrigiendo grafo..."<<std::endl;
-        int aux = 0;
         if(!queue.empty())
         {
-            while(aux<queue.size()-1)
+            int aux = 0;
+            while(evenOdd.second>2)
             {
-                Designar::Graph<Room>::Node* roomA = roomsReference[numRooms-queue.size()+aux/2];
-                Designar::Graph<Room>::Node* roomB = roomsReference[numRooms-2-aux/2];
+                int start = (*queue.front()->get_info().getIndex()-1)+aux/2;
+                Designar::Graph<Room>::Node* roomA = roomsReference[start];
                 std::pair<int,int> posA = *roomA->get_info().getPos();
                 int sideA = side(random);
-                if(verifyInsert(sideA,posA))
+                while(!verifyInsert(sideA,posA)||roomA->get_num_arcs()%2==0)
                 {
-                    matrix[posA.first][posA.second] = -(*roomB->get_info().getIndex());
-                    roomA->get_info().setPath(sideA);
-                } 
+                    ++start;
+                    roomA = roomsReference[start];
+                    posA = *roomA->get_info().getPos();
+                    sideA = side(random);
+                }
+                int end = (numRooms-2)-aux/2;
+                Designar::Graph<Room>::Node* roomB = roomsReference[end];
                 std::pair<int,int> posB = *roomB->get_info().getPos();
                 int sideB = side(random);
-                if(verifyInsert(sideB,posB))
+                while(!verifyInsert(sideB,posB)||roomB->get_num_arcs()%2==0)
                 {
-                    matrix[posB.first][posB.second] = -(*roomA->get_info().getIndex());
-                    roomB->get_info().setPath(sideB);
+                    --end;
+                    roomB = roomsReference[end];
+                    posB = *roomB->get_info().getPos();
+                    sideB = side(random);
                 }
                 map.insert_arc(roomA, roomB);
-                aux = aux+2;
-                even_odd.second = even_odd.second-2;
+                matrix[posA.first][posA.second] = -(*roomB->get_info().getIndex());
+                roomA->get_info().setPath(sideA);
+                matrix[posB.first][posB.second] = -(*roomA->get_info().getIndex());
+                roomB->get_info().setPath(sideB);
+                aux += 2;
+                evenOdd.second -= 2;
             }
         }
-        if(even_odd.second==2)
-        {
-            printWrittenGraph();
-            std::cout<<"Hay un camino euleriano!"<<std::endl;
-        }
-        else
-        {
-            std::cout<<"No hay camino euleriano."<<std::endl;
-        }
+        if(evenOdd.second==2){std::cout<<"Hay un camino euleriano!"<<std::endl;}
+        else{std::cout<<"No hay camino euleriano."<<std::endl;}
     }
     if(map.get_num_nodes()==numRooms){std::cout<<"Numero de Cuartos Correcto!"<<std::endl;}
     else{std::cout<<"Mapa incompleto."<<std::endl;}
+    printLastGraph();
 }
 
-void MyGraph::printWrittenGraph()
+void MyGraph::printLastGraph()
 {
     map.for_each_node([&](Designar::Graph<Room>::Node* room)
     {
-        std::cout<<"Num of Room: "<<room->get_info().getIndex();
+        std::cout<<"Num of Room: "<<*room->get_info().getIndex();
         for(auto arc : map.adjacent_arcs(room))
         {
             if(arc->get_src_node()->get_info().getIndex()!=room->get_info().getIndex())
             {
-                std::cout<<" "<<arc->get_tgt_node()->get_info().getIndex()<<" -> "<<arc->get_src_node()->get_info().getIndex();
+                std::cout<<" "<<*arc->get_tgt_node()->get_info().getIndex()<<" -> "<<*arc->get_src_node()->get_info().getIndex();
             }
             else
             {
-                std::cout<<" "<<arc->get_src_node()->get_info().getIndex()<<" -> "<<arc->get_tgt_node()->get_info().getIndex();
+                std::cout<<" "<<*arc->get_src_node()->get_info().getIndex()<<" -> "<<*arc->get_tgt_node()->get_info().getIndex();
             }
         }
         if(room->get_num_arcs()%2==0){std::cout<<"  Grado Par";}
@@ -240,6 +290,6 @@ void MyGraph::reset()
     map.clear();
     roomsReference.clear();
     while(!queue.empty()){queue.pop();}
-    even_odd = {0,0};
+    evenOdd = {numRooms,0};
     matrix.clear();
 }

@@ -147,11 +147,11 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
         SDL_Rect destino;
         SDL_Surface* surface = IMG_Load("assets/screenshots/tileSet.png");
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer.get(),surface);
-        int dimensiones = -1;
-        auto pos = level.shapesToDrawMap(800,800,dimensiones);
+        level.setShapesMap(800,800);
         SDL_Event event;
         bool running = true;
         SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 255);
+        level.printMapConsole();
         while (running) 
         {
             while (SDL_PollEvent(&event)) 
@@ -160,36 +160,26 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
                 {
                     running = false;
                 }
+                else if (event.type == SDL_KEYDOWN) 
+                {
+                    switch (event.key.keysym.sym) 
+                    {
+                        case SDLK_ESCAPE: running = false; break;
+                    }
+                }
             }
 
             SDL_RenderClear(renderer.get());
-            for(auto xd : pos)
+            for(auto xd : *level.getShapesMap())
             {
-                if(xd.second==0)
-                {
-                    origen = {832,207,32,32};
-                    destino.h = destino.w = dimensiones;
-                }
-                else if(xd.second==1)
-                {
-                    origen = {486,202,80,80};
-                    destino.h = destino.w = dimensiones;
-                }
-                else if(xd.second==2)
-                {
-                    origen = {832,416,64,64};
-                    destino.h = dimensiones/2;
-                    destino.w = dimensiones;
-                }
-                else if(xd.second==3)
-                {
-                    origen = {832,416,64,64};
-                    destino.h = dimensiones;
-                    destino.w = dimensiones/2;
-                }
-                    destino.x = xd.first.first;
-                    destino.y = xd.first.second;
-                    SDL_RenderCopy(renderer.get(),texture,&origen,&destino);
+                if(std::get<4>(xd)==0){origen = {832,207,32,32};}
+                else if(std::get<4>(xd)==1){origen = {486,202,80,80};}
+                else if(std::get<4>(xd)==2){origen = {832,416,64,64};}
+                destino.x = std::get<0>(xd);
+                destino.y = std::get<1>(xd);
+                destino.w = std::get<2>(xd);
+                destino.h = std::get<3>(xd);
+                SDL_RenderCopy(renderer.get(),texture,&origen,&destino);
             }  
             SDL_RenderPresent(renderer.get());
         }

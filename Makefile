@@ -8,6 +8,11 @@ BUILD_DIR = build
 LIB_SRC_DIR = lib/src
 TEST_BIN_DIR = test/bin
 TEST_SRC_DIR = test/src
+DSG = external/DeSiGNAR-2.0.0
+
+# Directorio de la biblioteca DeSiGNAR (después de la compilación)
+DESIGNAR_LIB_DIR = $(DSG)/build
+DESIGNAR_LIB_NAME = Designar
 
 # Archivos fuente
 MAIN_SRC = main.cpp

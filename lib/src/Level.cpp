@@ -22,6 +22,8 @@ const std::vector<std::vector<int>>* Level::getMatrix(){return &matrix;}
 
 const std::vector<Designar::Graph<Room>::Node*>* Level::getRoomsReference(){return &roomsReference;}
 
+const std::vector<shape>* Level::getShapesMap(){return &shapes;}
+
 void Level::setMap(const Designar::Graph<Room>& value){map = value;}
 
 void Level::setShortestPath(const Designar::Graph<Room>& value){shortestPath = value;}
@@ -43,6 +45,7 @@ void Level::printMapConsole()
         {
             if(matrix[i][j]==-1){std::cout<<"*";}
             else{std::cout<<matrix[i][j];}
+            std::cout<<" ";
         }
         std::cout<<std::endl;
     }
@@ -91,56 +94,58 @@ void Level::reduceMatrix()
     matrix = reduced;
 }
 
-std::vector<std::pair<std::pair<int,int>,int>> Level::shapesToDrawMap(const int& width, const int& height, int& square)
+void Level::setShapesMap(const int& width, const int& height)
 {
-    std::vector<std::pair<std::pair<int,int>,int>> positions; //pair.second tipo de figura 0:cuarto, 1:cuarto-portal, 2:pasillo horizontal, 3:pasillo vertical
+    std::vector<shape> result;
     if(!matrix.empty())
     {
-        const double resizeSquare = 1.5; //con 1.25 parece quedar grande
-        const int cellWidth = width/(matrix[0].size()+1);
-        const int cellHeight = height/(matrix.size()+1);
-        square = cellWidth;
-        if(rowsColumns.first!=1&&rowsColumns.second!=1){square = square*resizeSquare;}
-        int Y = cellHeight;
-        for(int i=0; i<matrix.size(); ++i)
+        const int cellWidth = width/(rowsColumns.second+1);
+        const int cellHeight = height/(rowsColumns.first+1);
+        int square = -1;
+        if(cellHeight>cellWidth){square = cellWidth;}
+        else{square = cellHeight;}
+        int dif = square/4;
+        int X = cellWidth-square/2-dif/2;
+        for(int i=0; i<matrix[0].size(); ++i)
         {
-            int X = cellWidth;
-            for(int j=0; j<matrix[0].size(); ++j)
+            int Y = cellHeight-square/2-dif/2;
+            int memory = result.size();
+            for(int j=0; j<matrix.size(); ++j)
             {
-                if(matrix[i][j]!=-1)
+                if(matrix[j][i]!=-1)
                 {
-                    positions.push_back({{X-(square/2),Y-(square/2)},0});
-                    if(matrix[i][j]>-1)
+                    result.push_back(std::make_tuple(X+dif,Y+dif,square-dif,square-dif,0));
+                    if(matrix[j][i]>-1)
                     {
-                        std::vector<bool> paths = *roomsReference[matrix[i][j]-1]->get_info().getPaths();
-                        for(int i=0; i<paths.size(); ++i)
+                        std::vector<bool> paths = *roomsReference[matrix[j][i]-1]->get_info().getPaths();
+                        for(int k=0; k<paths.size(); ++k)
                         {
-                            if(paths[i])
+                            if(paths[k])
                             {
-                                switch (i)
+                                switch (k)
                                 {
-                                    case 0:
-                                        positions.push_back({{X-square,Y-(square/4)},2});
+                                    case 0: //Izquierda
+                                        result.push_back(std::make_tuple(X,Y+square/2,dif,dif,2));
                                     break;
-                                    case 1:
-                                        positions.push_back({{X-(square/4),Y-square},3});
+                                    case 1: //Arriba
+                                        result.push_back(std::make_tuple(X+square/2,Y,dif,dif,2));
                                     break;
-                                    case 2:
-                                        positions.push_back({{X,Y-(square/4)},2});
+                                    case 2: //Derecha
+                                        result.push_back(std::make_tuple(X+square,Y+square/2,dif,dif,2));
                                     break;
-                                    case 3:
-                                        positions.push_back({{X-(square/4),Y},3});
+                                    case 3: //Abajo
+                                        result.push_back(std::make_tuple(X+square/2,Y+square,dif,dif,2));
                                     break;
                                 }
                             }
                         }
                     }
-                    else{positions.push_back({{X-(square/2),Y-(square/2)},1});}
+                    else{result.push_back(std::make_tuple(X+dif,Y+dif,square-dif,square-dif,1));}
                 }
-                X += square;
+                Y += square;
             }
-            Y += square;
+            if(memory!=result.size()){X += square;}
         }
     }
-    return positions;
+    shapes = result;
 }

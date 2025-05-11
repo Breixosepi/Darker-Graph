@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Room.hpp>
+using shape = std::tuple<int,int,int,int,int>; //Get<0>=X, Get<1>=Y, Get<2>=Width, Get<3>=Height, Get<4>=typeShape 
 
 class Level
 {
@@ -15,16 +16,17 @@ class Level
         const std::vector<std::vector<int>>* getMatrix();
         const std::pair<int,int>* getReducedMatrix();
         const std::vector<Designar::Graph<Room>::Node*>* getRoomsReference();
+        const std::vector<shape>* getShapesMap();
 
         void setMap(const Designar::Graph<Room>& value);
         void setShortestPath(const Designar::Graph<Room>& value);
         void setEulerianPath(const Designar::Graph<Room>& value);
         void setMatrix(const std::vector<std::vector<int>>& value);
+        void setShapesMap(const int& width, const int& height);
 
         void printMapConsole();
         void getRowsColumns();
         void reduceMatrix();
-        std::vector<std::pair<std::pair<int,int>,int>> shapesToDrawMap(const int& width, const int& height, int& square);
     
     private:
         Designar::Graph<Room> map;
@@ -33,4 +35,5 @@ class Level
         std::vector<std::vector<int>> matrix;
         std::pair<int,int> rowsColumns;
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
+        std::vector<shape> shapes;
 };
