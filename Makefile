@@ -33,7 +33,7 @@ LDFLAGS += $(SDL_LIBS)
 # Reglas principales
 all: $(MAIN_TARGET) $(TEST_TARGETS)
 
-$(MAIN_TARGET): $(BUILD_DIR)/$(notdir $(MAIN_SRC:.cpp=.o)) $(LIB_OBJECTS)
+$(MAIN_TARGET): $(BUILD_DIR)/$(notdir $(MAIN_SRC:.cpp=.o)) $(LIB_OBJECTS) $(DESIGNAR_LIB_DIR)/lib$(DESIGNAR_LIB_NAME).a
 	@mkdir -p $(@D)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
