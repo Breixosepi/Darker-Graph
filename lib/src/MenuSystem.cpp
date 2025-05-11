@@ -1,7 +1,7 @@
 #include "MenuSystem.hpp"
 #include <iostream>
 
-MenuSystem::MenuSystem(const RendererPtr& render, const FontPtr& fonts) : renderer(render.get()), font(fonts.get()),head(nullptr),tail(nullptr),current(nullptr)
+MenuSystem::MenuSystem(const RendererPtr& render, const FontPtr& fonts, const WindowPtr& wind) : renderer(render.get()), font(fonts.get()),head(nullptr),tail(nullptr),current(nullptr),window(wind.get())
 {
 
 }
@@ -135,23 +135,27 @@ void MenuSystem::executeCurrent()
     }
 }
 
-std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& renderer, const FontPtr& font) 
+std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& renderer, const FontPtr& font, const WindowPtr& wind) 
 {
-    std::unique_ptr<MenuSystem> menu = std::make_unique<MenuSystem>(renderer, font);
+    std::unique_ptr<MenuSystem> menu = std::make_unique<MenuSystem>(renderer, font, wind);
 
     menu->addWidget("start", "Iniciar Juego", [&]()
     {
+        int width, height;
+        SDL_GetWindowSize(wind.get(),&width,&height);
+        SDL_SetRenderDrawColor(renderer.get(), 20, 20, 20, 255);
         MyGraph creator;
         Level level(creator.createMap(false));
-        SDL_Rect origen;
-        SDL_Rect destino;
-        SDL_Surface* surface = IMG_Load("assets/screenshots/tileSet.png");
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer.get(),surface);
-        level.setShapesMap(800,800);
+        level.setShapesMap(width,height);
+        SDL_Rect originTileSet;
+        SDL_Rect destTileSet;
+        SDL_Rect originBackground = {55,80,260,195};
+        SDL_Surface* surfTileSet = IMG_Load("assets/screenshots/tileSet.png");
+        SDL_Texture* textTileSet = SDL_CreateTextureFromSurface(renderer.get(),surfTileSet);
+        SDL_Surface* surfBackground = IMG_Load("assets/screenshots/perg.png");
+        SDL_Texture* textBackground = SDL_CreateTextureFromSurface(renderer.get(),surfBackground);
         SDL_Event event;
         bool running = true;
-        SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 255);
-        level.printMapConsole();
         while (running) 
         {
             while (SDL_PollEvent(&event)) 
@@ -167,20 +171,28 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
                         case SDLK_ESCAPE: running = false; break;
                     }
                 }
+                else if(event.type == SDL_WINDOWEVENT)
+                {
+                    if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
+                    {
+                        SDL_GetWindowSize(wind.get(), &width, &height);
+                        level.setShapesMap(width,height);
+                    } 
+                }  
             }
-
             SDL_RenderClear(renderer.get());
-            for(auto xd : *level.getShapesMap())
+            SDL_RenderCopy(renderer.get(),textBackground,&originBackground,NULL);
+            for(Shape shape : *level.getShapesMap())
             {
-                if(std::get<4>(xd)==0){origen = {832,207,32,32};}
-                else if(std::get<4>(xd)==1){origen = {486,202,80,80};}
-                else if(std::get<4>(xd)==2){origen = {832,416,64,64};}
-                destino.x = std::get<0>(xd);
-                destino.y = std::get<1>(xd);
-                destino.w = std::get<2>(xd);
-                destino.h = std::get<3>(xd);
-                SDL_RenderCopy(renderer.get(),texture,&origen,&destino);
-            }  
+                if(std::get<4>(shape)==0){originTileSet = {832,208,32,32};}
+                else if(std::get<4>(shape)==1){originTileSet = {486,202,80,80};}
+                else if(std::get<4>(shape)==2){originTileSet = {832,416,64,64};}
+                destTileSet.x = std::get<0>(shape);
+                destTileSet.y = std::get<1>(shape);
+                destTileSet.w = std::get<2>(shape);
+                destTileSet.h = std::get<3>(shape);
+                SDL_RenderCopy(renderer.get(),textTileSet,&originTileSet,&destTileSet);
+            }
             SDL_RenderPresent(renderer.get());
         }
     });

@@ -2,8 +2,7 @@
 
 Game::Game() : isRunning(false)
 {
-    //levels.push_back(creator.createMap(false));
-    //levels[0].printMapConsole();
+
 }
 Game::~Game()
 {
@@ -42,8 +41,7 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
         TTF_SetFontOutline(font.get(), 0);  
         TTF_SetFontHinting(font.get(), TTF_HINTING_LIGHT);
 
-
-        mainMenu = MenuSystem::createMainMenu(renderer, font);
+        mainMenu = MenuSystem::createMainMenu(renderer, font, window);
 
         SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 0);
         isRunning = true;
@@ -53,7 +51,7 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
         isRunning = false;
     }
 
-    if((IMG_Init(IMG_INIT_PNG))&IMG_INIT_PNG)
+    if((IMG_Init({IMG_INIT_PNG|IMG_INIT_JPG}))&IMG_INIT_PNG)
     {
         surfaceBackground = IMG_Load("assets/screenshots/background-title.png");
         if(surfaceBackground)
@@ -73,8 +71,6 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
     {
         isRunning = false;
     }
-
-    //SDL_GetWindowSize(window,&windowWidth,&windowHeight);
 }
 void Game::handleEvents() 
 {
@@ -89,12 +85,12 @@ void Game::handleEvents()
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                 {
-                    int newWidth = std::max(event.window.data1, 800);
-                    int newHeight = std::max(event.window.data2, 800);
+                    //int newWidth = std::max(event.window.data1, 800);
+                    //int newHeight = std::max(event.window.data2, 800);
                     
-                    if (event.window.data1 < 800 || event.window.data2 < 800) 
+                    if (event.window.data1 > 800 && event.window.data2 > 800) 
                     {
-                        SDL_SetWindowSize(window.get(), newWidth, newHeight);
+                        SDL_SetWindowSize(window.get(), event.window.data1, event.window.data2);
                     }
                 }
                 break;

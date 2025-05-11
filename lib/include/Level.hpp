@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Room.hpp>
-using shape = std::tuple<int,int,int,int,int>; //Get<0>=X, Get<1>=Y, Get<2>=Width, Get<3>=Height, Get<4>=typeShape 
+using Shape = std::tuple<int,int,int,int,int>; //Get<0>=X, Get<1>=Y, Get<2>=Width, Get<3>=Height, Get<4>=typeShape 
 
 class Level
 {
@@ -16,7 +16,7 @@ class Level
         const std::vector<std::vector<int>>* getMatrix();
         const std::pair<int,int>* getReducedMatrix();
         const std::vector<Designar::Graph<Room>::Node*>* getRoomsReference();
-        const std::vector<shape>* getShapesMap();
+        const std::vector<Shape>* getShapesMap();
 
         void setMap(const Designar::Graph<Room>& value);
         void setShortestPath(const Designar::Graph<Room>& value);
@@ -35,5 +35,5 @@ class Level
         std::vector<std::vector<int>> matrix;
         std::pair<int,int> rowsColumns;
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
-        std::vector<shape> shapes;
+        std::vector<Shape> shapes;
 };

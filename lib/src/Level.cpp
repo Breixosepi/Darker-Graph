@@ -22,7 +22,7 @@ const std::vector<std::vector<int>>* Level::getMatrix(){return &matrix;}
 
 const std::vector<Designar::Graph<Room>::Node*>* Level::getRoomsReference(){return &roomsReference;}
 
-const std::vector<shape>* Level::getShapesMap(){return &shapes;}
+const std::vector<Shape>* Level::getShapesMap(){return &shapes;}
 
 void Level::setMap(const Designar::Graph<Room>& value){map = value;}
 
@@ -96,7 +96,7 @@ void Level::reduceMatrix()
 
 void Level::setShapesMap(const int& width, const int& height)
 {
-    std::vector<shape> result;
+    std::vector<Shape> result;
     if(!matrix.empty())
     {
         const int cellWidth = width/(rowsColumns.second+1);
