@@ -6,7 +6,8 @@ Level::Level(std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>:
 {
     map = std::get<0>(tuple);
     roomsReference = std::get<1>(tuple);
-    rowsColumns = {0,0};
+    rows = 0;
+    columns = 0;
     setMatrix(std::get<2>(tuple));
 }
 
@@ -57,18 +58,18 @@ void Level::getRowsColumns()
     {
         for(int i=0; i<matrix.size(); ++i)
         {
-            std::pair<int,int> memory = rowsColumns;
+            std::pair<int,int> memory = {rows,columns};
             for(int j=0; j<matrix[0].size(); ++j)
             {
-                if(matrix[i][j]!=-1&&memory.first==rowsColumns.first)
+                if(matrix[i][j]!=-1&&memory.first==rows)
                 {
-                    ++rowsColumns.first;
+                    ++rows;
                 }
-                if(matrix[j][i]!=-1&&memory.second==rowsColumns.second)
+                if(matrix[j][i]!=-1&&memory.second==columns)
                 {
-                    ++rowsColumns.second;
+                    ++columns;
                 }
-                if(memory.first!=rowsColumns.first&&memory.second!=rowsColumns.second){break;}
+                if(memory.first!=rows&&memory.second!=columns){break;}
             }
         }
     }
@@ -99,22 +100,19 @@ void Level::setShapesMap(const int& width, const int& height)
     std::vector<Shape> result;
     if(!matrix.empty())
     {
-        const int cellWidth = width/(rowsColumns.second+1);
-        const int cellHeight = height/(rowsColumns.first+1);
-        int square = -1;
-        if(cellHeight>cellWidth){square = cellWidth;}
-        else{square = cellHeight;}
-        int dif = square/4;
-        int X = cellWidth-square/2-dif/2;
+        double square = std::min(width/(columns+1),height/(rows+1)); //se escoge la celda mas pequena
+        double shrink = square/4; //se encoge la celda para dejar espacio para los pasillos
+        double tile = square-shrink;
+        double X = (width-square*columns)/2.0 - shrink/2;
         for(int i=0; i<matrix[0].size(); ++i)
         {
-            int Y = cellHeight-square/2-dif/2;
+            double Y = (height-square*rows)/2.0 - shrink/2;
             int memory = result.size();
             for(int j=0; j<matrix.size(); ++j)
             {
                 if(matrix[j][i]!=-1)
                 {
-                    result.push_back(std::make_tuple(X+dif,Y+dif,square-dif,square-dif,0));
+                    result.push_back(std::make_tuple(X+shrink,Y+shrink,tile,tile,0));
                     if(matrix[j][i]>-1)
                     {
                         std::vector<bool> paths = *roomsReference[matrix[j][i]-1]->get_info().getPaths();
@@ -125,22 +123,22 @@ void Level::setShapesMap(const int& width, const int& height)
                                 switch (k)
                                 {
                                     case 0: //Izquierda
-                                        result.push_back(std::make_tuple(X,Y+square/2,dif,dif,2));
+                                        result.push_back(std::make_tuple(X,Y+square/2,shrink,shrink,2));
                                     break;
                                     case 1: //Arriba
-                                        result.push_back(std::make_tuple(X+square/2,Y,dif,dif,2));
+                                        result.push_back(std::make_tuple(X+square/2,Y,shrink,shrink,2));
                                     break;
                                     case 2: //Derecha
-                                        result.push_back(std::make_tuple(X+square,Y+square/2,dif,dif,2));
+                                        result.push_back(std::make_tuple(X+square,Y+square/2,shrink,shrink,2));
                                     break;
                                     case 3: //Abajo
-                                        result.push_back(std::make_tuple(X+square/2,Y+square,dif,dif,2));
+                                        result.push_back(std::make_tuple(X+square/2,Y+square,shrink,shrink,2));
                                     break;
                                 }
                             }
                         }
                     }
-                    else{result.push_back(std::make_tuple(X+dif,Y+dif,square-dif,square-dif,1));}
+                    else{result.push_back(std::make_tuple(X+shrink,Y+shrink,tile,tile,1));}
                 }
                 Y += square;
             }

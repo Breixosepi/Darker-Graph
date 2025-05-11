@@ -33,7 +33,8 @@ class Level
         Designar::Graph<Room> shortestPath;
         Designar::Graph<Room> eulerianPath;
         std::vector<std::vector<int>> matrix;
-        std::pair<int,int> rowsColumns;
+        double rows;
+        double columns;
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
         std::vector<Shape> shapes;
 };
