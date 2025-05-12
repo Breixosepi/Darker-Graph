@@ -179,7 +179,7 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
                     } 
                 }  
             }
-            level.DrawMap(renderer.get());
+            level.drawRoom(0,width,height,renderer.get());     
         }
     });
 

@@ -190,7 +190,7 @@ void Level::reduceMatrix()
     matrix = reduced;
 }
 
-void Level::DrawMap(SDL_Renderer* renderer)
+void Level::drawMap(SDL_Renderer* renderer)
 {
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
@@ -203,5 +203,73 @@ void Level::DrawMap(SDL_Renderer* renderer)
         destTileSet.w = destTileSet.h = dimensionShapes.at(std::get<2>(shape));
         SDL_RenderCopy(renderer,textTileSet,&originShapes.at(std::get<2>(shape)),&destTileSet);
     }
+    SDL_RenderPresent(renderer);
+}
+
+void Level::drawRoom(const int& index, const int& width, const int& height, SDL_Renderer* renderer)
+{
+    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
+    SDL_Rect destTileSet;
+    SDL_Rect originWall = {304,400,64,48};
+    SDL_Rect originColumn = {640,112,16,80};
+    double div = 4.0;
+    double cell = std::min(width/div,height/div);
+    double shrink = cell/6.0;
+    double square = cell - shrink;
+    int countColumns = 0;
+    std::queue<SDL_Rect> queue;
+    int Y = (height-cell*div)/2.0 + shrink*div/2;
+    destTileSet.w = destTileSet.h = square;
+    for(int i=0; i<div; ++i)
+    {
+        int X = (width-cell*div)/2.0 + shrink*div/2;
+        for(int j=0; j<div; ++j)
+        {
+            destTileSet.x = X;
+            destTileSet.y = Y;
+            SDL_RenderCopy(renderer,textTileSet,&originShapes.at(0),&destTileSet);
+            if(i==0 || i==div-1)
+            {
+                destTileSet.y += (i*2)*shrink - destTileSet.h;
+                SDL_RenderCopyEx(renderer,textTileSet,&originWall,&destTileSet,0,NULL,SDL_FLIP_NONE);
+                if(j==0 || j==div-1)
+                {
+                    destTileSet.w = shrink*2;
+                    destTileSet.x += (j*2-1)*shrink - destTileSet.w/4;
+                    if(countColumns<2)
+                    { 
+                        SDL_RenderCopyEx(renderer,textTileSet,&originColumn,&destTileSet,0,NULL,SDL_FLIP_NONE);
+                        ++countColumns;
+                    }
+                    else
+                    {
+                        queue.push(destTileSet);
+                    }
+                    destTileSet.w = square;
+                    destTileSet.x = X;
+                }
+                destTileSet.y = Y;    
+            }
+            if(j==0 || j==div-1)
+            {
+                destTileSet.x += (j*2-1)*shrink; 
+                destTileSet.w = shrink;
+                destTileSet.y -= shrink;
+                SDL_RenderCopyEx(renderer,textTileSet,&originWall,&destTileSet,0,NULL,SDL_FLIP_NONE); 
+                destTileSet.x = X; 
+                destTileSet.w = square;
+                destTileSet.y = Y;
+            }
+            X+=square;
+        }
+        Y+=square;
+    }
+    while(!queue.empty())
+    {
+        destTileSet = queue.front();
+        queue.pop();
+        SDL_RenderCopyEx(renderer,textTileSet,&originColumn,&destTileSet,0,NULL,SDL_FLIP_NONE);
+    } 
     SDL_RenderPresent(renderer);
 }

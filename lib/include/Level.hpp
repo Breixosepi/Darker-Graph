@@ -28,7 +28,8 @@ class Level
         void setOriginBackground(const int& x, const int& y, const int& w, const int& h);
 
         void printMapConsole();
-        void DrawMap(SDL_Renderer* renderer);
+        void drawMap(SDL_Renderer* renderer);
+        void drawRoom(const int& index, const int& width, const int& height, SDL_Renderer* renderer);
     
     private:
         Designar::Graph<Room> map;
