@@ -4,6 +4,8 @@
 #include <SDL2/SDL_image.h>
 #include <memory>
 #include <vector>
+#include <stdexcept>
+
 
 
 struct SDL_Deleter 

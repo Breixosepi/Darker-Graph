@@ -1,5 +1,6 @@
 #include "MenuSystem.hpp"
 #include <iostream>
+#include <Player.hpp>
 
 MenuSystem::MenuSystem(const RendererPtr& render, const FontPtr& fonts, const WindowPtr& wind) : renderer(render.get()), font(fonts.get()),head(nullptr),tail(nullptr),current(nullptr),window(wind.get())
 {
@@ -199,41 +200,46 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
 
     static SDL_Rect square = {375, 375, 50, 50}; 
 
-    menu->addWidget("load", "Cargar Partida", [&]() 
+menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]() 
+{
+    SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
+    TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer.get(), playerSurface));
+    SDL_FreeSurface(playerSurface);
+    Player player;
+    player.initAnimation(renderer, playerTexture);
+    player.setPosition(400, 300); 
+    bool running = true;
+    SDL_Event event;
+    Uint32 lastTime = SDL_GetTicks();
+    const Uint8* keyboardState = nullptr;
+
+    while (running) 
     {
-        SDL_Event event;
-        bool running = true;
+        Uint32 currentTime = SDL_GetTicks();
+        float deltaTime = (currentTime - lastTime) / 1000.0f; 
+        lastTime = currentTime;
 
-        while (running) 
+        while (SDL_PollEvent(&event)) 
         {
-            while (SDL_PollEvent(&event)) 
+            player.handleImput(event);
+            if (event.type == SDL_QUIT) 
             {
-                if (event.type == SDL_QUIT) 
-                {
-                    running = false;
-                }
-                else if (event.type == SDL_KEYDOWN) 
-                {
-                    switch (event.key.keysym.sym) 
-                    {
-                        case SDLK_UP: square.y -= 10; break;
-                        case SDLK_DOWN: square.y += 10; break;
-                        case SDLK_LEFT: square.x -= 10; break;
-                        case SDLK_RIGHT: square.x += 10; break;
-                        case SDLK_ESCAPE: running = false; break;
-                    }
-                }
+                running = false;
+                SDL_PushEvent(&event); 
             }
-
-            SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 255);
-            SDL_RenderClear(renderer.get());
-
-            SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 255); 
-            SDL_RenderFillRect(renderer.get(), &square);
-
-            SDL_RenderPresent(renderer.get());
+            else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) 
+            {
+                running = false; 
+            }
         }
-    });
+        player.update(deltaTime);
+        SDL_SetRenderDrawColor(renderer.get(), 30, 30, 50, 255); 
+        SDL_RenderClear(renderer.get());
+        player.renderPlayer(renderer);
+        SDL_RenderPresent(renderer.get());
+        SDL_Delay(16); 
+    }
+});
     
     menu->addWidget("options", "Opciones", []() 
     {
