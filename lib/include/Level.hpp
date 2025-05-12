@@ -1,7 +1,8 @@
 #pragma once
 
 #include <Room.hpp>
-using Shape = std::tuple<int,int,int,int,int>; //Get<0>=X, Get<1>=Y, Get<2>=Width, Get<3>=Height, Get<4>=typeShape 
+#include <unordered_map>
+using PosShape = std::tuple<int,int,int>; //Get<0>=X, Get<1>=Y, Get<2>=typeShape 
 
 class Level
 {
@@ -14,19 +15,20 @@ class Level
         const Designar::Graph<Room>* getShortestPath();
         const Designar::Graph<Room>* getEulerianPath();
         const std::vector<std::vector<int>>* getMatrix();
-        const std::pair<int,int>* getReducedMatrix();
         const std::vector<Designar::Graph<Room>::Node*>* getRoomsReference();
-        const std::vector<Shape>* getShapesMap();
 
         void setMap(const Designar::Graph<Room>& value);
         void setShortestPath(const Designar::Graph<Room>& value);
         void setEulerianPath(const Designar::Graph<Room>& value);
         void setMatrix(const std::vector<std::vector<int>>& value);
         void setShapesMap(const int& width, const int& height);
+        void setTileSet(const char* value, SDL_Renderer* renderer);
+        void insertOriginShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape);
+        void setBackground(const char* value, SDL_Renderer* renderer);
+        void setOriginBackground(const int& x, const int& y, const int& w, const int& h);
 
         void printMapConsole();
-        void getRowsColumns();
-        void reduceMatrix();
+        void DrawMap(SDL_Renderer* renderer);
     
     private:
         Designar::Graph<Room> map;
@@ -36,5 +38,15 @@ class Level
         double rows;
         double columns;
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
-        std::vector<Shape> shapes;
+        SDL_Rect originBackground;
+        std::unordered_map<int,SDL_Rect> originShapes;
+        std::vector<PosShape> posShapes;
+        std::unordered_map<int,int> dimensionShapes;
+        SDL_Surface* surfTileSet;
+        SDL_Texture* textTileSet;
+        SDL_Surface* surfBackground;
+        SDL_Texture* textBackground;
+
+        void getRowsColumns();
+        void reduceMatrix();
 };

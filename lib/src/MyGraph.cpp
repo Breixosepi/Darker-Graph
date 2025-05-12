@@ -2,7 +2,7 @@
 
 MyGraph::MyGraph()
 {
-    numRooms = 8; //Bug a partir de 10
+    numRooms = 5;
     maxGrade = 4;
     probability = 80.0;
     evenOdd = {numRooms,0};
@@ -10,6 +10,8 @@ MyGraph::MyGraph()
 
 MyGraph::~MyGraph(){};
 
+//Devuelve una tupla con: el mapa (Grafo conexo, dirigido y con un camino euleriano como minimo), 
+//un vector con referencia a los nodos y una matriz con las posiciones de las salas y portales.
 std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>::Node*>,std::vector<std::vector<int>>> MyGraph::createMap(const bool& custom)
 {
     if(custom){getData();}
@@ -35,6 +37,7 @@ std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>::Node*>,std::
             generateEvenRooms(room,random,probabilityAdd,chooseSide);
         }
         fixMap(random,chooseSide);
+        ++numRooms;
     }
     return std::make_tuple(map,roomsReference,matrix);
 }
@@ -100,7 +103,7 @@ bool MyGraph::verifyInsert(int& side, std::pair<int,int>& pos)
     std::pair<int,int> aux = pos;
     for(int i=0; i<4; ++i)
     {
-        switch (side)
+        switch (side) 
         {
             case 0: //Izquierda
                 --pos.second;
@@ -118,7 +121,7 @@ bool MyGraph::verifyInsert(int& side, std::pair<int,int>& pos)
         if(matrix[pos.first][pos.second]==-1){return true;}
         pos = aux;
         ++side;
-        if(side==4){side -= 4;}
+        if(side==4){side -= 4;} //Revisa las posiciones disponibles en sentido de las agujas del reloj
     }
     return false;
 }
@@ -168,7 +171,6 @@ bool MyGraph::verifyPath(int& side, std::pair<int,int>& pos)
 
 void MyGraph::generateEntry(std::mt19937 random, std::uniform_real_distribution<double> add, std::uniform_int_distribution<int> side)
 {
-    std::cout<<"Generando entrada..."<<std::endl;
     Designar::Graph<Room>::Node* room = helperInsert({numRooms-1,numRooms-1});
     if(maxGrade>0)
     {
@@ -183,17 +185,15 @@ void MyGraph::generateEntry(std::mt19937 random, std::uniform_real_distribution<
             else{break;}
         }
     }
-    std::cout<<"Entrada Generada!"<<std::endl;
 }
 
 void MyGraph::generateEvenRooms(Designar::Graph<Room>::Node*& room, std::mt19937 random, std::uniform_real_distribution<double> add, std::uniform_int_distribution<int> side)
 {
-    std::cout<<"Convirtiendo Cuarto "<<"("<<*room->get_info().getIndex()<<")"<<" en Grado par..."<<std::endl;
     while(room->get_num_arcs()<maxGrade)
     {
         if(room->get_num_arcs()%2!=0) //Grado Impar
         { 
-            insertRoom(room,side(random));
+            insertRoom(room,side(random)); //Asegura que todos los Cuartos sean pares (excepto la entrada y la salida)
         }
         else //Grado Par
         {
@@ -204,7 +204,6 @@ void MyGraph::generateEvenRooms(Designar::Graph<Room>::Node*& room, std::mt19937
             else{break;}
         }  
     }
-    std::cout<<"("<<*room->get_info().getIndex()<<")"<<" es par!"<<std::endl;
 }
 
 bool MyGraph::limitRoom(Designar::Graph<Room>::Node*& room)
@@ -212,12 +211,12 @@ bool MyGraph::limitRoom(Designar::Graph<Room>::Node*& room)
     return map.get_num_nodes()+2<=numRooms && room->get_num_arcs()+2<=maxGrade;
 }
 
+//Termina de conectar los cuartos impares para que entonces el grafo cumpla con las condiciones necesarias
 void MyGraph::fixMap(std::mt19937 random, std::uniform_int_distribution<int> side)
 {
-    if(evenOdd.second==2){std::cout<<"Hay un camino euleriano!"<<std::endl;}
+    if(evenOdd.second==2){std::cout<<"Finish map Creation! eulerian path exist."<<std::endl;}
     else
     {
-        std::cout<<"Corrigiendo grafo..."<<std::endl;
         if(!queue.empty())
         {
             int aux = 0;
@@ -254,12 +253,10 @@ void MyGraph::fixMap(std::mt19937 random, std::uniform_int_distribution<int> sid
                 evenOdd.second -= 2;
             }
         }
-        if(evenOdd.second==2){std::cout<<"Hay un camino euleriano!"<<std::endl;}
-        else{std::cout<<"No hay camino euleriano."<<std::endl;}
+        if(evenOdd.second==2){std::cout<<"Correction Made. Finish map Creation! eulerian path exist."<<std::endl;}
+        else{std::cout<<"Correction Made. Finish map Creation! eulerian path NOT exist."<<std::endl;}
     }
-    if(map.get_num_nodes()==numRooms){std::cout<<"Numero de Cuartos Correcto!"<<std::endl;}
-    else{std::cout<<"Mapa incompleto."<<std::endl;}
-    printLastGraph();
+    std::cout<<"Num of Rooms: "<<map.get_num_nodes()<<std::endl;
 }
 
 void MyGraph::printLastGraph()

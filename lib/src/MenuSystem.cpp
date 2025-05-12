@@ -139,22 +139,20 @@ void MenuSystem::executeCurrent()
 std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& renderer, const FontPtr& font, const WindowPtr& wind) 
 {
     std::unique_ptr<MenuSystem> menu = std::make_unique<MenuSystem>(renderer, font, wind);
-
+    
     menu->addWidget("start", "Iniciar Juego", [&]()
-    {
+    {   
+        MyGraph creator;
         int width, height;
         SDL_GetWindowSize(wind.get(),&width,&height);
-        SDL_SetRenderDrawColor(renderer.get(), 20, 20, 20, 255);
-        MyGraph creator;
         Level level(creator.createMap(false));
         level.setShapesMap(width,height);
-        SDL_Rect originTileSet;
-        SDL_Rect destTileSet;
-        SDL_Rect originBackground = {55,80,260,195};
-        SDL_Surface* surfTileSet = IMG_Load("assets/screenshots/tileSet.png");
-        SDL_Texture* textTileSet = SDL_CreateTextureFromSurface(renderer.get(),surfTileSet);
-        SDL_Surface* surfBackground = IMG_Load("assets/screenshots/perg.png");
-        SDL_Texture* textBackground = SDL_CreateTextureFromSurface(renderer.get(),surfBackground);
+        level.setBackground("assets/screenshots/perg.png",renderer.get());
+        level.setOriginBackground(55,80,260,195);
+        level.setTileSet("assets/screenshots/tileSet.png",renderer.get());
+        level.insertOriginShape(832,208,32,32,0);
+        level.insertOriginShape(486,202,80,80,1);
+        level.insertOriginShape(832,416,64,64,2);
         SDL_Event event;
         bool running = true;
         while (running) 
@@ -181,20 +179,7 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
                     } 
                 }  
             }
-            SDL_RenderClear(renderer.get());
-            SDL_RenderCopy(renderer.get(),textBackground,&originBackground,NULL);
-            for(Shape shape : *level.getShapesMap())
-            {
-                if(std::get<4>(shape)==0){originTileSet = {832,208,32,32};}
-                else if(std::get<4>(shape)==1){originTileSet = {486,202,80,80};}
-                else if(std::get<4>(shape)==2){originTileSet = {832,416,64,64};}
-                destTileSet.x = std::get<0>(shape);
-                destTileSet.y = std::get<1>(shape);
-                destTileSet.w = std::get<2>(shape);
-                destTileSet.h = std::get<3>(shape);
-                SDL_RenderCopy(renderer.get(),textTileSet,&originTileSet,&destTileSet);
-            }
-            SDL_RenderPresent(renderer.get());
+            level.DrawMap(renderer.get());
         }
     });
 

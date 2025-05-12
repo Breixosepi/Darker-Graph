@@ -6,8 +6,6 @@
 #include <vector>
 #include <stdexcept>
 
-
-
 struct SDL_Deleter 
 {
     void operator()(SDL_Window* window) const 
