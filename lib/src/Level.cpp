@@ -208,12 +208,10 @@ void Level::drawMap(SDL_Renderer* renderer)
 
 void Level::drawRoom(const int& index, const int& width, const int& height, SDL_Renderer* renderer)
 {
-    SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
     SDL_Rect destTileSet;
     SDL_Rect originWall = {304,400,64,48};
     SDL_Rect originColumn = {640,112,16,80};
-    double div = 4.0;
+    double div = 6.0;
     double cell = std::min(width/div,height/div);
     double shrink = cell/6.0;
     double square = cell - shrink;
@@ -231,12 +229,14 @@ void Level::drawRoom(const int& index, const int& width, const int& height, SDL_
             SDL_RenderCopy(renderer,textTileSet,&originShapes.at(0),&destTileSet);
             if(i==0 || i==div-1)
             {
-                destTileSet.y += (i*2)*shrink - destTileSet.h;
+                destTileSet.y -= destTileSet.h;
+                if(i==div-1){destTileSet.y += cell;}
                 SDL_RenderCopyEx(renderer,textTileSet,&originWall,&destTileSet,0,NULL,SDL_FLIP_NONE);
                 if(j==0 || j==div-1)
                 {
                     destTileSet.w = shrink*2;
-                    destTileSet.x += (j*2-1)*shrink - destTileSet.w/4;
+                    destTileSet.x -= destTileSet.w - destTileSet.w/4;
+                    if(j==div-1){destTileSet.x += cell;}
                     if(countColumns<2)
                     { 
                         SDL_RenderCopyEx(renderer,textTileSet,&originColumn,&destTileSet,0,NULL,SDL_FLIP_NONE);
@@ -253,7 +253,8 @@ void Level::drawRoom(const int& index, const int& width, const int& height, SDL_
             }
             if(j==0 || j==div-1)
             {
-                destTileSet.x += (j*2-1)*shrink; 
+                destTileSet.x -= shrink;
+                if(j==div-1){destTileSet.x += cell;}
                 destTileSet.w = shrink;
                 destTileSet.y -= shrink;
                 SDL_RenderCopyEx(renderer,textTileSet,&originWall,&destTileSet,0,NULL,SDL_FLIP_NONE); 
@@ -271,5 +272,4 @@ void Level::drawRoom(const int& index, const int& width, const int& height, SDL_
         queue.pop();
         SDL_RenderCopyEx(renderer,textTileSet,&originColumn,&destTileSet,0,NULL,SDL_FLIP_NONE);
     } 
-    SDL_RenderPresent(renderer);
 }

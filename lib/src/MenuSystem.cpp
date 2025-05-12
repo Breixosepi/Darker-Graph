@@ -179,7 +179,7 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
                     } 
                 }  
             }
-            level.drawRoom(0,width,height,renderer.get());     
+            level.drawMap(renderer.get());    
         }
     });
 
@@ -187,6 +187,18 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
 
 menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]() 
 {
+    MyGraph creator;
+    int width, height;
+    SDL_GetWindowSize(wind.get(),&width,&height);
+    Level level(creator.createMap(false));
+    level.setShapesMap(width,height);
+    level.setBackground("assets/screenshots/perg.png",renderer.get());
+    level.setOriginBackground(55,80,260,195);
+    level.setTileSet("assets/screenshots/tileSet.png",renderer.get());
+    level.insertOriginShape(832,208,32,32,0);
+    level.insertOriginShape(486,202,80,80,1);
+    level.insertOriginShape(832,416,64,64,2);
+
     SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
     TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer.get(), playerSurface));
     SDL_FreeSurface(playerSurface);
@@ -220,6 +232,7 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
         player.update(deltaTime);
         SDL_SetRenderDrawColor(renderer.get(), 30, 30, 50, 255); 
         SDL_RenderClear(renderer.get());
+        level.drawRoom(0,width,height,renderer.get());
         player.renderPlayer(renderer);
         SDL_RenderPresent(renderer.get());
         SDL_Delay(16); 
