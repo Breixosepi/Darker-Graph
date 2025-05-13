@@ -189,9 +189,11 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
 {
     MyGraph creator;
     int width, height;
+    double NUMERODEBALDOSAS = 4.0;
     SDL_GetWindowSize(wind.get(),&width,&height);
     Level level(creator.createMap(false));
     level.setShapesMap(width,height);
+    level.setShapesRoom(0,width,height,NUMERODEBALDOSAS,false);
     level.setBackground("assets/screenshots/perg.png",renderer.get());
     level.setOriginBackground(55,80,260,195);
     level.setTileSet("assets/screenshots/tileSet.png",renderer.get());
@@ -199,7 +201,8 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
     level.insertOriginShape(486,202,80,80,1);
     level.insertOriginShape(832,416,64,64,2);
     level.insertOriginShape(304,400,64,48,3);
-    level.insertOriginShape(640,112,16,80,4);
+    level.insertOriginShape(304,400,64,48,4);
+    level.insertOriginShape(640,112,16,80,5);
 
     SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
     TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer.get(), playerSurface));
@@ -230,12 +233,21 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
             {
                 running = false; 
             }
+            else if(event.type == SDL_WINDOWEVENT)
+            {
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
+                {
+                    SDL_GetWindowSize(wind.get(), &width, &height);
+                    level.setShapesRoom(0,width,height,NUMERODEBALDOSAS,false);
+                } 
+            }  
         }
         player.update(deltaTime);
         SDL_SetRenderDrawColor(renderer.get(), 30, 30, 50, 255); 
         SDL_RenderClear(renderer.get());
-        level.drawRoom(0,width,height,5.0,renderer.get(),false);
+        level.drawRoom(renderer.get());
         player.renderPlayer(renderer);
+        level.drawRoomLastFrame(renderer.get());
         SDL_RenderPresent(renderer.get());
         SDL_Delay(16); 
     }

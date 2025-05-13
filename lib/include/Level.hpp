@@ -22,14 +22,17 @@ class Level
         void setEulerianPath(const Designar::Graph<Room>& value);
         void setMatrix(const std::vector<std::vector<int>>& value);
         void setShapesMap(const int& width, const int& height);
+        void setShapesRoom(const int& index, const int& width, const int& height, const double& div, const bool& centered);
         void setTileSet(const char* value, SDL_Renderer* renderer);
         void insertOriginShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape);
         void setBackground(const char* value, SDL_Renderer* renderer);
         void setOriginBackground(const int& x, const int& y, const int& w, const int& h);
 
         void printMapConsole();
+        void draw(const std::vector<PosShape>& shapes, const std::unordered_map<int,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);
         void drawMap(SDL_Renderer* renderer);
-        void drawRoom(const int& index, const int& width, const int& height, const double& div, SDL_Renderer* renderer, const bool& centered);
+        void drawRoom(SDL_Renderer* renderer);
+        void drawRoomLastFrame(SDL_Renderer* renderer);
     
     private:
         Designar::Graph<Room> map;
@@ -40,10 +43,13 @@ class Level
         double columns;
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
         SDL_Rect originBackground;
-        //0:Tile, 1:Portal, 2:Path, 3:Wall, 4:Column
+        //0:Tile, 1:Portal, 2:Path, 3:WallHorizontal, 4:WallVertical, 5:Column
         std::unordered_map<int,SDL_Rect> originShapes;
-        std::vector<PosShape> posShapes;
-        std::unordered_map<int,int> dimensionShapes;
+        std::vector<PosShape> shapesMap;
+        std::vector<PosShape> shapesRoom;
+        std::vector<PosShape> lowerFrameRoom;
+        std::unordered_map<int,std::pair<int,int>> dimensionsMap;
+        std::unordered_map<int,std::pair<int,int>> dimensionsRoom;
         SDL_Surface* surfTileSet;
         SDL_Texture* textTileSet;
         SDL_Surface* surfBackground;
