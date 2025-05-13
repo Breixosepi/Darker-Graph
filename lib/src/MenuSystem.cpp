@@ -198,6 +198,8 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
     level.insertOriginShape(832,208,32,32,0);
     level.insertOriginShape(486,202,80,80,1);
     level.insertOriginShape(832,416,64,64,2);
+    level.insertOriginShape(304,400,64,48,3);
+    level.insertOriginShape(640,112,16,80,4);
 
     SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
     TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer.get(), playerSurface));
@@ -232,7 +234,7 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
         player.update(deltaTime);
         SDL_SetRenderDrawColor(renderer.get(), 30, 30, 50, 255); 
         SDL_RenderClear(renderer.get());
-        level.drawRoom(0,width,height,renderer.get());
+        level.drawRoom(0,width,height,5.0,renderer.get(),false);
         player.renderPlayer(renderer);
         SDL_RenderPresent(renderer.get());
         SDL_Delay(16); 

@@ -206,22 +206,22 @@ void Level::drawMap(SDL_Renderer* renderer)
     SDL_RenderPresent(renderer);
 }
 
-void Level::drawRoom(const int& index, const int& width, const int& height, SDL_Renderer* renderer)
+void Level::drawRoom(const int& index, const int& width, const int& height, const double& div, SDL_Renderer* renderer, const bool& centered)
 {
     SDL_Rect destTileSet;
-    SDL_Rect originWall = {304,400,64,48};
-    SDL_Rect originColumn = {640,112,16,80};
-    double div = 6.0;
-    double cell = std::min(width/div,height/div);
-    double shrink = cell/6.0;
-    double square = cell - shrink;
-    int countColumns = 0;
+    double cellWidth = width/div;
+    double cellHeight = height/div;
+    if(centered){cellHeight = cellWidth = std::min(cellHeight,cellWidth);}
+    double shrinkX = cellWidth/6.0;
+    double shrinkY = cellHeight/2.0;
     std::queue<SDL_Rect> queue;
-    int Y = (height-cell*div)/2.0 + shrink*div/2;
-    destTileSet.w = destTileSet.h = square;
+    int countColumns = 0;
+    double widthTile = destTileSet.w = cellWidth-shrinkX/div;
+    destTileSet.h = cellHeight-shrinkY*2/div;
+    double Y = destTileSet.h + (height-cellHeight*div)/2;
     for(int i=0; i<div; ++i)
     {
-        int X = (width-cell*div)/2.0 + shrink*div/2;
+        double X = shrinkX + (width-cellWidth*div)/2;
         for(int j=0; j<div; ++j)
         {
             destTileSet.x = X;
@@ -229,47 +229,47 @@ void Level::drawRoom(const int& index, const int& width, const int& height, SDL_
             SDL_RenderCopy(renderer,textTileSet,&originShapes.at(0),&destTileSet);
             if(i==0 || i==div-1)
             {
-                destTileSet.y -= destTileSet.h;
-                if(i==div-1){destTileSet.y += cell;}
-                SDL_RenderCopyEx(renderer,textTileSet,&originWall,&destTileSet,0,NULL,SDL_FLIP_NONE);
-                if(j==0 || j==div-1)
+                destTileSet.y -= destTileSet.h; //Paredes en horizontal (altas)
+                if(i==div-1){destTileSet.y += cellHeight;}
+                SDL_RenderCopyEx(renderer,textTileSet,&originShapes.at(3),&destTileSet,0,NULL,SDL_FLIP_NONE);
+                if(j==0 || j==div-1) 
                 {
-                    destTileSet.w = shrink*2;
-                    destTileSet.x -= destTileSet.w - destTileSet.w/4;
-                    if(j==div-1){destTileSet.x += cell;}
-                    if(countColumns<2)
+                    destTileSet.w = shrinkX*2;
+                    destTileSet.x -= 0.75*destTileSet.w; //w - w/4
+                    if(j==div-1){destTileSet.x += cellWidth;}
+                    if(countColumns<2) //dos columnas de arriba
                     { 
-                        SDL_RenderCopyEx(renderer,textTileSet,&originColumn,&destTileSet,0,NULL,SDL_FLIP_NONE);
+                        SDL_RenderCopyEx(renderer,textTileSet,&originShapes.at(4),&destTileSet,0,NULL,SDL_FLIP_NONE);
                         ++countColumns;
                     }
-                    else
+                    else //dos columnas de abajo
                     {
                         queue.push(destTileSet);
                     }
-                    destTileSet.w = square;
+                    destTileSet.w = widthTile;
                     destTileSet.x = X;
                 }
                 destTileSet.y = Y;    
             }
             if(j==0 || j==div-1)
             {
-                destTileSet.x -= shrink;
-                if(j==div-1){destTileSet.x += cell;}
-                destTileSet.w = shrink;
-                destTileSet.y -= shrink;
-                SDL_RenderCopyEx(renderer,textTileSet,&originWall,&destTileSet,0,NULL,SDL_FLIP_NONE); 
+                destTileSet.x -= shrinkX;
+                if(j==div-1){destTileSet.x += cellWidth;}
+                destTileSet.w = shrinkX;
+                destTileSet.y -= shrinkY;
+                SDL_RenderCopyEx(renderer,textTileSet,&originShapes.at(3),&destTileSet,0,NULL,SDL_FLIP_NONE); 
                 destTileSet.x = X; 
-                destTileSet.w = square;
+                destTileSet.w = widthTile;
                 destTileSet.y = Y;
             }
-            X+=square;
+            X+=destTileSet.w;
         }
-        Y+=square;
+        Y+=destTileSet.h;
     }
     while(!queue.empty())
     {
         destTileSet = queue.front();
         queue.pop();
-        SDL_RenderCopyEx(renderer,textTileSet,&originColumn,&destTileSet,0,NULL,SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer,textTileSet,&originShapes.at(4),&destTileSet,0,NULL,SDL_FLIP_NONE);
     } 
 }

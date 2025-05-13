@@ -29,7 +29,7 @@ class Level
 
         void printMapConsole();
         void drawMap(SDL_Renderer* renderer);
-        void drawRoom(const int& index, const int& width, const int& height, SDL_Renderer* renderer);
+        void drawRoom(const int& index, const int& width, const int& height, const double& div, SDL_Renderer* renderer, const bool& centered);
     
     private:
         Designar::Graph<Room> map;
@@ -40,6 +40,7 @@ class Level
         double columns;
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
         SDL_Rect originBackground;
+        //0:Tile, 1:Portal, 2:Path, 3:Wall, 4:Column
         std::unordered_map<int,SDL_Rect> originShapes;
         std::vector<PosShape> posShapes;
         std::unordered_map<int,int> dimensionShapes;
