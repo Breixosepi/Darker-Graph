@@ -6,8 +6,8 @@ Level::Level(std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>:
 {
     map = std::get<0>(tuple);
     roomsReference = std::get<1>(tuple);
-    rows = 0;
-    columns = 0;
+    rows = columns = 0;
+    windowWidth = windowHeight = -1;
     setMatrix(std::get<2>(tuple));
 }
 
@@ -29,6 +29,13 @@ void Level::setShortestPath(const Designar::Graph<Room>& value){shortestPath = v
         
 void Level::setEulerianPath(const Designar::Graph<Room>& value){eulerianPath = value;}
 
+void Level::setWindowSize(const int& width, const int& height)
+{
+    windowWidth = width;
+    windowHeight = height;
+    setShapesMap();
+}
+
 void Level::setMatrix(const std::vector<std::vector<int>>& value)
 {
     matrix = value;
@@ -37,8 +44,8 @@ void Level::setMatrix(const std::vector<std::vector<int>>& value)
 }
 
 //Actualiza el vector de figuras a dibujar para mostrar el mapa del presente nivel.
-//Recibe el ancho y alto de la ventana ya que es redimensionable.
-void Level::setShapesMap(const int& width, const int& height)
+//Trabaja con el ultimo tamano de ventana establecido.
+void Level::setShapesMap()
 {
     if(!shapesMap.empty())
     {
@@ -47,16 +54,16 @@ void Level::setShapesMap(const int& width, const int& height)
     }
     if(!matrix.empty())
     {
-        double square = std::min(width/(columns+1),height/(rows+1)); //se escoge la celda mas pequena
-        double shrink = square/4; //se encoge la celda para dejar espacio para los pasillos
+        double square = std::min(windowWidth/(columns+1),windowHeight/(rows+1)); //se escoge la celda mas pequena
+        double shrink = square/4.0; //se encoge la celda para dejar espacio para los pasillos
         double tile = square-shrink;
-        double X = (width-square*columns)/2.0 - shrink/2;
+        double X = (windowWidth-square*columns)/2.0 - shrink/2.0;
         dimensionsMap.insert({0,std::make_pair(tile,tile)});
         dimensionsMap.insert({1,std::make_pair(tile,tile)});
         dimensionsMap.insert({2,std::make_pair(shrink,shrink)});
         for(int i=0; i<matrix[0].size(); ++i)
         {
-            double Y = (height-square*rows)/2.0 - shrink/2;
+            double Y = (windowHeight-square*rows)/2.0 - shrink/2.0;
             int memory = shapesMap.size();
             for(int j=0; j<matrix.size(); ++j)
             {
@@ -73,16 +80,16 @@ void Level::setShapesMap(const int& width, const int& height)
                                 switch (k)
                                 {
                                     case 0: //Izquierda
-                                        shapesMap.push_back(std::make_tuple(X,Y+square/2,2));
+                                        shapesMap.push_back(std::make_tuple(X,Y+square/2.0,2));
                                     break;
                                     case 1: //Arriba
-                                        shapesMap.push_back(std::make_tuple(X+square/2,Y,2));
+                                        shapesMap.push_back(std::make_tuple(X+square/2.0,Y,2));
                                     break;
                                     case 2: //Derecha
-                                        shapesMap.push_back(std::make_tuple(X+square,Y+square/2,2));
+                                        shapesMap.push_back(std::make_tuple(X+square,Y+square/2.0,2));
                                     break;
                                     case 3: //Abajo
-                                        shapesMap.push_back(std::make_tuple(X+square/2,Y+square,2));
+                                        shapesMap.push_back(std::make_tuple(X+square/2.0,Y+square,2));
                                     break;
                                 }
                             }
@@ -97,31 +104,40 @@ void Level::setShapesMap(const int& width, const int& height)
     }
 }
 
-void Level::setShapesRoom(const int& index, const int& width, const int& height, const double& div, const bool& centered)
+//Actualiza el vector de figuras a dibujar para mostrar el fondo de los cuartos.
+//Trabaja con el ultimo tamano de ventana establecido.
+//Tambien se puede ver modificado a traves de alguno de los 2 parametros que recibe
+void Level::setDesignRoom(const double& div, const bool& centered)
 {
     if(!shapesRoom.empty())
     {
         shapesRoom.clear();
         dimensionsRoom.clear();
         lowerFrameRoom.clear();
+        doors.clear();
     }
-    double extraDim = 2.0;
-    double cellWidth = width/(div+extraDim);
-    double cellHeight = height/(div+extraDim);
+    int extraDim = 2;
+    double cellWidth = windowWidth/(div+extraDim);
+    double cellHeight = windowHeight/(div+extraDim);
     if(centered){cellHeight = cellWidth = std::min(cellHeight,cellWidth);}
     double shrinkX = cellWidth/4.0; //Ancho pared Vertical //Hitbox!
     double shrinkY = cellHeight/2.0; //Alto pared hotizontal
-    double widthTile = (cellWidth*(div+extraDim) - shrinkX*2)/div;
-    double heightTile = (cellHeight*(div+extraDim) - shrinkY*2)/div;
+    double widthTile = (cellWidth*(div+extraDim) - shrinkX*2.0)/div;
+    double heightTile = (cellHeight*(div+extraDim) - shrinkY*2.0)/div;
 
     dimensionsRoom.insert({0,std::make_pair(widthTile,heightTile)}); //piso
     dimensionsRoom.insert({3,std::make_pair(widthTile,heightTile)}); //pared horizontal
     dimensionsRoom.insert({4,std::make_pair(shrinkX,heightTile)}); //pared vertical
-    dimensionsRoom.insert({5,std::make_pair(shrinkX*2,heightTile)}); //column
+    dimensionsRoom.insert({5,std::make_pair(shrinkX*2.0,heightTile)}); //columna
+    dimensionsRoom.insert({6,std::make_pair(widthTile,heightTile)}); //puerta superior inferior
+    dimensionsRoom.insert({7,std::make_pair(widthTile,heightTile)}); //oscuridad puerta
+    dimensionsRoom.insert({8,std::make_pair(shrinkX,heightTile)}); //puerta lateral
+    dimensionsRoom.insert({9,std::make_pair(shrinkX,heightTile)}); //marco puerta lateral
 
-    double resizeY = (height-cellHeight*(div+extraDim))/2;
-    double resizeX = (width-cellWidth*(div+extraDim))/2;
+    double resizeY = (windowHeight-cellHeight*(div+extraDim))/2.0;
+    double resizeX = (windowWidth-cellWidth*(div+extraDim))/2.0;
     double Y = shrinkY + shrinkY/2 + resizeY;
+    double supY, infY = -1.0;
     for(int i=0; i<div; ++i)
     {
         double X = shrinkX + resizeX;
@@ -130,13 +146,21 @@ void Level::setShapesRoom(const int& index, const int& width, const int& height,
             shapesRoom.push_back({X,Y,0});
             if(i==0 || i==div-1)
             {
-                if(i<div-1){shapesRoom.push_back({X,Y-heightTile,3});}
-                else{lowerFrameRoom.push_back({X,Y+shrinkY,3});}
-                if(i==0&&j==div-1){shapesRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,Y-heightTile,5});}
+                if(i<div-1)
+                {
+                    supY = Y-heightTile; //Linea de los frames mas superiores
+                    shapesRoom.push_back({X,supY,3});
+                }
+                else
+                {
+                    infY = Y+shrinkY; //Linea de los frames mas inferiores
+                    lowerFrameRoom.push_back({X,infY,3});
+                }
+                if(i==0&&j==div-1){shapesRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,supY,5});}
             }
             if(j==0 || j==div-1)
             {
-                if(i==0&&j==0){shapesRoom.push_back({-shrinkX/2.0+resizeX,Y-heightTile,5});}
+                if(i==0&&j==0){shapesRoom.push_back({-shrinkX/2.0+resizeX,supY,5});}
                 if(j<div-1){shapesRoom.push_back({X-shrinkX,Y-shrinkY,4});} //Paredes en Vertical (delgadas)
                 else{shapesRoom.push_back({X+widthTile,Y-shrinkY,4});}
             }
@@ -144,8 +168,22 @@ void Level::setShapesRoom(const int& index, const int& width, const int& height,
         }
         Y+=heightTile;
     }
-    lowerFrameRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,heightTile*div+resizeY,5});
-    lowerFrameRoom.push_back({-shrinkX/2.0+resizeX,heightTile*div+resizeY,5});
+
+    doors.push_back({resizeX,resizeY+supY+heightTile*(div+1)/2.0,9}); //izquierda
+    doors.push_back({resizeX,resizeY+supY+heightTile*(div+1)/2.0,8});
+
+    doors.push_back({widthTile*(div-1)/2.0+shrinkX+resizeX,supY,7}); //arriba
+    doors.push_back({widthTile*(div-1)/2.0+shrinkX+resizeX,supY,6});
+
+    doors.push_back({resizeX+shrinkX+widthTile*(div),resizeY+supY+heightTile*(div+1)/2.0,9}); //derecha
+    doors.push_back({resizeX+shrinkX+widthTile*(div),resizeY+supY+heightTile*(div+1)/2.0,8});
+
+    doors.push_back({widthTile*(div-1)/2.0+shrinkX+resizeX,infY,7}); //abajo
+    doors.push_back({widthTile*(div-1)/2.0+shrinkX+resizeX,infY,6});
+
+    //Columnas inferiores
+    lowerFrameRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,infY,5});
+    lowerFrameRoom.push_back({-shrinkX/2.0+resizeX,infY,5});
 }
 
 void Level::setTileSet(const char* value, SDL_Renderer* renderer)
@@ -162,9 +200,9 @@ void Level::setTileSet(const char* value, SDL_Renderer* renderer)
     else{std::cout<<"Surface "<<value<<" dont created."<<std::endl;}
 }
 
-void Level::insertOriginShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape)
+void Level::insertSourceShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape)
 {
-    if(!originShapes.insert({numOfShape,{x,y,w,h}}).second){std::cout<<"Num of Shape is already in use"<<std::endl;}
+    if(!sourceShapes.insert({numOfShape,{x,y,w,h}}).second){std::cout<<"Num of Shape is already in use"<<std::endl;}
 }
 
 void Level::setBackground(const char* value, SDL_Renderer* renderer)
@@ -181,7 +219,7 @@ void Level::setBackground(const char* value, SDL_Renderer* renderer)
     else{std::cout<<"Surface "<<value<<" dont created."<<std::endl;}
 }
 
-void Level::setOriginBackground(const int& x, const int& y, const int& w, const int& h){originBackground = {x,y,w,h};}
+void Level::setSourceBackground(const int& x, const int& y, const int& w, const int& h){sourceBackground = {x,y,w,h};}
 
 void Level::printMapConsole()
 {
@@ -245,33 +283,72 @@ void Level::drawMap(SDL_Renderer* renderer)
 {
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
-    SDL_RenderCopy(renderer,textBackground,&originBackground,NULL);
+    SDL_RenderCopy(renderer,textBackground,&sourceBackground,NULL);
     draw(shapesMap,dimensionsMap,renderer);
     SDL_RenderPresent(renderer);
 }
 
-void Level::drawRoom(SDL_Renderer* renderer)
+void Level::drawRoom(const int& index, SDL_Renderer* renderer)
 {
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
     draw(shapesRoom,dimensionsRoom,renderer);
+    drawDoors(index,renderer);
 }
 
-void Level::drawRoomLastFrame(SDL_Renderer* renderer)
+void Level::drawDoors(const int& index, SDL_Renderer* renderer)
+{
+    SDL_Rect destDoor;
+    SDL_Rect destBonus;
+    for(int i=0; i<3; ++i)
+    {
+        if((*roomsReference[index-1]->get_info().getPaths())[i])
+        {
+            destDoor = fillRect(doors[i*2+1],dimensionsRoom);
+            destBonus = fillRect(doors[i*2],dimensionsRoom);
+            if(i==0||i==2)
+            {
+                SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(9),&destBonus);
+                SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(8),&destDoor);
+            }
+            else
+            {
+                SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(7),&destBonus);
+                SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(6),&destDoor);
+            }
+        }
+    }
+}
+
+void Level::drawRoomLastFrame(const int& index, SDL_Renderer* renderer)
 {
     draw(lowerFrameRoom,dimensionsRoom,renderer);
+    if((*roomsReference[index-1]->get_info().getPaths())[3])
+    {
+        SDL_Rect destDoor = fillRect(doors[3*2+1],dimensionsRoom);
+        SDL_Rect destBonus = fillRect(doors[3*2],dimensionsRoom);
+        SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(7),&destBonus);
+        SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(6),&destDoor);
+    }
 }
 
 void Level::draw(const std::vector<PosShape>& shapes, const std::unordered_map<int,std::pair<int,int>>& dimensions, SDL_Renderer* renderer)
 {
     SDL_Rect destTileSet;
-    std::pair<int,int> widthHeight;
     for(PosShape shape : shapes)
     {
-        destTileSet.x = std::get<0>(shape);
-        destTileSet.y = std::get<1>(shape);
-        widthHeight = dimensions.at(std::get<2>(shape));
-        destTileSet.w = widthHeight.first;
-        destTileSet.h = widthHeight.second;
-        SDL_RenderCopy(renderer,textTileSet,&originShapes.at(std::get<2>(shape)),&destTileSet);
+        destTileSet = fillRect(shape,dimensions);
+        SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(std::get<2>(shape)),&destTileSet);
     }
+}
+
+SDL_Rect Level::fillRect(const PosShape& shape, const std::unordered_map<int,std::pair<int,int>>& dimensions)
+{
+    SDL_Rect dest;
+    std::pair<int,int> widthHeight;
+    dest.x = std::get<0>(shape);
+    dest.y = std::get<1>(shape);
+    widthHeight = dimensions.at(std::get<2>(shape));
+    dest.w = widthHeight.first;
+    dest.h = widthHeight.second;
+    return dest;
 }

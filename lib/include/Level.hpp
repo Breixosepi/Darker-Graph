@@ -2,7 +2,6 @@
 
 #include <Room.hpp>
 #include <unordered_map>
-using PosShape = std::tuple<int,int,int>; //Get<0>=X, Get<1>=Y, Get<2>=typeShape 
 
 class Level
 {
@@ -21,32 +20,36 @@ class Level
         void setShortestPath(const Designar::Graph<Room>& value);
         void setEulerianPath(const Designar::Graph<Room>& value);
         void setMatrix(const std::vector<std::vector<int>>& value);
-        void setShapesMap(const int& width, const int& height);
-        void setShapesRoom(const int& index, const int& width, const int& height, const double& div, const bool& centered);
+        void setShapesMap();
+        void setDesignRoom(const double& div, const bool& centered);
         void setTileSet(const char* value, SDL_Renderer* renderer);
-        void insertOriginShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape);
+        void insertSourceShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape);
         void setBackground(const char* value, SDL_Renderer* renderer);
-        void setOriginBackground(const int& x, const int& y, const int& w, const int& h);
+        void setSourceBackground(const int& x, const int& y, const int& w, const int& h);
+        void setWindowSize(const int& width, const int& height);
 
         void printMapConsole();
-        void draw(const std::vector<PosShape>& shapes, const std::unordered_map<int,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);
+        
         void drawMap(SDL_Renderer* renderer);
-        void drawRoom(SDL_Renderer* renderer);
-        void drawRoomLastFrame(SDL_Renderer* renderer);
+        void drawRoom(const int& index, SDL_Renderer* renderer);
+        void drawRoomLastFrame(const int& index, SDL_Renderer* renderer);
     
     private:
         Designar::Graph<Room> map;
         Designar::Graph<Room> shortestPath;
         Designar::Graph<Room> eulerianPath;
         std::vector<std::vector<int>> matrix;
+        int windowWidth;
+        int windowHeight;
         double rows;
         double columns;
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
-        SDL_Rect originBackground;
-        //0:Tile, 1:Portal, 2:Path, 3:WallHorizontal, 4:WallVertical, 5:Column
-        std::unordered_map<int,SDL_Rect> originShapes;
+        SDL_Rect sourceBackground;
+        //0:Tile, 1:Portal, 2:Path, 3:WallHorizontal, 4:WallVertical, 5:Column, 6:Door, 7:Darkness
+        std::unordered_map<int,SDL_Rect> sourceShapes;
         std::vector<PosShape> shapesMap;
         std::vector<PosShape> shapesRoom;
+        std::vector<PosShape> doors;
         std::vector<PosShape> lowerFrameRoom;
         std::unordered_map<int,std::pair<int,int>> dimensionsMap;
         std::unordered_map<int,std::pair<int,int>> dimensionsRoom;
@@ -57,4 +60,7 @@ class Level
 
         void getRowsColumns();
         void reduceMatrix();
+        void draw(const std::vector<PosShape>& shapes, const std::unordered_map<int,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);
+        void drawDoors(const int& index, SDL_Renderer* renderer);
+        SDL_Rect fillRect(const PosShape& shape, const std::unordered_map<int,std::pair<int,int>>& dimensions);
 };
