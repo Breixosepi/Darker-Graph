@@ -8,6 +8,8 @@ Level::Level(std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>:
     roomsReference = std::get<1>(tuple);
     rows = columns = 0;
     windowWidth = windowHeight = -1;
+    if(map.get_num_nodes()!=0){currentIndex = 1;}
+    else{currentIndex = -1;}
     setMatrix(std::get<2>(tuple));
 }
 
@@ -29,11 +31,14 @@ void Level::setShortestPath(const Designar::Graph<Room>& value){shortestPath = v
         
 void Level::setEulerianPath(const Designar::Graph<Room>& value){eulerianPath = value;}
 
+void Level::setCurrentIndex(const int& value){currentIndex = value;}
+
 void Level::setWindowSize(const int& width, const int& height)
 {
     windowWidth = width;
     windowHeight = height;
     setShapesMap();
+    setDesignRoom(false);
 }
 
 void Level::setMatrix(const std::vector<std::vector<int>>& value)
@@ -107,7 +112,7 @@ void Level::setShapesMap()
 //Actualiza el vector de figuras a dibujar para mostrar el fondo de los cuartos.
 //Trabaja con el ultimo tamano de ventana establecido.
 //Tambien se puede ver modificado a traves de alguno de los 2 parametros que recibe
-void Level::setDesignRoom(const double& div, const bool& centered)
+void Level::setDesignRoom(const bool& centered)
 {
     if(!shapesRoom.empty())
     {
@@ -117,6 +122,7 @@ void Level::setDesignRoom(const double& div, const bool& centered)
         doors.clear();
     }
     int extraDim = 2;
+    double div = *roomsReference[currentIndex-1]->get_info().getDivisions();
     double cellWidth = windowWidth/(div+extraDim);
     double cellHeight = windowHeight/(div+extraDim);
     if(centered){cellHeight = cellWidth = std::min(cellHeight,cellWidth);}
@@ -288,20 +294,20 @@ void Level::drawMap(SDL_Renderer* renderer)
     SDL_RenderPresent(renderer);
 }
 
-void Level::drawRoom(const int& index, SDL_Renderer* renderer)
+void Level::drawRoom(SDL_Renderer* renderer)
 {
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
     draw(shapesRoom,dimensionsRoom,renderer);
-    drawDoors(index,renderer);
+    drawDoors(renderer);
 }
 
-void Level::drawDoors(const int& index, SDL_Renderer* renderer)
+void Level::drawDoors(SDL_Renderer* renderer)
 {
     SDL_Rect destDoor;
     SDL_Rect destBonus;
     for(int i=0; i<3; ++i)
     {
-        if((*roomsReference[index-1]->get_info().getPaths())[i])
+        if((*roomsReference[currentIndex-1]->get_info().getPaths())[i])
         {
             destDoor = fillRect(doors[i*2+1],dimensionsRoom);
             destBonus = fillRect(doors[i*2],dimensionsRoom);
@@ -319,10 +325,10 @@ void Level::drawDoors(const int& index, SDL_Renderer* renderer)
     }
 }
 
-void Level::drawRoomLastFrame(const int& index, SDL_Renderer* renderer)
+void Level::drawRoomLastFrame(SDL_Renderer* renderer)
 {
     draw(lowerFrameRoom,dimensionsRoom,renderer);
-    if((*roomsReference[index-1]->get_info().getPaths())[3])
+    if((*roomsReference[currentIndex-1]->get_info().getPaths())[3])
     {
         SDL_Rect destDoor = fillRect(doors[3*2+1],dimensionsRoom);
         SDL_Rect destBonus = fillRect(doors[3*2],dimensionsRoom);

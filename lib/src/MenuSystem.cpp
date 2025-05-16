@@ -148,12 +148,14 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
         SDL_GetWindowSize(wind.get(),&width,&height);
         Level level(creator.createMap(false));
         level.setWindowSize(width,height);
+
         level.setBackground("assets/screenshots/perg.png",renderer.get());
         level.setSourceBackground(55,80,260,195);
         level.setTileSet("assets/screenshots/tileSet.png",renderer.get());
         level.insertSourceShape(832,208,32,32,0);
         level.insertSourceShape(486,202,80,80,1);
         level.insertSourceShape(832,416,64,64,2);
+        
         SDL_Event event;
         bool running = true;
         while (running) 
@@ -182,9 +184,7 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
             }
             level.drawMap(renderer.get());    
         }
-    });
-
-    static SDL_Rect square = {375, 375, 50, 50}; 
+    }); 
 
 menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]() 
 {
@@ -192,11 +192,10 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
     int width, height;
 
     // room setup
-    double NUMERODEBALDOSAS = 4.0;
     SDL_GetWindowSize(wind.get(),&width,&height);
     Level level(creator.createMap(false));
     level.setWindowSize(width,height);
-    level.setDesignRoom(NUMERODEBALDOSAS,false);
+    
     level.setBackground("assets/screenshots/perg.png",renderer.get());
     level.setSourceBackground(55,80,260,195);
     level.setTileSet("assets/screenshots/tileSet.png",renderer.get());
@@ -210,6 +209,7 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
     level.insertSourceShape(72,52,176,63,7);
     level.insertSourceShape(400,112,16,80,8);
     level.insertSourceShape(432,112,16,74,9);
+    level.printMapConsole();
 
     // Player setup
     SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
@@ -220,7 +220,7 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
     player.setPosition(400, 300); 
 
     // Enemy setup 
-    SDL_Surface* enemySurface = IMG_Load("assets/sprites/orc.png");
+    SDL_Surface* enemySurface = IMG_Load("assets/sprites/Orc.png");
     TexturePtr enemyTexture(SDL_CreateTextureFromSurface(renderer.get(), enemySurface));
     SDL_FreeSurface(enemySurface);
     Enemy enemy;
@@ -255,7 +255,6 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
                 {
                     SDL_GetWindowSize(wind.get(), &width, &height);
                     level.setWindowSize(width,height);
-                    level.setDesignRoom(NUMERODEBALDOSAS,false);
                 } 
             }  
         }
@@ -267,10 +266,10 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
         // Renderizado
         SDL_SetRenderDrawColor(renderer.get(), 30, 30, 50, 255); 
         SDL_RenderClear(renderer.get());
-        level.drawRoom(2,renderer.get());
+        level.drawRoom(renderer.get());
         player.renderPlayer(renderer);
         enemy.renderEnemy(renderer); 
-        level.drawRoomLastFrame(2,renderer.get());
+        level.drawRoomLastFrame(renderer.get());
         SDL_RenderPresent(renderer.get());
         SDL_Delay(16); 
     }

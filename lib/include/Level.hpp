@@ -20,19 +20,18 @@ class Level
         void setShortestPath(const Designar::Graph<Room>& value);
         void setEulerianPath(const Designar::Graph<Room>& value);
         void setMatrix(const std::vector<std::vector<int>>& value);
-        void setShapesMap();
-        void setDesignRoom(const double& div, const bool& centered);
         void setTileSet(const char* value, SDL_Renderer* renderer);
         void insertSourceShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape);
         void setBackground(const char* value, SDL_Renderer* renderer);
         void setSourceBackground(const int& x, const int& y, const int& w, const int& h);
         void setWindowSize(const int& width, const int& height);
+        void setCurrentIndex(const int& value);
 
         void printMapConsole();
         
         void drawMap(SDL_Renderer* renderer);
-        void drawRoom(const int& index, SDL_Renderer* renderer);
-        void drawRoomLastFrame(const int& index, SDL_Renderer* renderer);
+        void drawRoom(SDL_Renderer* renderer);
+        void drawRoomLastFrame(SDL_Renderer* renderer);
     
     private:
         Designar::Graph<Room> map;
@@ -44,6 +43,7 @@ class Level
         double rows;
         double columns;
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
+        int currentIndex;
         SDL_Rect sourceBackground;
         //0:Tile, 1:Portal, 2:Path, 3:WallHorizontal, 4:WallVertical, 5:Column, 6:Door, 7:Darkness
         std::unordered_map<int,SDL_Rect> sourceShapes;
@@ -60,7 +60,9 @@ class Level
 
         void getRowsColumns();
         void reduceMatrix();
+        void setShapesMap();
+        void setDesignRoom(const bool& centered);
         void draw(const std::vector<PosShape>& shapes, const std::unordered_map<int,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);
-        void drawDoors(const int& index, SDL_Renderer* renderer);
+        void drawDoors(SDL_Renderer* renderer);
         SDL_Rect fillRect(const PosShape& shape, const std::unordered_map<int,std::pair<int,int>>& dimensions);
 };

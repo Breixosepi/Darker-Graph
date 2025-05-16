@@ -2,9 +2,9 @@
 
 MyGraph::MyGraph()
 {
-    numRooms = 5;
+    numRooms = 8;
     maxGrade = 4;
-    probability = 80.0;
+    probability = 50.0;
     evenOdd = {numRooms,0};
 }
 
