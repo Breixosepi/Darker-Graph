@@ -1,6 +1,7 @@
 #include "MenuSystem.hpp"
 #include <iostream>
 #include <Player.hpp>
+#include <Enemy.hpp>
 
 MenuSystem::MenuSystem(const RendererPtr& render, const FontPtr& fonts, const WindowPtr& wind) : renderer(render.get()), font(fonts.get()),head(nullptr),tail(nullptr),current(nullptr),window(wind.get())
 {
@@ -189,6 +190,8 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
 {
     MyGraph creator;
     int width, height;
+
+    // room setup
     double NUMERODEBALDOSAS = 4.0;
     SDL_GetWindowSize(wind.get(),&width,&height);
     Level level(creator.createMap(false));
@@ -204,16 +207,25 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
     level.insertOriginShape(304,400,64,48,4);
     level.insertOriginShape(640,112,16,80,5);
 
+    // Player setup
     SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
     TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer.get(), playerSurface));
     SDL_FreeSurface(playerSurface);
     Player player;
     player.initAnimation(renderer, playerTexture);
     player.setPosition(400, 300); 
+
+    // Enemy setup 
+    SDL_Surface* enemySurface = IMG_Load("assets/sprites/orc.png");
+    TexturePtr enemyTexture(SDL_CreateTextureFromSurface(renderer.get(), enemySurface));
+    SDL_FreeSurface(enemySurface);
+    Enemy enemy;
+    enemy.initAnimation(renderer, enemyTexture);
+    enemy.setPosition(450, 200);
+
     bool running = true;
     SDL_Event event;
     Uint32 lastTime = SDL_GetTicks();
-    const Uint8* keyboardState = nullptr;
 
     while (running) 
     {
@@ -242,16 +254,23 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
                 } 
             }  
         }
+
+        // Actualización de objetos
         player.update(deltaTime);
+        enemy.update(deltaTime);
+
+        // Renderizado
         SDL_SetRenderDrawColor(renderer.get(), 30, 30, 50, 255); 
         SDL_RenderClear(renderer.get());
         level.drawRoom(renderer.get());
         player.renderPlayer(renderer);
+        enemy.renderEnemy(renderer); 
         level.drawRoomLastFrame(renderer.get());
         SDL_RenderPresent(renderer.get());
         SDL_Delay(16); 
     }
 });
+
     
     menu->addWidget("options", "Opciones", []() 
     {
