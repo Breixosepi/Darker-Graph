@@ -25,6 +25,8 @@ const std::vector<std::vector<int>>* Level::getMatrix(){return &matrix;}
 
 const std::vector<Designar::Graph<Room>::Node*>* Level::getRoomsReference(){return &roomsReference;}
 
+Room* Level::getCurrentRoom(){return &roomsReference[currentIndex-1]->get_info();}
+
 void Level::setMap(const Designar::Graph<Room>& value){map = value;}
 
 void Level::setShortestPath(const Designar::Graph<Room>& value){shortestPath = value;}
@@ -33,12 +35,12 @@ void Level::setEulerianPath(const Designar::Graph<Room>& value){eulerianPath = v
 
 void Level::setCurrentIndex(const int& value){currentIndex = value;}
 
-void Level::setWindowSize(const int& width, const int& height)
+double Level::setWindowSize(const int& width, const int& height)
 {
     windowWidth = width;
     windowHeight = height;
     setShapesMap();
-    setDesignRoom(false);
+    return setDesignRoom(false);
 }
 
 void Level::setMatrix(const std::vector<std::vector<int>>& value)
@@ -112,7 +114,7 @@ void Level::setShapesMap()
 //Actualiza el vector de figuras a dibujar para mostrar el fondo de los cuartos.
 //Trabaja con el ultimo tamano de ventana establecido.
 //Tambien se puede ver modificado a traves de alguno de los 2 parametros que recibe
-void Level::setDesignRoom(const bool& centered)
+double Level::setDesignRoom(const bool& centered)
 {
     if(!shapesRoom.empty())
     {
@@ -122,7 +124,7 @@ void Level::setDesignRoom(const bool& centered)
         doors.clear();
     }
     int extraDim = 2;
-    double div = *roomsReference[currentIndex-1]->get_info().getDivisions();
+    double div = *getCurrentRoom()->getDivisions();
     double cellWidth = windowWidth/(div+extraDim);
     double cellHeight = windowHeight/(div+extraDim);
     if(centered){cellHeight = cellWidth = std::min(cellHeight,cellWidth);}
@@ -133,7 +135,7 @@ void Level::setDesignRoom(const bool& centered)
 
     dimensionsRoom.insert({0,std::make_pair(widthTile,heightTile)}); //piso
     dimensionsRoom.insert({3,std::make_pair(widthTile,heightTile)}); //pared horizontal
-    dimensionsRoom.insert({4,std::make_pair(shrinkX,heightTile)}); //pared vertical
+    dimensionsRoom.insert({4,std::make_pair(shrinkX,heightTile+(shrinkY+heightTile)/div)}); //pared vertical, en el alto se considera los margenes hacia arriba y hacia abajo para dibujar las horizontales
     dimensionsRoom.insert({5,std::make_pair(shrinkX*2.0,heightTile)}); //columna
     dimensionsRoom.insert({6,std::make_pair(widthTile,heightTile)}); //puerta superior inferior
     dimensionsRoom.insert({7,std::make_pair(widthTile,heightTile)}); //oscuridad puerta
@@ -142,54 +144,59 @@ void Level::setDesignRoom(const bool& centered)
 
     double resizeY = (windowHeight-cellHeight*(div+extraDim))/2.0;
     double resizeX = (windowWidth-cellWidth*(div+extraDim))/2.0;
-    double Y = shrinkY + shrinkY/2 + resizeY;
+    double Y = 0.75*heightTile + resizeY;
     double supY, infY = -1.0;
     for(int i=0; i<div; ++i)
     {
         double X = shrinkX + resizeX;
         for(int j=0; j<div; ++j)
         {
-            shapesRoom.push_back({X,Y,0});
+            shapesRoom.push_back({X,Y,0}); //Baldosas
             if(i==0 || i==div-1)
             {
                 if(i<div-1)
                 {
                     supY = Y-heightTile; //Linea de los frames mas superiores
-                    shapesRoom.push_back({X,supY,3});
+                    shapesRoom.push_back({X,supY,3}); //Paredes Superiores
                 }
                 else
                 {
-                    infY = Y+shrinkY; //Linea de los frames mas inferiores
-                    lowerFrameRoom.push_back({X,infY,3});
+                    infY = Y+0.75*heightTile; //Linea de los frames mas inferiores, se tapa un cuarto de la baldosa inferior
+                    lowerFrameRoom.push_back({X,infY,3}); //Paredes Inferiores
                 }
-                if(i==0&&j==div-1){shapesRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,supY,5});}
+                if(i==0&&j==div-1){shapesRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,supY,5});} //Columnas Superior Derecha
             }
             if(j==0 || j==div-1)
             {
-                if(i==0&&j==0){shapesRoom.push_back({-shrinkX/2.0+resizeX,supY,5});}
-                if(j<div-1){shapesRoom.push_back({X-shrinkX,Y-shrinkY,4});} //Paredes en Vertical (delgadas)
-                else{shapesRoom.push_back({X+widthTile,Y-shrinkY,4});}
+                if(i==0&&j==0){shapesRoom.push_back({-shrinkX/2.0+resizeX,supY,5});} //Columna Superior Izquierda
+                if(j<div-1){shapesRoom.push_back({X-shrinkX,Y-shrinkY,4});} //Paredes en Vertical a la izquierda(delgadas)
+                else{shapesRoom.push_back({X+widthTile,Y-shrinkY,4});} //Paredes en Vertical a la derecha
             }
             X+=widthTile;
         }
         Y+=heightTile;
     }
 
-    doors.push_back({resizeX,resizeY+supY+heightTile*(div+1)/2.0,9}); //izquierda
-    doors.push_back({resizeX,resizeY+supY+heightTile*(div+1)/2.0,8});
+    //Ubicacion Puertas
+    double middleY = supY+heightTile*(div+1)/2.0;
+    double middleX = widthTile*(div-1)/2.0+shrinkX;
 
-    doors.push_back({widthTile*(div-1)/2.0+shrinkX+resizeX,supY,7}); //arriba
-    doors.push_back({widthTile*(div-1)/2.0+shrinkX+resizeX,supY,6});
+    doors.push_back({resizeX,resizeY+middleY,9}); //izquierda
+    doors.push_back({resizeX,resizeY+middleY,8});
 
-    doors.push_back({resizeX+shrinkX+widthTile*(div),resizeY+supY+heightTile*(div+1)/2.0,9}); //derecha
-    doors.push_back({resizeX+shrinkX+widthTile*(div),resizeY+supY+heightTile*(div+1)/2.0,8});
+    doors.push_back({resizeX+middleX,supY,7}); //arriba
+    doors.push_back({resizeX+middleX,supY,6});
 
-    doors.push_back({widthTile*(div-1)/2.0+shrinkX+resizeX,infY,7}); //abajo
-    doors.push_back({widthTile*(div-1)/2.0+shrinkX+resizeX,infY,6});
+    doors.push_back({resizeX+shrinkX+widthTile*(div),resizeY+middleY,9}); //derecha
+    doors.push_back({resizeX+shrinkX+widthTile*(div),resizeY+middleY,8});
 
+    doors.push_back({middleX,infY,7}); //abajo
+    doors.push_back({middleX,infY,6});
     //Columnas inferiores
     lowerFrameRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,infY,5});
     lowerFrameRoom.push_back({-shrinkX/2.0+resizeX,infY,5});
+
+    return shrinkX;
 }
 
 void Level::setTileSet(const char* value, SDL_Renderer* renderer)
@@ -307,7 +314,7 @@ void Level::drawDoors(SDL_Renderer* renderer)
     SDL_Rect destBonus;
     for(int i=0; i<3; ++i)
     {
-        if((*roomsReference[currentIndex-1]->get_info().getPaths())[i])
+        if((*getCurrentRoom()->getPaths())[i])
         {
             destDoor = fillRect(doors[i*2+1],dimensionsRoom);
             destBonus = fillRect(doors[i*2],dimensionsRoom);
@@ -328,7 +335,7 @@ void Level::drawDoors(SDL_Renderer* renderer)
 void Level::drawRoomLastFrame(SDL_Renderer* renderer)
 {
     draw(lowerFrameRoom,dimensionsRoom,renderer);
-    if((*roomsReference[currentIndex-1]->get_info().getPaths())[3])
+    if((*getCurrentRoom()->getPaths())[3])
     {
         SDL_Rect destDoor = fillRect(doors[3*2+1],dimensionsRoom);
         SDL_Rect destBonus = fillRect(doors[3*2],dimensionsRoom);

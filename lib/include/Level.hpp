@@ -15,6 +15,7 @@ class Level
         const Designar::Graph<Room>* getEulerianPath();
         const std::vector<std::vector<int>>* getMatrix();
         const std::vector<Designar::Graph<Room>::Node*>* getRoomsReference();
+        Room* getCurrentRoom();
 
         void setMap(const Designar::Graph<Room>& value);
         void setShortestPath(const Designar::Graph<Room>& value);
@@ -24,7 +25,7 @@ class Level
         void insertSourceShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape);
         void setBackground(const char* value, SDL_Renderer* renderer);
         void setSourceBackground(const int& x, const int& y, const int& w, const int& h);
-        void setWindowSize(const int& width, const int& height);
+        double setWindowSize(const int& width, const int& height);
         void setCurrentIndex(const int& value);
 
         void printMapConsole();
@@ -61,7 +62,7 @@ class Level
         void getRowsColumns();
         void reduceMatrix();
         void setShapesMap();
-        void setDesignRoom(const bool& centered);
+        double setDesignRoom(const bool& centered);
         void draw(const std::vector<PosShape>& shapes, const std::unordered_map<int,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);
         void drawDoors(SDL_Renderer* renderer);
         SDL_Rect fillRect(const PosShape& shape, const std::unordered_map<int,std::pair<int,int>>& dimensions);

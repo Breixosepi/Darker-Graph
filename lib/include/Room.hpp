@@ -19,17 +19,17 @@ class Room
         const std::vector<bool>* getPaths();
         const std::pair<int,int>* getPos();
         const std::vector<PosShape>* getShapes();
-        const int* getDivisions();
+        const double* getDivisions();
 
         void setPos(const std::pair<int,int>& value);
         void setPath(const int& side);
         void setShapes(const std::vector<PosShape> value);
-        void setDivisions(const int& value);
+        void setDivisions(const double& value);
 
     private:
         int index;
         std::pair<int,int> posInMatrix;
         std::vector<bool> paths;
         std::vector<PosShape> shapes;
-        int divisions;
+        double divisions;
 };
