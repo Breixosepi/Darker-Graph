@@ -1,5 +1,6 @@
 #pragma once 
 #include <Utilities.hpp>
+#include "Enemy.hpp"
         
     enum class State 
     { 
@@ -23,6 +24,11 @@ class Player
         void setState(State newState);
         void handleImput(const SDL_Event& event);
         int getAnimationRow() const;
+        void attack(Enemy& enemies);
+        SDL_Rect getAttackHitbox() const;
+        SDL_Rect getBounds() const;
+        State getState() const { return currentState; }
+        void renderAttackHitbox(const RendererPtr& renderer) const;
         
     private:
         SDL_Texture* texture;
@@ -34,6 +40,4 @@ class Player
         bool isMoving = false;
         int currentFrame = 0;
         float animTimer = 0.0f;
-        
-
 };

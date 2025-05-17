@@ -274,3 +274,78 @@ void Player::setState(State newState)
     }
 }
 
+SDL_Rect Player::getBounds() const
+{
+    return destRect;
+}
+
+SDL_Rect Player::getAttackHitbox() const // hay que cambiar el hitbox par que de bien
+{
+    SDL_Rect attackHitbox = {0, 0, 0, 0};
+    const int hitboxExtension = 30; 
+
+    switch (currentDirection)
+    {
+        case Direction::RIGHT:
+        attackHitbox.x = destRect.x + destRect.w;
+        attackHitbox.y = destRect.y + destRect.h / 2 - 10; 
+        attackHitbox.w = hitboxExtension;
+        attackHitbox.h = 20; 
+            break;
+
+        case Direction::LEFT:
+            attackHitbox.x = destRect.x - hitboxExtension;
+            attackHitbox.y = destRect.y + destRect.h/4;
+            attackHitbox.w = hitboxExtension;
+            attackHitbox.h = destRect.h/2;
+            break;
+
+        case Direction::UP:
+            attackHitbox.x = destRect.x + destRect.w/4;
+            attackHitbox.y = destRect.y - hitboxExtension;
+            attackHitbox.w = destRect.w/2;
+            attackHitbox.h = hitboxExtension;
+            break;
+
+        case Direction::DOWN:
+            attackHitbox.x = destRect.x + destRect.w/4;
+            attackHitbox.y = destRect.y + destRect.h;
+            attackHitbox.w = destRect.w/2;
+            attackHitbox.h = hitboxExtension;
+            break;
+    }
+
+    return attackHitbox;
+}
+
+void Player::attack(Enemy& enemies)
+{
+    if (currentState != State::ATTACKING)
+        return;
+
+    SDL_Rect attackHitbox = getAttackHitbox();
+
+    SDL_Rect enemyBounds = enemies.getBounds();
+
+    if (SDL_HasIntersection(&attackHitbox, &enemyBounds))
+    {
+        enemies.setState(EnemyState::TAKING_DAMAGE);
+    }
+}
+
+void Player::renderAttackHitbox(const RendererPtr& renderer) const
+{
+    if (currentState != State::ATTACKING)
+        return;
+
+    SDL_Rect attackHitbox = getAttackHitbox();
+
+    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 80); 
+    SDL_RenderFillRect(renderer.get(), &attackHitbox);
+
+    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 255); 
+    SDL_RenderDrawRect(renderer.get(), &attackHitbox);
+
+    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE); 
+}

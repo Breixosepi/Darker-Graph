@@ -2,6 +2,8 @@
 #include <Widget.hpp>
 #include <Level.hpp>
 #include <MyGraph.hpp>
+#include <Player.hpp>
+#include <Enemy.hpp>
 
 class MenuSystem 
 {
@@ -15,8 +17,10 @@ class MenuSystem
         void handleEvent(const SDL_Event& event);
         void render() const;
         void navigateUp();
+        void setupLevel(Level& level, Player& player, Enemy& enemy);
         void navigateDown();
         void executeCurrent();
+        void playGameLoop(Level& level, Player& player, Enemy& enemy);
     
     private:
         WindowPtr window;

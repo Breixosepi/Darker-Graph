@@ -23,7 +23,9 @@ public:
     void patrol(float deltaTime);
     void updateAnimation(float deltaTime);
     int getAnimationRow() const;
+    void detectPlayer(const SDL_Rect& playerRect);
     SDL_Rect getBounds() const;
+ 
 
 private:
     SDL_Texture* texture;
@@ -31,7 +33,11 @@ private:
     SDL_Rect destRect;
     EnemyDirection currentDirection;
     EnemyState currentState;
-    int frameWidth, frameHeight, startX, currentFrame = 0, patrolRange = 200;
-    const float ANIM_SPEED = 0.15f;
-    float animTimer = 0.0f, speed = 100.0f;
+    int frameWidth, frameHeight, startX, currentFrame = 0, patrolRange = 300;
+    const float ANIM_SPEED = 0.3f;
+    float animTimer = 0.0f, speed = 150.0f;
+    float attackCooldown = 1.0f; 
+    float cooldownTimer = 0.0f;
+    bool attackInProgress = false;
+
 };

@@ -223,6 +223,7 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
     SDL_Surface* enemySurface = IMG_Load("assets/sprites/Orc.png");
     TexturePtr enemyTexture(SDL_CreateTextureFromSurface(renderer.get(), enemySurface));
     SDL_FreeSurface(enemySurface);
+    std::vector<Enemy> enemies;
     Enemy enemy;
     enemy.initAnimation(renderer, enemyTexture);
     enemy.setPosition(450, 200);
@@ -261,13 +262,17 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
 
         // Actualización de objetos
         player.update(deltaTime);
+        player.attack(enemy);
+        enemy.detectPlayer(player.getBounds());
         enemy.update(deltaTime);
+        
 
         // Renderizado
         SDL_SetRenderDrawColor(renderer.get(), 30, 30, 50, 255); 
         SDL_RenderClear(renderer.get());
         level.drawRoom(renderer.get());
         player.renderPlayer(renderer);
+        player.renderAttackHitbox(renderer);
         enemy.renderEnemy(renderer); 
         level.drawRoomLastFrame(renderer.get());
         SDL_RenderPresent(renderer.get());
@@ -293,4 +298,4 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
     });
     
     return menu;
-}
+} 
