@@ -1,6 +1,7 @@
 #pragma once 
 #include <Utilities.hpp>
 #include "Enemy.hpp"
+#include <iostream>
         
     enum class State 
     { 
@@ -18,7 +19,7 @@ class Player
         Player();
         void initAnimation(const RendererPtr &renderer, const TexturePtr &texture);
         void renderPlayer(const RendererPtr &renderer);
-        void update(float deltaTime);
+        void update(float deltaTime, std::pair<double,double> border, int width, int height);
         void setPosition(int x, int y);
         void updateAnimation(float deltaTime);
         void setState(State newState);

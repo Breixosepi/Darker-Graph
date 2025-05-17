@@ -35,7 +35,7 @@ void Level::setEulerianPath(const Designar::Graph<Room>& value){eulerianPath = v
 
 void Level::setCurrentIndex(const int& value){currentIndex = value;}
 
-double Level::setWindowSize(const int& width, const int& height)
+std::pair<double,double> Level::setWindowSize(const int& width, const int& height)
 {
     windowWidth = width;
     windowHeight = height;
@@ -114,7 +114,7 @@ void Level::setShapesMap()
 //Actualiza el vector de figuras a dibujar para mostrar el fondo de los cuartos.
 //Trabaja con el ultimo tamano de ventana establecido.
 //Tambien se puede ver modificado a traves de alguno de los 2 parametros que recibe
-double Level::setDesignRoom(const bool& centered)
+std::pair<double,double> Level::setDesignRoom(const bool& centered)
 {
     if(!shapesRoom.empty())
     {
@@ -128,8 +128,8 @@ double Level::setDesignRoom(const bool& centered)
     double cellWidth = windowWidth/(div+extraDim);
     double cellHeight = windowHeight/(div+extraDim);
     if(centered){cellHeight = cellWidth = std::min(cellHeight,cellWidth);}
-    double shrinkX = cellWidth/4.0; //Ancho pared Vertical //Hitbox!
-    double shrinkY = cellHeight/2.0; //Alto pared hotizontal
+    double shrinkX = cellWidth/4.0; //margen en horizontal Hitbox! en X
+    double shrinkY = cellHeight/2.0; //margen en vertical Hitbox! en Y
     double widthTile = (cellWidth*(div+extraDim) - shrinkX*2.0)/div;
     double heightTile = (cellHeight*(div+extraDim) - shrinkY*2.0)/div;
 
@@ -144,7 +144,7 @@ double Level::setDesignRoom(const bool& centered)
 
     double resizeY = (windowHeight-cellHeight*(div+extraDim))/2.0;
     double resizeX = (windowWidth-cellWidth*(div+extraDim))/2.0;
-    double Y = 0.75*heightTile + resizeY;
+    double Y = shrinkY + resizeY;
     double supY, infY = -1.0;
     for(int i=0; i<div; ++i)
     {
@@ -196,7 +196,7 @@ double Level::setDesignRoom(const bool& centered)
     lowerFrameRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,infY,5});
     lowerFrameRoom.push_back({-shrinkX/2.0+resizeX,infY,5});
 
-    return shrinkX;
+    return std::make_pair(shrinkX,shrinkY);
 }
 
 void Level::setTileSet(const char* value, SDL_Renderer* renderer)

@@ -8,13 +8,17 @@ Player::Player() : texture(nullptr), currentDirection(Direction::RIGHT), current
 void Player::initAnimation(const RendererPtr &renderer, const TexturePtr &texture) 
 {
     this->texture = texture.get();
+
     int textureWidth, textureHeight;
+    int removePixelsInX = 16; //8 pixeles por cada costado horizontalmente
+    int removePixelsInY = 14; //14 pixeles de la parte superior del sprite
+
     SDL_QueryTexture(texture.get(), NULL, NULL, &textureWidth, &textureHeight);
-    
-    frameWidth = textureWidth / 5; // para los otros sprites hay que dividirlo dependiendo de la cantidad de columnas
-    frameHeight = textureHeight / 9; // lo mismo aca pero de filas
+
+    frameWidth = (textureWidth/5)-(removePixelsInX); // para los otros sprites hay que dividirlo dependiendo de la cantidad de columnas
+    frameHeight = (textureHeight/9)-(removePixelsInY); // lo mismo aca pero de filas
     srcRect = {0, 0, frameWidth, frameHeight};
-    destRect = {0, 0, frameWidth * 6, frameHeight * 6};
+    destRect = {0, 0, frameWidth*6, frameHeight*6};
 }
 
 int Player::getAnimationRow() const 
@@ -171,7 +175,7 @@ void Player::handleImput(const SDL_Event &event)
     }
 }
 
-void Player::update(float deltaTime) 
+void Player::update(float deltaTime, std::pair<double,double> border, int width, int height) 
 {
     if (isMoving) 
     {
@@ -180,25 +184,40 @@ void Player::update(float deltaTime)
         {
             case Direction::UP:    
             {
-                destRect.y -= moveAmount;
+                //deduccion: se necesita de unos pixeles vacios por encima de cada sprite
+                //y cuando se reescala se multiplica dicho vacio
+                //para evitar ese error visual se le impide que suba mucho al multiplicar por 0.75
+                if(static_cast<float>(border.second)-destRect.h*0.75<=destRect.y-moveAmount)
+                {
+                    destRect.y -= moveAmount;
+                }
+                else{destRect.y = static_cast<float>(border.second)-destRect.h*0.75;}
             } 
                 break;
 
             case Direction::DOWN:  
             {
-                destRect.y += moveAmount;
+                if(height-static_cast<float>(border.second)>=destRect.y+destRect.h+moveAmount)
+                {
+                    destRect.y += moveAmount;
+                }
+                else{destRect.y = height-static_cast<float>(border.second)-destRect.h;}
             } 
                 break;
 
             case Direction::LEFT:  
             {
-                destRect.x -= moveAmount;
+                destRect.x = std::max(static_cast<float>(border.first),destRect.x-moveAmount);
             }
                 break;
 
             case Direction::RIGHT: 
             {
-                destRect.x += moveAmount;
+                if(width-static_cast<float>(border.first)>=destRect.x+destRect.w+moveAmount)
+                {
+                    destRect.x += moveAmount;
+                }
+                else{destRect.x = width-static_cast<float>(border.first)-destRect.w;}
             }
                 break;
         }
@@ -248,8 +267,10 @@ void Player::updateAnimation(float deltaTime)
     }
     
     int row = getAnimationRow();
-    srcRect.x = currentFrame * frameWidth;
-    srcRect.y = row * frameHeight;
+    //este 8 y 14 representan los pixeles borrados
+    srcRect.x = currentFrame*frameWidth + 8*(currentFrame+1);
+    if(currentFrame!=0){srcRect.x += 8*currentFrame;}
+    srcRect.y = 14*(row+1)+frameHeight*(row);
 }
 
 void Player::renderPlayer(const RendererPtr &renderer) 

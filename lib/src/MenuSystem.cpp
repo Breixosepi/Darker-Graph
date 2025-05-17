@@ -194,7 +194,7 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
     // room setup
     SDL_GetWindowSize(wind.get(),&width,&height);
     Level level(creator.createMap(false));
-    level.setWindowSize(width,height);
+    std::pair<double,double> borderRoom = level.setWindowSize(width,height);
     
     level.setBackground("assets/screenshots/perg.png",renderer.get());
     level.setSourceBackground(55,80,260,195);
@@ -261,11 +261,10 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
         }
 
         // Actualización de objetos
-        player.update(deltaTime);
+        player.update(deltaTime,borderRoom,width,height);
         player.attack(enemy);
         enemy.detectPlayer(player.getBounds());
         enemy.update(deltaTime);
-        
 
         // Renderizado
         SDL_SetRenderDrawColor(renderer.get(), 30, 30, 50, 255); 
