@@ -50,10 +50,18 @@ void Enemy::update(float deltaTime)
     else if (currentState == EnemyState::TAKING_DAMAGE)
     {
         cooldownTimer += deltaTime;
-        if (cooldownTimer >= 0.5f) 
+        if (cooldownTimer >= 0.7f) 
         {
             cooldownTimer = 0.0f;
             setState(EnemyState::PATROLLING);
+        }
+    }
+    else if (currentState == EnemyState::DEAD)
+    {
+        cooldownTimer += deltaTime;
+        if (cooldownTimer >= 1.5f) 
+        {
+            cooldownTimer = 0.0f;
         }
     }
 
@@ -103,7 +111,8 @@ int Enemy::getAnimationRow() const
         case EnemyState::IDLE: return 0;
         case EnemyState::PATROLLING: return 1;
         case EnemyState::ATTACKING: return 3;
-        case EnemyState::TAKING_DAMAGE: return 5;
+        case EnemyState::TAKING_DAMAGE:
+        case EnemyState::DEAD: return 5;
         default: return 0;
     }
 }
@@ -118,9 +127,15 @@ void Enemy::setState(EnemyState newState)
 {
     if (currentState != newState)
     {
+        if (currentState == EnemyState::TAKING_DAMAGE && newState != EnemyState::PATROLLING) 
+        {
+            return;
+        }
+        
         currentState = newState;
         currentFrame = 0;
         animTimer = 0.0f;
+        
         if (newState == EnemyState::ATTACKING)
         {
             attackInProgress = true;
@@ -129,7 +144,6 @@ void Enemy::setState(EnemyState newState)
         {
             attackInProgress = false;
         }
-    
     }
 }
 
@@ -211,5 +225,73 @@ void Enemy::renderDebugBounds(const RendererPtr& renderer) const
     SDL_SetRenderDrawColor(renderer.get(), 0, 0, 255, 255);
     SDL_RenderDrawRect(renderer.get(), &bounds);
     
+    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE);
+}
+
+void Enemy::attack(Player& player)
+{
+    if (currentState != EnemyState::ATTACKING) 
+    {
+        hasHit = false;
+        return;
+    }
+
+    if ( currentFrame >=3 && !hasHit) 
+    {
+        SDL_Rect attackHitbox = getAttackHitbox();
+        SDL_Rect playerBounds = player.getBounds();
+
+        if (SDL_HasIntersection(&attackHitbox, &playerBounds)) 
+        {
+            player.setState(State::TAKING_DAMAGE);
+            hasHit = true;
+        }
+    } 
+    else if (currentFrame >= 3) 
+    {
+        hasHit = false;
+    }
+}
+
+SDL_Rect Enemy::getAttackHitbox() const 
+{
+    if (currentState != EnemyState::ATTACKING) 
+    {
+        return {0, 0, 0, 0};
+    }
+
+    int baseWidth = frameWidth * 6;  
+    int baseHeight = frameHeight * 6; 
+    
+    SDL_Rect attackHitbox = {0, 0, 0, 0};
+    int attackRange = 60; 
+    int hitboxWidth = baseWidth * 0.6f;
+    int hitboxHeight = baseHeight * 0.6f;
+
+    if (currentDirection == EnemyDirection::RIGHT) 
+    {
+        attackHitbox = { destRect.x + baseWidth/2 + attackRange, destRect.y + baseHeight/3, attackRange, hitboxHeight/2};
+    } 
+    else 
+    {
+        attackHitbox = { destRect.x + attackRange*3, destRect.y + baseHeight/3, attackRange, hitboxHeight/2};
+    }
+
+    return attackHitbox;
+}
+
+void Enemy::renderAttackHitbox(const RendererPtr& renderer) const
+{
+    if (currentState != EnemyState::ATTACKING) 
+    { 
+        return;  
+    }
+
+    SDL_Rect hitbox = getAttackHitbox();
+    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 100);  
+    SDL_RenderFillRect(renderer.get(), &hitbox);
+    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 255); 
+    SDL_RenderDrawRect(renderer.get(), &hitbox);
     SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE);
 }

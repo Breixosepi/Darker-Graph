@@ -1,7 +1,8 @@
 #pragma once 
 #include <Utilities.hpp>
-#include "Enemy.hpp"
 #include <iostream>
+
+class Enemy;
         
     enum class State 
     { 
@@ -30,6 +31,7 @@ class Player
         SDL_Rect getBounds() const;
         State getState() const { return currentState; }
         void renderAttackHitbox(const RendererPtr& renderer) const; //helper para ver el hitbox de ataque
+        void renderDebugBounds(const RendererPtr& renderer) const; //helper para ver el rect del player
         
     private:
         SDL_Texture* texture;
@@ -41,4 +43,7 @@ class Player
         bool isMoving = false;
         int currentFrame = 0;
         float animTimer = 0.0f;
+        float damageCooldown = 0.0f;
+        const float DAMAGE_COOLDOWN_TIME = 0.2f; 
+        bool hasHit = false;
 };

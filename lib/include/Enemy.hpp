@@ -1,5 +1,6 @@
 #pragma once
 #include <Utilities.hpp>
+#include "Player.hpp"
 
 enum class EnemyState 
 {
@@ -24,8 +25,11 @@ public:
     void updateAnimation(float deltaTime);
     int getAnimationRow() const;
     void detectPlayer(const SDL_Rect& playerRect);
+    void attack(Player& player);
     SDL_Rect getBounds() const;
-    void renderDebugBounds(const RendererPtr& renderer) const; //helper para ver el hitbox del enemigo
+    SDL_Rect getAttackHitbox() const; 
+    void renderAttackHitbox(const RendererPtr& renderer) const; 
+    void renderDebugBounds(const RendererPtr& renderer) const; //helper para ver el rect del enemigo
  
 
 private:
@@ -40,5 +44,6 @@ private:
     float attackCooldown = 1.0f; 
     float cooldownTimer = 0.0f;
     bool attackInProgress = false;
+     bool hasHit = false;
 
 };

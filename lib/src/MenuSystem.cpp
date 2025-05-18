@@ -264,6 +264,7 @@ menu->addWidget("load", "Puntuaciones", [&renderer, &wind, &font]()
         player.update(deltaTime,borderRoom,width,height);
         player.attack(enemy);
         enemy.detectPlayer(player.getBounds());
+        enemy.attack(player);
         enemy.update(deltaTime);
 
         // Renderizado
@@ -272,7 +273,9 @@ menu->addWidget("load", "Puntuaciones", [&renderer, &wind, &font]()
         level.drawRoom(renderer.get());
         player.renderPlayer(renderer);
         // player.renderAttackHitbox(renderer);
+        // player.renderDebugBounds(renderer);
         enemy.renderEnemy(renderer); 
+        enemy.renderAttackHitbox(renderer);
         // enemy.renderDebugBounds(renderer);
         level.drawRoomLastFrame(renderer.get());
         SDL_RenderPresent(renderer.get());

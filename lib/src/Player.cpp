@@ -1,4 +1,5 @@
 #include "Player.hpp"
+#include <Enemy.hpp>
 
 Player::Player() : texture(nullptr), currentDirection(Direction::RIGHT), currentState(State::IDLE) 
 {
@@ -177,7 +178,16 @@ void Player::handleImput(const SDL_Event &event)
 
 void Player::update(float deltaTime, std::pair<double,double> border, int width, int height) 
 {
-    if (isMoving) 
+    if (currentState == State::TAKING_DAMAGE) 
+    {
+        damageCooldown += deltaTime;
+        if (damageCooldown >= DAMAGE_COOLDOWN_TIME) 
+        {
+            damageCooldown = 0.0f;
+            setState(State::IDLE);
+        }
+    }
+    else if (isMoving) 
     {
         float moveAmount = 200.0f * deltaTime;
         switch (currentDirection) 
@@ -339,7 +349,7 @@ SDL_Rect Player::getAttackHitbox() const
 
 void Player::attack(Enemy& enemy)
 {
-    static bool hasHit = false;
+    bool hasHit = false;
     
     if (currentState != State::ATTACKING) 
     {
@@ -381,3 +391,16 @@ void Player::renderAttackHitbox(const RendererPtr& renderer) const
     SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE);
 }
 
+void Player::renderDebugBounds(const RendererPtr& renderer) const
+{
+    SDL_Rect bounds = getBounds();
+    
+    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer.get(), 0, 0, 255, 100);
+    SDL_RenderFillRect(renderer.get(), &bounds);
+    
+    SDL_SetRenderDrawColor(renderer.get(), 0, 0, 255, 255);
+    SDL_RenderDrawRect(renderer.get(), &bounds);
+    
+    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE);
+}
