@@ -29,7 +29,7 @@ class Player
         SDL_Rect getAttackHitbox() const;
         SDL_Rect getBounds() const;
         State getState() const { return currentState; }
-        void renderAttackHitbox(const RendererPtr& renderer) const;
+        void renderAttackHitbox(const RendererPtr& renderer) const; //helper para ver el hitbox de ataque
         
     private:
         SDL_Texture* texture;

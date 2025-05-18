@@ -60,8 +60,6 @@ void Enemy::update(float deltaTime)
     updateAnimation(deltaTime);
 }
 
-
-
 void Enemy::patrol(float deltaTime)
 {
     if (currentDirection == EnemyDirection::RIGHT)
@@ -137,8 +135,18 @@ void Enemy::setState(EnemyState newState)
 
 SDL_Rect Enemy::getBounds() const
 {
-    return destRect;
+
+    const int enemyWidth = frameWidth ;  
+    const int enemyHeight = frameHeight ; 
+    
+    return {
+        destRect.x + (destRect.w -frameWidth) / 2 , 
+        destRect.y + (destRect.h - frameHeight) / 2,
+        enemyWidth,
+        enemyHeight
+    };
 }
+
 
 void Enemy::detectPlayer(const SDL_Rect& playerRect)
 {
@@ -190,4 +198,18 @@ void Enemy::detectPlayer(const SDL_Rect& playerRect)
             setState(EnemyState::PATROLLING);
         }
     }
+}
+
+void Enemy::renderDebugBounds(const RendererPtr& renderer) const
+{
+    SDL_Rect bounds = getBounds();
+    
+    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer.get(), 0, 0, 255, 100);
+    SDL_RenderFillRect(renderer.get(), &bounds);
+    
+    SDL_SetRenderDrawColor(renderer.get(), 0, 0, 255, 255);
+    SDL_RenderDrawRect(renderer.get(), &bounds);
+    
+    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE);
 }

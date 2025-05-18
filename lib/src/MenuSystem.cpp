@@ -186,7 +186,7 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
         }
     }); 
 
-menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]() 
+menu->addWidget("load", "Puntuaciones", [&renderer, &wind, &font]() 
 {
     MyGraph creator;
     int width, height;
@@ -271,8 +271,9 @@ menu->addWidget("load", "Cargar Partida", [&renderer, &wind, &font]()
         SDL_RenderClear(renderer.get());
         level.drawRoom(renderer.get());
         player.renderPlayer(renderer);
-        player.renderAttackHitbox(renderer);
+        // player.renderAttackHitbox(renderer);
         enemy.renderEnemy(renderer); 
+        // enemy.renderDebugBounds(renderer);
         level.drawRoomLastFrame(renderer.get());
         SDL_RenderPresent(renderer.get());
         SDL_Delay(16); 

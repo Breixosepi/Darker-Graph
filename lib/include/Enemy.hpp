@@ -25,6 +25,7 @@ public:
     int getAnimationRow() const;
     void detectPlayer(const SDL_Rect& playerRect);
     SDL_Rect getBounds() const;
+    void renderDebugBounds(const RendererPtr& renderer) const; //helper para ver el hitbox del enemigo
  
 
 private:

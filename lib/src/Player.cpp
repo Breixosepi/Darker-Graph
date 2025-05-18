@@ -300,73 +300,84 @@ SDL_Rect Player::getBounds() const
     return destRect;
 }
 
-SDL_Rect Player::getAttackHitbox() const // hay que cambiar el hitbox par que de bien
+SDL_Rect Player::getAttackHitbox() const 
 {
-    SDL_Rect attackHitbox = {0, 0, 0, 0};
-    const int hitboxExtension = 30; 
+    if (currentState != State::ATTACKING) 
+    {
+        return {0, 0, 0, 0};
+    }
 
-    switch (currentDirection)
+    const int baseWidth = frameWidth * 6;  
+    const int baseHeight = frameHeight * 6; 
+    
+    SDL_Rect attackHitbox = {0, 0, 0, 0};
+    const int attackRange = 60; 
+    const int hitboxWidth = baseWidth * 0.6f;
+    const int hitboxHeight = baseHeight * 0.6f;
+
+    switch (currentDirection) 
     {
         case Direction::RIGHT:
-        attackHitbox.x = destRect.x + destRect.w;
-        attackHitbox.y = destRect.y + destRect.h / 2 - 10; 
-        attackHitbox.w = hitboxExtension;
-        attackHitbox.h = 20; 
+            attackHitbox = { destRect.x + baseWidth , destRect.y + baseHeight/3, attackRange, hitboxHeight};
             break;
 
         case Direction::LEFT:
-            attackHitbox.x = destRect.x - hitboxExtension;
-            attackHitbox.y = destRect.y + destRect.h/4;
-            attackHitbox.w = hitboxExtension;
-            attackHitbox.h = destRect.h/2;
+            attackHitbox = { destRect.x - attackRange , destRect.y + baseHeight/3, attackRange, hitboxHeight};
             break;
 
         case Direction::UP:
-            attackHitbox.x = destRect.x + destRect.w/4;
-            attackHitbox.y = destRect.y - hitboxExtension;
-            attackHitbox.w = destRect.w/2;
-            attackHitbox.h = hitboxExtension;
+            attackHitbox = { destRect.x + baseWidth/4 , destRect.y - attackRange , hitboxWidth , attackRange};
             break;
 
         case Direction::DOWN:
-            attackHitbox.x = destRect.x + destRect.w/4;
-            attackHitbox.y = destRect.y + destRect.h;
-            attackHitbox.w = destRect.w/2;
-            attackHitbox.h = hitboxExtension;
+            attackHitbox = { destRect.x + baseWidth/4 , destRect.y + baseHeight , hitboxWidth , attackRange };
             break;
     }
 
     return attackHitbox;
 }
 
-void Player::attack(Enemy& enemies)
+void Player::attack(Enemy& enemy)
 {
-    if (currentState != State::ATTACKING)
-        return;
-
-    SDL_Rect attackHitbox = getAttackHitbox();
-
-    SDL_Rect enemyBounds = enemies.getBounds();
-
-    if (SDL_HasIntersection(&attackHitbox, &enemyBounds))
+    static bool hasHit = false;
+    
+    if (currentState != State::ATTACKING) 
     {
-        enemies.setState(EnemyState::TAKING_DAMAGE);
+        hasHit = false;
+        return;
+    }
+
+    if (currentFrame == 2 && !hasHit) 
+    {
+        SDL_Rect attackHitbox = getAttackHitbox();
+        SDL_Rect enemyBounds = enemy.getBounds();
+
+        if (SDL_HasIntersection(&attackHitbox, &enemyBounds)) 
+        {
+            enemy.setState(EnemyState::TAKING_DAMAGE);
+            hasHit = true; 
+        }
+    } 
+    else if (currentFrame != 2) 
+    {
+        hasHit = false; 
     }
 }
 
 void Player::renderAttackHitbox(const RendererPtr& renderer) const
 {
     if (currentState != State::ATTACKING)
+    { 
         return;
+    }
 
-    SDL_Rect attackHitbox = getAttackHitbox();
-
+    SDL_Rect hitbox = getAttackHitbox();
+    
     SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 80); 
-    SDL_RenderFillRect(renderer.get(), &attackHitbox);
-
-    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 255); 
-    SDL_RenderDrawRect(renderer.get(), &attackHitbox);
-
-    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE); 
+    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 100);
+    SDL_RenderFillRect(renderer.get(), &hitbox);
+    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 255);
+    SDL_RenderDrawRect(renderer.get(), &hitbox);
+    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE);
 }
+
