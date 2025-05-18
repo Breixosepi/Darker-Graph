@@ -49,10 +49,12 @@ void Enemy::update(float deltaTime)
     }
     else if (currentState == EnemyState::TAKING_DAMAGE)
     {
+        animSpeed = 0.1f;
         cooldownTimer += deltaTime;
-        if (cooldownTimer >= 0.7f) 
+        if (cooldownTimer >=attackCooldown) 
         {
             cooldownTimer = 0.0f;
+            animSpeed = 0.2f;
             setState(EnemyState::PATROLLING);
         }
     }
@@ -91,7 +93,7 @@ void Enemy::patrol(float deltaTime)
 void Enemy::updateAnimation(float deltaTime)
 {
     animTimer += deltaTime;
-    if (animTimer >= ANIM_SPEED)
+    if (animTimer >= animSpeed)
     {
         animTimer = 0.0f;
         currentFrame = (currentFrame + 1) % 4;
@@ -111,7 +113,7 @@ int Enemy::getAnimationRow() const
         case EnemyState::IDLE: return 0;
         case EnemyState::PATROLLING: return 1;
         case EnemyState::ATTACKING: return 3;
-        case EnemyState::TAKING_DAMAGE:
+        case EnemyState::TAKING_DAMAGE: return 4;
         case EnemyState::DEAD: return 5;
         default: return 0;
     }

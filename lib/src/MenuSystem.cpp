@@ -275,7 +275,7 @@ menu->addWidget("load", "Puntuaciones", [&renderer, &wind, &font]()
         // player.renderAttackHitbox(renderer);
         // player.renderDebugBounds(renderer);
         enemy.renderEnemy(renderer); 
-        enemy.renderAttackHitbox(renderer);
+        // enemy.renderAttackHitbox(renderer);
         // enemy.renderDebugBounds(renderer);
         level.drawRoomLastFrame(renderer.get());
         SDL_RenderPresent(renderer.get());

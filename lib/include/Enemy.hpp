@@ -28,7 +28,7 @@ public:
     void attack(Player& player);
     SDL_Rect getBounds() const;
     SDL_Rect getAttackHitbox() const; 
-    void renderAttackHitbox(const RendererPtr& renderer) const; 
+    void renderAttackHitbox(const RendererPtr& renderer) const; //helper para ver el hitbox de ataque
     void renderDebugBounds(const RendererPtr& renderer) const; //helper para ver el rect del enemigo
  
 
@@ -39,11 +39,10 @@ private:
     EnemyDirection currentDirection;
     EnemyState currentState;
     int frameWidth, frameHeight, startX, currentFrame = 0, patrolRange = 300;
-    const float ANIM_SPEED = 0.3f;
+    float animSpeed = 0.2f;
     float animTimer = 0.0f, speed = 150.0f;
     float attackCooldown = 1.0f; 
     float cooldownTimer = 0.0f;
     bool attackInProgress = false;
-     bool hasHit = false;
-
+    bool hasHit = false;
 };
