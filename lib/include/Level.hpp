@@ -54,9 +54,7 @@ class Level
         std::vector<PosShape> lowerFrameRoom;
         std::unordered_map<int,std::pair<int,int>> dimensionsMap;
         std::unordered_map<int,std::pair<int,int>> dimensionsRoom;
-        SDL_Surface* surfTileSet;
         SDL_Texture* textTileSet;
-        SDL_Surface* surfBackground;
         SDL_Texture* textBackground;
 
         void getRowsColumns();

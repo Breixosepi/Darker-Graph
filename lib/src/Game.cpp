@@ -53,7 +53,7 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
 
     if((IMG_Init({IMG_INIT_PNG|IMG_INIT_JPG}))&IMG_INIT_PNG)
     {
-        surfaceBackground = IMG_Load("assets/screenshots/background-title.png");
+        SDL_Surface* surfaceBackground = IMG_Load("assets/screenshots/background-title.png");
         if(surfaceBackground)
         {
             textureBackground = SDL_CreateTextureFromSurface(renderer.get(),surfaceBackground);
@@ -61,6 +61,7 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
             {
                 isRunning = false;
             }
+            SDL_FreeSurface(surfaceBackground);
         }
         else
         {

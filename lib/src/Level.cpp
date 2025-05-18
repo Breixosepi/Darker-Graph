@@ -201,7 +201,7 @@ std::pair<double,double> Level::setDesignRoom(const bool& centered)
 
 void Level::setTileSet(const char* value, SDL_Renderer* renderer)
 {
-    surfTileSet = IMG_Load(value);
+    SDL_Surface* surfTileSet = IMG_Load(value);
     if(surfTileSet)
     {
         textTileSet = SDL_CreateTextureFromSurface(renderer,surfTileSet);
@@ -209,6 +209,7 @@ void Level::setTileSet(const char* value, SDL_Renderer* renderer)
         {
             std::cout<<"Texture "<<value<<" dont created."<<std::endl;
         }
+        SDL_FreeSurface(surfTileSet);
     }
     else{std::cout<<"Surface "<<value<<" dont created."<<std::endl;}
 }
@@ -220,7 +221,7 @@ void Level::insertSourceShape(const int& x, const int& y, const int& w, const in
 
 void Level::setBackground(const char* value, SDL_Renderer* renderer)
 {
-    surfBackground = IMG_Load(value);
+    SDL_Surface* surfBackground = IMG_Load(value);
     if(surfBackground)
     {
         textBackground = SDL_CreateTextureFromSurface(renderer,surfBackground);
@@ -228,6 +229,7 @@ void Level::setBackground(const char* value, SDL_Renderer* renderer)
         {
             std::cout<<"Texture "<<value<<" dont created."<<std::endl;
         }
+        SDL_FreeSurface(surfBackground);
     }
     else{std::cout<<"Surface "<<value<<" dont created."<<std::endl;}
 }
