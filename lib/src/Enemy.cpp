@@ -1,6 +1,6 @@
 #include "Enemy.hpp"
-#include <iostream>
 #include <cmath>
+#include <Combat.hpp>
 
 Enemy::Enemy() :
     texture(nullptr),
@@ -34,7 +34,12 @@ void Enemy::setPosition(int x, int y)
 
 void Enemy::update(float deltaTime)
 {
-    if (currentState == EnemyState::ATTACKING)
+    if (currentState == EnemyState::DEAD)
+    {
+        updateAnimation(deltaTime);
+        return;
+    }
+    else if (currentState == EnemyState::ATTACKING)
     {
         cooldownTimer += deltaTime;
 
@@ -56,14 +61,6 @@ void Enemy::update(float deltaTime)
             cooldownTimer = 0.0f;
             animSpeed = 0.2f;
             setState(EnemyState::PATROLLING);
-        }
-    }
-    else if (currentState == EnemyState::DEAD)
-    {
-        cooldownTimer += deltaTime;
-        if (cooldownTimer >= 1.5f) 
-        {
-            cooldownTimer = 0.0f;
         }
     }
 
@@ -127,8 +124,13 @@ void Enemy::renderEnemy(SDL_Renderer* renderer)
 
 void Enemy::setState(EnemyState newState)
 {
+
     if (currentState != newState)
     {
+        if (currentState == EnemyState::DEAD)
+        {
+            return;
+        }
         if (currentState == EnemyState::TAKING_DAMAGE && newState != EnemyState::PATROLLING) 
         {
             return;
@@ -232,27 +234,7 @@ void Enemy::renderDebugBounds(SDL_Renderer* renderer) const
 
 void Enemy::attack(Player& player)
 {
-    if (currentState != EnemyState::ATTACKING) 
-    {
-        hasHit = false;
-        return;
-    }
-
-    if ( currentFrame >=3 && !hasHit) 
-    {
-        SDL_Rect attackHitbox = getAttackHitbox();
-        SDL_Rect playerBounds = player.getBounds();
-
-        if (SDL_HasIntersection(&attackHitbox, &playerBounds)) 
-        {
-            player.setState(State::TAKING_DAMAGE);
-            hasHit = true;
-        }
-    } 
-    else if (currentFrame >= 3) 
-    {
-        hasHit = false;
-    }
+    Combat::enemyAttack(*this, player);
 }
 
 SDL_Rect Enemy::getAttackHitbox() const 
@@ -296,4 +278,34 @@ void Enemy::renderAttackHitbox(SDL_Renderer* renderer) const
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); 
     SDL_RenderDrawRect(renderer, &hitbox);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+}
+
+EnemyState Enemy::getState()
+{
+    return currentState;
+}   
+
+int Enemy::getCurrentFrame() const 
+{
+    return currentFrame;
+}
+
+bool Enemy::getHasHit() const 
+{
+    return hasHit;
+}
+
+void Enemy::setHasHit(bool hit) 
+{
+    hasHit = hit;
+}
+
+int Enemy::getHealth() const 
+{
+    return health;
+}
+
+void Enemy::setHealth(int health) 
+{
+    this->health = health;
 }

@@ -5,6 +5,8 @@
 #include <memory>
 #include <vector>
 #include <stdexcept>
+#include <algorithm>
+
 
 struct SDL_Deleter 
 {

@@ -26,10 +26,16 @@ public:
     int getAnimationRow() const;
     void detectPlayer(const SDL_Rect& playerRect);
     void attack(Player& player);
+    EnemyState getState();
     SDL_Rect getBounds() const;
     SDL_Rect getAttackHitbox() const; 
     void renderAttackHitbox(SDL_Renderer* renderer) const; //helper para ver el hitbox de ataque
     void renderDebugBounds(SDL_Renderer* renderer) const; //helper para ver el rect del enemigo
+    int getCurrentFrame() const;
+    bool getHasHit() const;
+    void setHasHit(bool hit);
+    int getHealth() const;
+    void setHealth(int health);
  
 
 private:
@@ -45,4 +51,5 @@ private:
     float cooldownTimer = 0.0f;
     bool attackInProgress = false;
     bool hasHit = false;
+    int health = 2;
 };

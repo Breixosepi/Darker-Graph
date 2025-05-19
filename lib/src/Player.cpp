@@ -1,7 +1,8 @@
 #include "Player.hpp"
 #include <Enemy.hpp>
+#include <Combat.hpp>
 
-Player::Player() : texture(nullptr), currentDirection(Direction::RIGHT), currentState(State::IDLE) 
+Player::Player() : texture(nullptr), currentDirection(Direction::RIGHT), currentState(State::IDLE), lives(3)
 {
     isInBound = {false,false,false,false};
 }
@@ -10,9 +11,15 @@ void Player::initAnimation(SDL_Renderer* renderer, const TexturePtr &texture)
 {
     this->texture = texture.get();
 
+    healthBar.init(renderer, "assets/sprites/Health.png");
+
     int textureWidth, textureHeight;
     int removePixelsInX = 16; //8 pixeles por cada costado horizontalmente
     int removePixelsInY = 14; //14 pixeles de la parte superior del sprite
+
+    int screenWidth, screenHeight;
+    SDL_GetRendererOutputSize(renderer, &screenWidth, &screenHeight);
+    healthBar.setBaseSize(screenWidth, screenHeight);
 
     SDL_QueryTexture(texture.get(), NULL, NULL, &textureWidth, &textureHeight);
 
@@ -160,13 +167,6 @@ void Player::handleImput(const SDL_Event &event)
                     animTimer = 0.0f;
                 }
                     break;
-
-            case SDLK_e:
-                if (keyPressed) 
-                {
-                    currentState = State::DEAD;
-                }
-                    break;
         }
 
         if (!isMoving && currentState == State::RUNNING) 
@@ -257,6 +257,9 @@ void Player::update(float deltaTime, std::pair<double,double> border, int width,
         }
     }
     updateAnimation(deltaTime);
+
+    healthBar.update(lives, deltaTime);
+
 }
 
 void Player::updateAnimation(float deltaTime) 
@@ -311,6 +314,7 @@ void Player::renderPlayer(SDL_Renderer* renderer)
 {
     SDL_RendererFlip flip = (currentDirection == Direction::LEFT) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
     SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0, nullptr, flip);
+    healthBar.render(renderer);
 }
 
 void Player::setPosition(int x, int y) 
@@ -379,29 +383,12 @@ SDL_Rect Player::getAttackHitbox() const
 
 void Player::attack(Enemy& enemy)
 {
-    bool hasHit = false;
-    
-    if (currentState != State::ATTACKING) 
-    {
-        hasHit = false;
-        return;
-    }
+    Combat::playerAttack(*this, enemy);
+}
 
-    if (currentFrame == 2 && !hasHit) 
-    {
-        SDL_Rect attackHitbox = getAttackHitbox();
-        SDL_Rect enemyBounds = enemy.getBounds();
-
-        if (SDL_HasIntersection(&attackHitbox, &enemyBounds)) 
-        {
-            enemy.setState(EnemyState::TAKING_DAMAGE);
-            hasHit = true; 
-        }
-    } 
-    else if (currentFrame != 2) 
-    {
-        hasHit = false; 
-    }
+int Player::getCurrentFrame() const
+{
+    return currentFrame; 
 }
 
 void Player::renderAttackHitbox(SDL_Renderer* renderer) const
@@ -449,4 +436,46 @@ bool Player::getIsInBound() const
         return isInBound[static_cast<int>(Direction::LEFT)];
     }
     return false;
+}
+
+int Player::getHealth() const 
+{
+    return lives;
+}
+
+void Player::setHealth(int lives) 
+{
+    this->lives = lives;
+}
+
+bool Player::getHasHit() const 
+{
+    return hasHit;
+}
+
+void Player::setHasHit(bool hit) 
+{
+    hasHit = hit;
+}
+
+void Player::takeDamage(int amount) 
+{
+    if (lives <= 0) return;
+    
+    int newLives = std::max(lives - amount, 0);
+    if (newLives < lives) 
+    {
+        healthBar.takeDamage(); 
+    }
+    lives = newLives;
+
+    if(lives==0)
+    {
+        currentState = State::DEAD;
+    }
+}
+
+void Player::handleWindowResize(int newWidth, int newHeight) 
+{
+    healthBar.handleWindowResize(newWidth, newHeight);
 }
