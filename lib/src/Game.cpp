@@ -119,10 +119,18 @@ void Game::render()
 }
 void Game::cleanup()
 {
+    std::cout<<"Start Cleanup"<<std::endl;
     mainMenu.reset();
+    font.reset();
+    renderer.reset();
+    window.reset();
+    std::cout<<"Pointers Clean"<<std::endl;
+    IMG_Quit();
+    std::cout<<"IMG Clean"<<std::endl;
     TTF_Quit();
+    std::cout<<"TTF Clean"<<std::endl;
     SDL_Quit();
-    isRunning = false;
+    std::cout<<"SDL Clean"<<std::endl;
 }
 
 bool Game::running()
