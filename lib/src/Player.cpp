@@ -6,7 +6,7 @@ Player::Player() : texture(nullptr), currentDirection(Direction::RIGHT), current
 
 }
 
-void Player::initAnimation(const RendererPtr &renderer, const TexturePtr &texture) 
+void Player::initAnimation(SDL_Renderer* renderer, const TexturePtr &texture) 
 {
     this->texture = texture.get();
 
@@ -283,10 +283,10 @@ void Player::updateAnimation(float deltaTime)
     srcRect.y = 14*(row+1)+frameHeight*(row);
 }
 
-void Player::renderPlayer(const RendererPtr &renderer) 
+void Player::renderPlayer(SDL_Renderer* renderer) 
 {
     SDL_RendererFlip flip = (currentDirection == Direction::LEFT) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-    SDL_RenderCopyEx(renderer.get(), texture, &srcRect, &destRect, 0, nullptr, flip);
+    SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0, nullptr, flip);
 }
 
 void Player::setPosition(int x, int y) 
@@ -374,7 +374,7 @@ void Player::attack(Enemy& enemy)
     }
 }
 
-void Player::renderAttackHitbox(const RendererPtr& renderer) const
+void Player::renderAttackHitbox(SDL_Renderer* renderer) const
 {
     if (currentState != State::ATTACKING)
     { 
@@ -383,24 +383,24 @@ void Player::renderAttackHitbox(const RendererPtr& renderer) const
 
     SDL_Rect hitbox = getAttackHitbox();
     
-    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 100);
-    SDL_RenderFillRect(renderer.get(), &hitbox);
-    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 255);
-    SDL_RenderDrawRect(renderer.get(), &hitbox);
-    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 100);
+    SDL_RenderFillRect(renderer, &hitbox);
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderDrawRect(renderer, &hitbox);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 }
 
-void Player::renderDebugBounds(const RendererPtr& renderer) const
+void Player::renderDebugBounds(SDL_Renderer* renderer) const
 {
     SDL_Rect bounds = getBounds();
     
-    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(renderer.get(), 0, 0, 255, 100);
-    SDL_RenderFillRect(renderer.get(), &bounds);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 100);
+    SDL_RenderFillRect(renderer, &bounds);
     
-    SDL_SetRenderDrawColor(renderer.get(), 0, 0, 255, 255);
-    SDL_RenderDrawRect(renderer.get(), &bounds);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    SDL_RenderDrawRect(renderer, &bounds);
     
-    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 }

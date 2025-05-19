@@ -16,8 +16,8 @@ class Enemy
 {
 public:
     Enemy();
-    void initAnimation(const RendererPtr &renderer, const TexturePtr &texture);
-    void renderEnemy(const RendererPtr &renderer);
+    void initAnimation(SDL_Renderer* renderer, const TexturePtr &texture);
+    void renderEnemy(SDL_Renderer* renderer);
     void update(float deltaTime);
     void setPosition(int x, int y);
     void setState(EnemyState newState);
@@ -28,8 +28,8 @@ public:
     void attack(Player& player);
     SDL_Rect getBounds() const;
     SDL_Rect getAttackHitbox() const; 
-    void renderAttackHitbox(const RendererPtr& renderer) const; //helper para ver el hitbox de ataque
-    void renderDebugBounds(const RendererPtr& renderer) const; //helper para ver el rect del enemigo
+    void renderAttackHitbox(SDL_Renderer* renderer) const; //helper para ver el hitbox de ataque
+    void renderDebugBounds(SDL_Renderer* renderer) const; //helper para ver el rect del enemigo
  
 
 private:

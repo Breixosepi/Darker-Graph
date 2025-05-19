@@ -11,7 +11,7 @@ Enemy::Enemy() :
     destRect = {0, 0, 0, 0};
 }
 
-void Enemy::initAnimation(const RendererPtr& renderer, const TexturePtr& tex)
+void Enemy::initAnimation(SDL_Renderer* renderer, const TexturePtr& tex)
 {
     texture = tex.get();
 
@@ -119,10 +119,10 @@ int Enemy::getAnimationRow() const
     }
 }
 
-void Enemy::renderEnemy(const RendererPtr& renderer)
+void Enemy::renderEnemy(SDL_Renderer* renderer)
 {
     SDL_RendererFlip flip = (currentDirection == EnemyDirection::LEFT) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-    SDL_RenderCopyEx(renderer.get(), texture, &srcRect, &destRect, 0, nullptr, flip);
+    SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0, nullptr, flip);
 }
 
 void Enemy::setState(EnemyState newState)
@@ -216,18 +216,18 @@ void Enemy::detectPlayer(const SDL_Rect& playerRect)
     }
 }
 
-void Enemy::renderDebugBounds(const RendererPtr& renderer) const
+void Enemy::renderDebugBounds(SDL_Renderer* renderer) const
 {
     SDL_Rect bounds = getBounds();
     
-    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(renderer.get(), 0, 0, 255, 100);
-    SDL_RenderFillRect(renderer.get(), &bounds);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 100);
+    SDL_RenderFillRect(renderer, &bounds);
     
-    SDL_SetRenderDrawColor(renderer.get(), 0, 0, 255, 255);
-    SDL_RenderDrawRect(renderer.get(), &bounds);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    SDL_RenderDrawRect(renderer, &bounds);
     
-    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 }
 
 void Enemy::attack(Player& player)
@@ -282,7 +282,7 @@ SDL_Rect Enemy::getAttackHitbox() const
     return attackHitbox;
 }
 
-void Enemy::renderAttackHitbox(const RendererPtr& renderer) const
+void Enemy::renderAttackHitbox(SDL_Renderer* renderer) const
 {
     if (currentState != EnemyState::ATTACKING) 
     { 
@@ -290,10 +290,10 @@ void Enemy::renderAttackHitbox(const RendererPtr& renderer) const
     }
 
     SDL_Rect hitbox = getAttackHitbox();
-    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 100);  
-    SDL_RenderFillRect(renderer.get(), &hitbox);
-    SDL_SetRenderDrawColor(renderer.get(), 255, 0, 0, 255); 
-    SDL_RenderDrawRect(renderer.get(), &hitbox);
-    SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 100);  
+    SDL_RenderFillRect(renderer, &hitbox);
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); 
+    SDL_RenderDrawRect(renderer, &hitbox);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 }

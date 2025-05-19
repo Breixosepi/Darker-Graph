@@ -8,26 +8,27 @@
 class MenuSystem 
 {
     public:
-        MenuSystem(const RendererPtr& render, const FontPtr& fonts, const WindowPtr& wind);
+        MenuSystem();
+        MenuSystem(SDL_Renderer* render, TTF_Font* fonts, SDL_Window* wind);
         ~MenuSystem() = default;
         MenuSystem(const MenuSystem&) = delete;
-        MenuSystem& operator=(const MenuSystem&) = delete;
-        static std::unique_ptr<MenuSystem> createMainMenu(const RendererPtr& renderer,const FontPtr& font, const WindowPtr& wind); 
-        void addWidget(const std::string& name, const std::string& label, std::function<void()> action);
+        MenuSystem& operator=(const MenuSystem&) = delete;  
         void handleEvent(const SDL_Event& event);
         void render() const;
-        void navigateUp();
         void setupLevel(Level& level, Player& player, Enemy& enemy);
-        void navigateDown();
-        void executeCurrent();
         void playGameLoop(Level& level, Player& player, Enemy& enemy);
     
     private:
-        WindowPtr window;
-        RendererPtr renderer;
-        FontPtr font;
+        SDL_Window* window;
+        SDL_Renderer* renderer;
+        TTF_Font* font;
         std::vector<std::unique_ptr<Widget>> widgets;
         Widget* head;
         Widget* tail;
         Widget* current;
+        void setMainMenu(MenuSystem* menu);
+        void addWidget(const std::string& name, const std::string& label, std::function<void()> action);
+        void navigateUp();
+        void navigateDown();
+        void executeCurrent();
 };

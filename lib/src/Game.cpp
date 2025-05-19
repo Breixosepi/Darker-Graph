@@ -41,7 +41,7 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
         TTF_SetFontOutline(font.get(), 0);  
         TTF_SetFontHinting(font.get(), TTF_HINTING_LIGHT);
 
-        mainMenu = MenuSystem::createMainMenu(renderer, font, window);
+        mainMenu = std::make_unique<MenuSystem>(renderer.get(), font.get(), window.get());
 
         SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 0);
         isRunning = true;

@@ -13,24 +13,24 @@ bool Widget::containsPoint(int x, int y) const {
     return (x >= boundingBox.x && x <= boundingBox.x + boundingBox.w &&
             y >= boundingBox.y && y <= boundingBox.y + boundingBox.h);
 }
-void Widget::render(const RendererPtr& renderer, const FontPtr& font, bool isActive) const 
+void Widget::render(SDL_Renderer* renderer, TTF_Font* font, bool isActive) const 
 {
     SDL_Color color = isActive ? SDL_Color{0, 255, 0, 255} : SDL_Color{255, 255, 255, 255};
 
-    SurfacePtr surface(TTF_RenderText_Blended(font.get(), label.c_str(), color));
+    SurfacePtr surface(TTF_RenderText_Blended(font, label.c_str(), color));
     if (!surface) 
     {
         throw std::runtime_error("Error en la superficie");
     }
     
-    TexturePtr texture(SDL_CreateTextureFromSurface(renderer.get(), surface.get()));
+    TexturePtr texture(SDL_CreateTextureFromSurface(renderer, surface.get()));
     if (!texture) 
     {
         throw std::runtime_error("Error en la textura");
     }
 
     int screenWidth, screenHeight;
-    SDL_GetRendererOutputSize(renderer.get(), &screenWidth, &screenHeight);
+    SDL_GetRendererOutputSize(renderer, &screenWidth, &screenHeight);
 
     SDL_Rect rect
     {
@@ -40,14 +40,14 @@ void Widget::render(const RendererPtr& renderer, const FontPtr& font, bool isAct
         surface->h                      
     };
     const_cast<Widget*>(this)->boundingBox = rect;
-    SDL_RenderCopy(renderer.get(), texture.get(), nullptr, &rect);
+    SDL_RenderCopy(renderer, texture.get(), nullptr, &rect);
     
     if (isActive) 
     {
-        SurfacePtr arrowSurface(TTF_RenderText_Blended(font.get(), ">", color));
+        SurfacePtr arrowSurface(TTF_RenderText_Blended(font, ">", color));
         if (arrowSurface) 
         {
-            TexturePtr arrowTexture(SDL_CreateTextureFromSurface(renderer.get(), arrowSurface.get()));
+            TexturePtr arrowTexture(SDL_CreateTextureFromSurface(renderer, arrowSurface.get()));
             if (arrowTexture) 
             {
                 SDL_Rect arrowRect
@@ -57,7 +57,7 @@ void Widget::render(const RendererPtr& renderer, const FontPtr& font, bool isAct
                     arrowSurface->w,              
                     arrowSurface->h                 
                 };
-                SDL_RenderCopy(renderer.get(), arrowTexture.get(), nullptr, &arrowRect);
+                SDL_RenderCopy(renderer, arrowTexture.get(), nullptr, &arrowRect);
             }
         }
     }

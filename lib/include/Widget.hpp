@@ -10,7 +10,7 @@ public:
 
     Widget(const std::string& name, int x, int y, const std::string& label);
     virtual ~Widget() = default;
-    virtual void render(const RendererPtr& renderer, const FontPtr& font, bool isActive) const;
+    virtual void render(SDL_Renderer* renderer, TTF_Font* font, bool isActive) const;
     virtual void execute() const;
     void setAction(std::function<void()> action);
     void setPosition(int x, int y);

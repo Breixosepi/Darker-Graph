@@ -3,9 +3,22 @@
 #include <Player.hpp>
 #include <Enemy.hpp>
 
-MenuSystem::MenuSystem(const RendererPtr& render, const FontPtr& fonts, const WindowPtr& wind) : renderer(render.get()), font(fonts.get()),head(nullptr),tail(nullptr),current(nullptr),window(wind.get())
+MenuSystem::MenuSystem()
 {
+    head = nullptr;
+    tail = nullptr;
+    current = nullptr;
+}
 
+MenuSystem::MenuSystem(SDL_Renderer* render, TTF_Font* fonts, SDL_Window* wind)
+{
+    renderer = render;
+    font = fonts;
+    window = wind;
+    head = nullptr;
+    tail = nullptr;
+    current = nullptr;
+    setMainMenu(this);
 }
 
 void MenuSystem::addWidget(const std::string& name, const std::string& label, std::function<void()> action) 
@@ -137,21 +150,19 @@ void MenuSystem::executeCurrent()
     }
 }
 
-std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& renderer, const FontPtr& font, const WindowPtr& wind) 
-{
-    std::unique_ptr<MenuSystem> menu = std::make_unique<MenuSystem>(renderer, font, wind);
-    
+void MenuSystem::setMainMenu(MenuSystem* menu) 
+{ 
     menu->addWidget("start", "Iniciar Juego", [&]()
     {   
         MyGraph creator;
         int width, height;
-        SDL_GetWindowSize(wind.get(),&width,&height);
+        SDL_GetWindowSize(window,&width,&height);
         Level level(creator.createMap(false));
         level.setWindowSize(width,height);
 
-        level.setBackground("assets/screenshots/perg.png",renderer.get());
+        level.setBackground("assets/screenshots/perg.png",renderer);
         level.setSourceBackground(55,80,260,195);
-        level.setTileSet("assets/screenshots/tileSet.png",renderer.get());
+        level.setTileSet("assets/screenshots/tileSet.png",renderer);
         level.insertSourceShape(832,208,32,32,0);
         level.insertSourceShape(486,202,80,80,1);
         level.insertSourceShape(832,416,64,64,2);
@@ -177,28 +188,28 @@ std::unique_ptr<MenuSystem> MenuSystem::createMainMenu(const RendererPtr& render
                 {
                     if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                     {
-                        SDL_GetWindowSize(wind.get(), &width, &height);
+                        SDL_GetWindowSize(window, &width, &height);
                         level.setWindowSize(width,height);
                     } 
                 }  
             }
-            level.drawMap(renderer.get());    
+            level.drawMap(renderer);    
         }
     }); 
 
-menu->addWidget("load", "Puntuaciones", [&renderer, &wind, &font]() 
+menu->addWidget("load", "Puntuaciones", [&]() 
 {
     MyGraph creator;
     int width, height;
 
     // room setup
-    SDL_GetWindowSize(wind.get(),&width,&height);
+    SDL_GetWindowSize(window,&width,&height);
     Level level(creator.createMap(false));
     std::pair<double,double> borderRoom = level.setWindowSize(width,height);
     
-    level.setBackground("assets/screenshots/perg.png",renderer.get());
+    level.setBackground("assets/screenshots/perg.png",renderer);
     level.setSourceBackground(55,80,260,195);
-    level.setTileSet("assets/screenshots/tileSet.png",renderer.get());
+    level.setTileSet("assets/screenshots/tileSet.png",renderer);
     level.insertSourceShape(832,208,32,32,0);
     level.insertSourceShape(486,202,80,80,1);
     level.insertSourceShape(832,416,64,64,2);
@@ -213,7 +224,7 @@ menu->addWidget("load", "Puntuaciones", [&renderer, &wind, &font]()
 
     // Player setup
     SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
-    TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer.get(), playerSurface));
+    TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer, playerSurface));
     SDL_FreeSurface(playerSurface);
     Player player;
     player.initAnimation(renderer, playerTexture);
@@ -221,7 +232,7 @@ menu->addWidget("load", "Puntuaciones", [&renderer, &wind, &font]()
 
     // Enemy setup 
     SDL_Surface* enemySurface = IMG_Load("assets/sprites/Orc.png");
-    TexturePtr enemyTexture(SDL_CreateTextureFromSurface(renderer.get(), enemySurface));
+    TexturePtr enemyTexture(SDL_CreateTextureFromSurface(renderer, enemySurface));
     SDL_FreeSurface(enemySurface);
     std::vector<Enemy> enemies;
     Enemy enemy;
@@ -254,7 +265,7 @@ menu->addWidget("load", "Puntuaciones", [&renderer, &wind, &font]()
             {
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                 {
-                    SDL_GetWindowSize(wind.get(), &width, &height);
+                    SDL_GetWindowSize(window, &width, &height);
                     level.setWindowSize(width,height);
                 } 
             }  
@@ -268,17 +279,17 @@ menu->addWidget("load", "Puntuaciones", [&renderer, &wind, &font]()
         enemy.update(deltaTime);
 
         // Renderizado
-        SDL_SetRenderDrawColor(renderer.get(), 30, 30, 50, 255); 
-        SDL_RenderClear(renderer.get());
-        level.drawRoom(renderer.get());
+        SDL_SetRenderDrawColor(renderer, 30, 30, 50, 255); 
+        SDL_RenderClear(renderer);
+        level.drawRoom(renderer);
         player.renderPlayer(renderer);
         // player.renderAttackHitbox(renderer);
         // player.renderDebugBounds(renderer);
         enemy.renderEnemy(renderer); 
         // enemy.renderAttackHitbox(renderer);
         // enemy.renderDebugBounds(renderer);
-        level.drawRoomLastFrame(renderer.get());
-        SDL_RenderPresent(renderer.get());
+        level.drawRoomLastFrame(renderer);
+        SDL_RenderPresent(renderer);
         SDL_Delay(16); 
     }
 });
@@ -299,6 +310,4 @@ menu->addWidget("load", "Puntuaciones", [&renderer, &wind, &font]()
         SDL_Event quitEvent{SDL_QUIT};
         SDL_PushEvent(&quitEvent);
     });
-    
-    return menu;
 } 

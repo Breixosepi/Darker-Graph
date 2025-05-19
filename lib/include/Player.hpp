@@ -18,8 +18,8 @@ class Player
     public:
 
         Player();
-        void initAnimation(const RendererPtr &renderer, const TexturePtr &texture);
-        void renderPlayer(const RendererPtr &renderer);
+        void initAnimation(SDL_Renderer* renderer, const TexturePtr &texture);
+        void renderPlayer(SDL_Renderer* renderer);
         void update(float deltaTime, std::pair<double,double> border, int width, int height);
         void setPosition(int x, int y);
         void updateAnimation(float deltaTime);
@@ -30,8 +30,8 @@ class Player
         SDL_Rect getAttackHitbox() const;
         SDL_Rect getBounds() const;
         State getState() const { return currentState; }
-        void renderAttackHitbox(const RendererPtr& renderer) const; //helper para ver el hitbox de ataque
-        void renderDebugBounds(const RendererPtr& renderer) const; //helper para ver el rect del player
+        void renderAttackHitbox(SDL_Renderer* renderer) const; //helper para ver el hitbox de ataque
+        void renderDebugBounds(SDL_Renderer* renderer) const; //helper para ver el rect del player
         
     private:
         SDL_Texture* texture;
