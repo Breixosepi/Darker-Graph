@@ -25,7 +25,7 @@ std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>::Node*>,std::
         matrix.resize(numRooms*2 - 1); //num filas
         for (int i = 0; i < matrix.size(); ++i) //num columnas
         {
-            matrix[i].resize(numRooms*2 - 1, -1);
+            matrix[i].resize(numRooms*2 - 1, 0);
         }
 
         generateEntry(random,probabilityAdd,chooseSide);
@@ -118,7 +118,7 @@ bool MyGraph::verifyInsert(int& side, std::pair<int,int>& pos)
                 ++pos.first;
             break;
         }
-        if(matrix[pos.first][pos.second]==-1){return true;}
+        if(matrix[pos.first][pos.second]==0){return true;}
         pos = aux;
         ++side;
         if(side==4){side -= 4;} //Revisa las posiciones disponibles en sentido de las agujas del reloj

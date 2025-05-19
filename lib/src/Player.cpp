@@ -3,7 +3,7 @@
 
 Player::Player() : texture(nullptr), currentDirection(Direction::RIGHT), currentState(State::IDLE) 
 {
-
+    isInBound = {false,false,false,false};
 }
 
 void Player::initAnimation(SDL_Renderer* renderer, const TexturePtr &texture) 
@@ -200,8 +200,13 @@ void Player::update(float deltaTime, std::pair<double,double> border, int width,
                 if(static_cast<float>(border.second)-destRect.h*0.75<=destRect.y-moveAmount)
                 {
                     destRect.y -= moveAmount;
+                    isInBound[static_cast<int>(Direction::UP)] = false;
                 }
-                else{destRect.y = static_cast<float>(border.second)-destRect.h*0.75;}
+                else
+                {
+                    destRect.y = static_cast<float>(border.second)-destRect.h*0.75;
+                    isInBound[static_cast<int>(Direction::UP)] = true;
+                }
             } 
                 break;
 
@@ -210,14 +215,28 @@ void Player::update(float deltaTime, std::pair<double,double> border, int width,
                 if(height-static_cast<float>(border.second)>=destRect.y+destRect.h+moveAmount)
                 {
                     destRect.y += moveAmount;
+                    isInBound[static_cast<int>(Direction::DOWN)] = false;
                 }
-                else{destRect.y = height-static_cast<float>(border.second)-destRect.h;}
+                else
+                {
+                    destRect.y = height-static_cast<float>(border.second)-destRect.h;
+                    isInBound[static_cast<int>(Direction::DOWN)] = true;
+                }
             } 
                 break;
 
             case Direction::LEFT:  
             {
-                destRect.x = std::max(static_cast<float>(border.first),destRect.x-moveAmount);
+                if(static_cast<float>(border.first)<=destRect.x-moveAmount)
+                {
+                    destRect.x -= moveAmount;
+                    isInBound[static_cast<int>(Direction::LEFT)] = false;
+                }
+                else
+                {
+                    destRect.x = static_cast<float>(border.first);
+                    isInBound[static_cast<int>(Direction::LEFT)] = true;
+                }
             }
                 break;
 
@@ -226,8 +245,13 @@ void Player::update(float deltaTime, std::pair<double,double> border, int width,
                 if(width-static_cast<float>(border.first)>=destRect.x+destRect.w+moveAmount)
                 {
                     destRect.x += moveAmount;
+                    isInBound[static_cast<int>(Direction::RIGHT)] = false;
                 }
-                else{destRect.x = width-static_cast<float>(border.first)-destRect.w;}
+                else
+                {
+                    destRect.x = width-static_cast<float>(border.first)-destRect.w;
+                    isInBound[static_cast<int>(Direction::RIGHT)] = true;
+                }
             }
                 break;
         }
@@ -293,6 +317,12 @@ void Player::setPosition(int x, int y)
 {
     destRect.x = x;
     destRect.y = y;
+}
+
+void Player::setPosition(std::pair<int,int> value) 
+{
+    destRect.x = value.first;
+    destRect.y = value.second;
 }
 
 void Player::setState(State newState) 
@@ -391,7 +421,7 @@ void Player::renderAttackHitbox(SDL_Renderer* renderer) const
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 }
 
-void Player::renderDebugBounds(SDL_Renderer* renderer) const
+void Player::renderDebugBounds(SDL_Renderer* renderer)
 {
     SDL_Rect bounds = getBounds();
     
@@ -403,4 +433,20 @@ void Player::renderDebugBounds(SDL_Renderer* renderer) const
     SDL_RenderDrawRect(renderer, &bounds);
     
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+}
+
+bool Player::getIsInBound() const
+{
+    switch (currentDirection)
+    {
+    case Direction::RIGHT:
+        return isInBound[static_cast<int>(Direction::RIGHT)];
+    case Direction::UP:
+        return isInBound[static_cast<int>(Direction::UP)];
+    case Direction::DOWN:
+        return isInBound[static_cast<int>(Direction::DOWN)];
+    case Direction::LEFT:
+        return isInBound[static_cast<int>(Direction::LEFT)];
+    }
+    return false;
 }

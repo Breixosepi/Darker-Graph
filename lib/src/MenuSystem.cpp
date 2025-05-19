@@ -278,6 +278,16 @@ menu->addWidget("load", "Puntuaciones", [&]()
         enemy.attack(player);
         enemy.update(deltaTime);
 
+        if(player.getIsInBound()&&player.getState()==State::RUNNING)
+        {
+            int index = *level.getCurrentRoom()->getIndex();
+            player.setPosition(level.passRoom(static_cast<int>(player.getDirection()),player.getBounds()));
+            if(index!=*level.getCurrentRoom()->getIndex())
+            {
+                std::cout<<"Te moviste al cuarto Numero: "<<*level.getCurrentRoom()->getIndex()<<" Provienes del Cuarto Numero: "<<index<<std::endl;
+            }
+        }
+
         // Renderizado
         SDL_SetRenderDrawColor(renderer, 30, 30, 50, 255); 
         SDL_RenderClear(renderer);

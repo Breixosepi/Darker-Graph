@@ -59,7 +59,7 @@ void Level::setShapesMap()
         shapesMap.clear();
         dimensionsMap.clear();
     }
-    if(!matrix.empty())
+    if(!matrixReduced.empty())
     {
         double square = std::min(windowWidth/(columns+1),windowHeight/(rows+1)); //se escoge la celda mas pequena
         double shrink = square/4.0; //se encoge la celda para dejar espacio para los pasillos
@@ -68,18 +68,18 @@ void Level::setShapesMap()
         dimensionsMap.insert({0,std::make_pair(tile,tile)});
         dimensionsMap.insert({1,std::make_pair(tile,tile)});
         dimensionsMap.insert({2,std::make_pair(shrink,shrink)});
-        for(int i=0; i<matrix[0].size(); ++i)
+        for(int i=0; i<matrixReduced[0].size(); ++i)
         {
             double Y = (windowHeight-square*rows)/2.0 - shrink/2.0;
             int memory = shapesMap.size();
-            for(int j=0; j<matrix.size(); ++j)
+            for(int j=0; j<matrixReduced.size(); ++j)
             {
-                if(matrix[j][i]!=-1)
+                if(matrixReduced[j][i]!=0)
                 {
                     shapesMap.push_back(std::make_tuple(X+shrink,Y+shrink,0));
-                    if(matrix[j][i]>-1)
+                    if(matrixReduced[j][i]>0)
                     {
-                        std::vector<bool> paths = *roomsReference[matrix[j][i]-1]->get_info().getPaths();
+                        std::vector<bool> paths = *roomsReference[matrixReduced[j][i]-1]->get_info().getPaths();
                         for(int k=0; k<paths.size(); ++k)
                         {
                             if(paths[k])
@@ -238,12 +238,12 @@ void Level::setSourceBackground(const int& x, const int& y, const int& w, const 
 
 void Level::printMapConsole()
 {
-    for(int i=0; i<matrix.size(); ++i)
+    for(int i=0; i<matrixReduced.size(); ++i)
     {
-        for(int j=0; j<matrix[0].size(); ++j)
+        for(int j=0; j<matrixReduced[0].size(); ++j)
         {
-            if(matrix[i][j]==-1){std::cout<<"*";}
-            else{std::cout<<matrix[i][j];}
+            if(matrixReduced[i][j]==0){std::cout<<"*";}
+            else{std::cout<<matrixReduced[i][j];}
             std::cout<<" ";
         }
         std::cout<<std::endl;
@@ -260,11 +260,11 @@ void Level::getRowsColumns()
             std::pair<int,int> memory = {rows,columns};
             for(int j=0; j<matrix[0].size(); ++j)
             {
-                if(matrix[i][j]!=-1&&memory.first==rows)
+                if(matrix[i][j]!=0&&memory.first==rows)
                 {
                     ++rows;
                 }
-                if(matrix[j][i]!=-1&&memory.second==columns)
+                if(matrix[j][i]!=0&&memory.second==columns)
                 {
                     ++columns;
                 }
@@ -283,7 +283,7 @@ void Level::reduceMatrix()
         {
             for(int j=0; j<matrix[0].size(); ++j)
             {
-                if(matrix[i][j]!=-1)
+                if(matrix[i][j]!=0)
                 {
                     reduced.push_back(matrix[i]);
                     break;
@@ -291,7 +291,7 @@ void Level::reduceMatrix()
             }
         }
     }
-    matrix = reduced;
+    matrixReduced = reduced;
 }
 
 void Level::drawMap(SDL_Renderer* renderer)
@@ -366,4 +366,91 @@ SDL_Rect Level::fillRect(const PosShape& shape, const std::unordered_map<int,std
     dest.w = widthHeight.first;
     dest.h = widthHeight.second;
     return dest;
+}
+
+std::pair<int,int> Level::passRoom(int direction, const SDL_Rect& rectPlayer)
+{
+    if((*getCurrentRoom()->getPaths())[direction]) //Verifica si hay puerta en dicha direccion
+    {
+        Room actualRoom = *getCurrentRoom();
+        std::pair<int,int> posNeighbor = *actualRoom.getPos();
+        if(direction==0||direction==2) 
+        {
+            if(std::get<1>(doors[direction*2+1])<=rectPlayer.y) //Verifica si el personaje esta alineado con la puerta
+            {
+                if(std::get<1>(doors[direction*2+1])+(dimensionsRoom.at(8)).second>=rectPlayer.y+rectPlayer.h)
+                {
+                    switch (direction)
+                    {
+                    case 0:
+                        --posNeighbor.second;
+                        break;
+                    case 2:
+                        ++posNeighbor.second;
+                        break;
+                    }
+                }
+            }
+        }
+        else if(direction==1||direction==3)
+        {
+            if(std::get<0>(doors[direction*2+1])<=rectPlayer.x) //Verifica si el personaje esta alineado con la puerta
+            {
+                if(std::get<0>(doors[direction*2+1])+(dimensionsRoom.at(6)).first>=rectPlayer.x+rectPlayer.w)
+                {
+                    switch (direction)
+                    {
+                    case 1:
+                        --posNeighbor.first;
+                        break;
+                    case 3:
+                        ++posNeighbor.first;
+                        break;
+                    }
+
+                }
+            }
+        }
+        if(posNeighbor==*actualRoom.getPos()) //Si no estaba alineado, se retorna su misma posicion
+        {
+            return std::make_pair(rectPlayer.x,rectPlayer.y);
+        }
+        setCurrentIndex(std::abs(matrix[posNeighbor.first][posNeighbor.second]));
+        posNeighbor = *getCurrentRoom()->getPos();
+        std::pair<int,int> memory = posNeighbor;
+        std::pair<int,int> playerPos;
+        for(int i=0; i<4; ++i) //Nos movimos de cuarto y vamos a buscar en que direccion estaba el cuarto del cual venimos
+        {
+            switch (direction)
+            {
+            case 0:
+                --posNeighbor.second;
+                playerPos = std::make_pair(std::get<0>(doors[direction*2+1])+rectPlayer.w, std::get<1>(doors[direction*2+1]));
+                break;
+            case 1:
+                --posNeighbor.first;
+                playerPos = std::make_pair(std::get<0>(doors[direction*2+1]),std::get<1>(doors[direction*2+1])+rectPlayer.h);
+                break;
+            case 2:
+                ++posNeighbor.second;
+                playerPos = std::make_pair(std::get<0>(doors[direction*2+1])-rectPlayer.w,std::get<1>(doors[direction*2+1]));
+                break;
+            case 3:
+                ++posNeighbor.first;
+                playerPos = std::make_pair(std::get<0>(doors[direction*2+1]),std::get<1>(doors[direction*2+1])-rectPlayer.h);
+                break;
+            }
+            if(std::abs(matrix[posNeighbor.first][posNeighbor.second])==*actualRoom.getIndex())
+            {
+                return playerPos;
+            }  
+            else
+            {
+                ++direction;
+                if(direction>3){direction -= 4;}
+                posNeighbor = memory;
+            }
+        }
+    }
+    return std::make_pair(rectPlayer.x,rectPlayer.y);
 }

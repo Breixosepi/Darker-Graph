@@ -29,6 +29,7 @@ class Level
         void setCurrentIndex(const int& value);
 
         void printMapConsole();
+        std::pair<int,int> passRoom(int direction, const SDL_Rect& rectPlayer);
         
         void drawMap(SDL_Renderer* renderer);
         void drawRoom(SDL_Renderer* renderer);
@@ -39,6 +40,7 @@ class Level
         Designar::Graph<Room> shortestPath;
         Designar::Graph<Room> eulerianPath;
         std::vector<std::vector<int>> matrix;
+        std::vector<std::vector<int>> matrixReduced;
         int windowWidth;
         int windowHeight;
         double rows;

@@ -10,7 +10,7 @@ class Enemy;
     };
     enum class Direction 
     { 
-        RIGHT, UP, DOWN, LEFT 
+        LEFT, UP, RIGHT, DOWN
     };
 
 class Player 
@@ -22,6 +22,7 @@ class Player
         void renderPlayer(SDL_Renderer* renderer);
         void update(float deltaTime, std::pair<double,double> border, int width, int height);
         void setPosition(int x, int y);
+        void setPosition(std::pair<int,int> value);
         void updateAnimation(float deltaTime);
         void setState(State newState);
         void handleImput(const SDL_Event& event);
@@ -30,8 +31,10 @@ class Player
         SDL_Rect getAttackHitbox() const;
         SDL_Rect getBounds() const;
         State getState() const { return currentState; }
+        Direction getDirection() const {return currentDirection;}
+        bool getIsInBound() const;
         void renderAttackHitbox(SDL_Renderer* renderer) const; //helper para ver el hitbox de ataque
-        void renderDebugBounds(SDL_Renderer* renderer) const; //helper para ver el rect del player
+        void renderDebugBounds(SDL_Renderer* renderer); //helper para ver el rect del player
         
     private:
         SDL_Texture* texture;
@@ -46,4 +49,5 @@ class Player
         float damageCooldown = 0.0f;
         const float DAMAGE_COOLDOWN_TIME = 0.2f; 
         bool hasHit = false;
+        std::vector<bool> isInBound;
 };
