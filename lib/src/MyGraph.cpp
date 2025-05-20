@@ -37,6 +37,7 @@ std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>::Node*>,std::
             generateEvenRooms(room,random,probabilityAdd,chooseSide);
         }
         fixMap(random,chooseSide);
+        reduceMatrix();
         ++numRooms;
     }
     return std::make_tuple(map,roomsReference,matrix);
@@ -257,6 +258,80 @@ void MyGraph::fixMap(std::mt19937 random, std::uniform_int_distribution<int> sid
         else{std::cout<<"Correction Made. Finish map Creation! eulerian path NOT exist."<<std::endl;}
     }
     std::cout<<"Num of Rooms: "<<map.get_num_nodes()<<std::endl;
+}
+
+//De la matriz cuenta las filas y columnas donde hayan salas.
+std::pair<int,int> MyGraph::getRowsColumns()
+{
+    std::pair<int,int> pair = {0,0};
+    for(int i=0; i<matrix.size(); ++i)
+    {
+        std::pair<int,int> memory = pair;
+        for(int j=0; j<matrix[0].size(); ++j)
+        {
+            if(matrix[i][j]!=0&&memory.first==pair.first)
+            {
+                ++pair.first;
+            }
+            if(matrix[j][i]!=0&&memory.second==pair.second)
+            {
+                ++pair.second;
+            }
+            if(memory.first!=pair.first&&memory.second!=pair.second){break;}
+        }
+    }
+    return pair;
+}
+
+void MyGraph::reduceMatrix()
+{
+    std::vector<std::vector<int>> rowsWithRooms;
+    bool firstRow = false;
+    int supRowsEliminated = 0;
+    for(int i=0; i<matrix.size(); ++i)
+    {
+        for(int j=0; j<matrix[0].size(); ++j)
+        {
+            if(matrix[i][j]!=0)
+            {
+                rowsWithRooms.push_back(matrix[i]);
+                if(!firstRow)
+                {
+                    firstRow = true;
+                    supRowsEliminated = i;
+                }
+                break;
+            }
+        }
+    }
+    std::pair<int,int> rowsColumns = getRowsColumns();
+    std::vector<std::vector<int>> reduced(rowsColumns.first,std::vector<int>(rowsColumns.second,0));
+    int k=0;
+    bool firstColumn = false;
+    int leftColumnsEliminated = 0;
+    for(int i=0; i<rowsWithRooms[0].size()||k<rowsColumns.second; ++i) //Columnas a Recorrer
+    {
+        bool found = false;
+        for(int j=0; j<rowsWithRooms.size(); ++j) //Filas a Recorrer
+        {
+            if(rowsWithRooms[j][i]!=0)
+            {
+                reduced[j][k]=rowsWithRooms[j][i];
+                found = true;
+                if(!firstColumn)
+                {
+                    firstColumn = true;
+                    leftColumnsEliminated = i;
+                }
+            }
+        }
+        if(found){++k;}
+    }
+    matrix = reduced;
+    for(auto node : roomsReference)
+    {
+        node->get_info().setPos({(*node).get_info().getPos()->first-supRowsEliminated,(*node).get_info().getPos()->second-leftColumnsEliminated});
+    }
 }
 
 void MyGraph::printLastGraph()

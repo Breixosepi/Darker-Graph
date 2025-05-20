@@ -262,7 +262,7 @@ menu->addWidget("load", "Puntuaciones", [&]()
         if(player.getIsInBound()&&player.getState()==State::RUNNING)
         {
             int index = *level.getCurrentRoom()->getIndex();
-            player.setPosition(level.passRoom(static_cast<int>(player.getDirection()),player.getBounds()));
+            player.setPosition(level.verifyPassRoom(static_cast<int>(player.getDirection()),player.getBounds()));
             if(index!=*level.getCurrentRoom()->getIndex())
             {
                 std::cout<<"Te moviste al cuarto Numero: "<<*level.getCurrentRoom()->getIndex()<<" Provienes del Cuarto Numero: "<<index<<std::endl;

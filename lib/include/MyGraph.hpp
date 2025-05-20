@@ -35,6 +35,8 @@ class MyGraph
         void generateEvenRooms(Designar::Graph<Room>::Node*& room, std::mt19937 random, std::uniform_real_distribution<double> add, std::uniform_int_distribution<int> side);
         bool limitRoom(Designar::Graph<Room>::Node*& room);
         void fixMap(std::mt19937 random, std::uniform_int_distribution<int> side);
+        std::pair<int,int> getRowsColumns();
+        void reduceMatrix();
         void printLastGraph(); 
         void reset();
 };

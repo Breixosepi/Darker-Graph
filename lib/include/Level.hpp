@@ -17,8 +17,8 @@ class Level
         const std::vector<std::vector<int>>* getMatrix();
         const std::vector<Designar::Graph<Room>::Node*>* getRoomsReference();
         Room* getCurrentRoom();
-        std::pair<int,int> getPosNeighbor(const int& direction);
-        const int* getIndexNeighbor(const int& direction);
+        const std::pair<int,int> getPosNeighbor(const int& direction);
+        const int getIndexNeighbor(const int& direction);
 
         void setMap(const Designar::Graph<Room>& value);
         void setShortestPath(const Designar::Graph<Room>& value);
@@ -44,11 +44,9 @@ class Level
         Designar::Graph<Room> shortestPath;
         Designar::Graph<Room> eulerianPath;
         std::vector<std::vector<int>> matrix;
-        std::vector<std::vector<int>> matrixReduced;
         int windowWidth;
         int windowHeight;
-        double rows;
-        double columns;
+
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
         int currentIndex;
         SDL_Rect sourceBackground;
@@ -64,8 +62,6 @@ class Level
         SDL_Texture* textBackground;
         AnimatedFigure animated;
 
-        void getRowsColumns();
-        void reduceMatrix();
         void setShapesMap();
         std::pair<double,double> setDesignRoom(const bool& centered);
         void draw(const std::vector<PosShape>& shapes, const std::unordered_map<int,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);

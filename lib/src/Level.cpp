@@ -6,7 +6,6 @@ Level::Level(std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>:
 {
     map = std::get<0>(tuple);
     roomsReference = std::get<1>(tuple);
-    rows = columns = 0;
     windowWidth = windowHeight = -1;
     if(map.get_num_nodes()!=0){currentIndex = 1;}
     else{currentIndex = -1;}
@@ -28,31 +27,42 @@ const std::vector<Designar::Graph<Room>::Node*>* Level::getRoomsReference(){retu
 
 Room* Level::getCurrentRoom(){return &roomsReference[currentIndex-1]->get_info();}
 
-std::pair<int,int> Level::getPosNeighbor(const int& direction)
+const std::pair<int,int> Level::getPosNeighbor(const int& direction)
 {
-    std::pair<int,int> posNeighbor = *getCurrentRoom()->getPos();
-    switch (direction)
+    if(currentIndex>0)
     {
-        case 0:
-            --posNeighbor.second;
-            break;
-        case 1:
-            --posNeighbor.first;
-            break;
-        case 2:
-            ++posNeighbor.second;
-            break;
-        case 3:
-            ++posNeighbor.first;
-            break;
+        std::pair<int,int> posNeighbor = *getCurrentRoom()->getPos();
+        switch (direction)
+        {
+            case 0:
+                --posNeighbor.second;
+                break;
+            case 1:
+                --posNeighbor.first;
+                break;
+            case 2:
+                ++posNeighbor.second;
+                break;
+            case 3:
+                ++posNeighbor.first;
+                break;
+        }
+        return posNeighbor;
     }
-    return posNeighbor;
+    return std::make_pair(-1,-1);
 }
 
-const int* Level::getIndexNeighbor(const int& direction)
+const int Level::getIndexNeighbor(const int& direction)
 {
     std::pair<int,int> posNeighbor = getPosNeighbor(direction);
-    return &matrix[posNeighbor.first][posNeighbor.second];
+    if(posNeighbor.first>=0&&posNeighbor.second>=0)
+    {
+        if(posNeighbor.first<matrix.size()&&posNeighbor.second<matrix[0].size())
+        {
+            return matrix[posNeighbor.first][posNeighbor.second];
+        }
+    }
+    return 0;
 }
 
 void Level::setMap(const Designar::Graph<Room>& value){map = value;}
@@ -71,12 +81,7 @@ std::pair<double,double> Level::setWindowSize(const int& width, const int& heigh
     return setDesignRoom(false);
 }
 
-void Level::setMatrix(const std::vector<std::vector<int>>& value)
-{
-    matrix = value;
-    getRowsColumns();
-    reduceMatrix();
-}
+void Level::setMatrix(const std::vector<std::vector<int>>& value){matrix = value;}
 
 //Actualiza el vector de figuras a dibujar para mostrar el mapa del presente nivel.
 //Trabaja con el ultimo tamano de ventana establecido.
@@ -87,27 +92,26 @@ void Level::setShapesMap()
         shapesMap.clear();
         dimensionsMap.clear();
     }
-    if(!matrixReduced.empty())
+    if(!matrix.empty())
     {
-        double square = std::min(windowWidth/(columns+1),windowHeight/(rows+1)); //se escoge la celda mas pequena
+        double square = std::min(windowWidth/(matrix[0].size()+1.0),windowHeight/(matrix.size()+1.0)); //se escoge la celda mas pequena
         double shrink = square/4.0; //se encoge la celda para dejar espacio para los pasillos
         double tile = square-shrink;
-        double X = (windowWidth-square*columns)/2.0 - shrink/2.0;
+        double X = (windowWidth-square*matrix[0].size())/2.0 - shrink/2.0;
         dimensionsMap.insert({0,std::make_pair(tile,tile)});
         dimensionsMap.insert({1,std::make_pair(tile,tile)});
         dimensionsMap.insert({2,std::make_pair(shrink,shrink)});
-        for(int i=0; i<matrixReduced[0].size(); ++i)
+        for(int i=0; i<matrix[0].size(); ++i)
         {
-            double Y = (windowHeight-square*rows)/2.0 - shrink/2.0;
-            int memory = shapesMap.size();
-            for(int j=0; j<matrixReduced.size(); ++j)
+            double Y = (windowHeight-square*matrix.size())/2.0 - shrink/2.0;
+            for(int j=0; j<matrix.size(); ++j)
             {
-                if(matrixReduced[j][i]!=0)
+                if(matrix[j][i]!=0)
                 {
                     shapesMap.push_back(std::make_tuple(X+shrink,Y+shrink,0));
-                    if(matrixReduced[j][i]>0)
+                    if(matrix[j][i]>0)
                     {
-                        std::vector<bool> paths = *roomsReference[matrixReduced[j][i]-1]->get_info().getPaths();
+                        std::vector<bool> paths = *roomsReference[matrix[j][i]-1]->get_info().getPaths();
                         for(int k=0; k<paths.size(); ++k)
                         {
                             if(paths[k])
@@ -134,7 +138,7 @@ void Level::setShapesMap()
                 }
                 Y += square;
             }
-            if(memory!=shapesMap.size()){X += square;}
+            X += square;
         }
     }
 }
@@ -272,60 +276,16 @@ void Level::setSourceBackground(const int& x, const int& y, const int& w, const 
 
 void Level::printMapConsole()
 {
-    for(int i=0; i<matrixReduced.size(); ++i)
+    for(int i=0; i<matrix.size(); ++i)
     {
-        for(int j=0; j<matrixReduced[0].size(); ++j)
+        for(int j=0; j<matrix[0].size(); ++j)
         {
-            if(matrixReduced[i][j]==0){std::cout<<"*";}
-            else{std::cout<<matrixReduced[i][j];}
+            if(matrix[i][j]==0){std::cout<<"*";}
+            else{std::cout<<matrix[i][j];}
             std::cout<<" ";
         }
         std::cout<<std::endl;
     }
-}
-
-//De la matriz cuenta las filas y columnas donde hayan salas.
-void Level::getRowsColumns()
-{
-    if(!matrix.empty())
-    {
-        for(int i=0; i<matrix.size(); ++i)
-        {
-            std::pair<int,int> memory = {rows,columns};
-            for(int j=0; j<matrix[0].size(); ++j)
-            {
-                if(matrix[i][j]!=0&&memory.first==rows)
-                {
-                    ++rows;
-                }
-                if(matrix[j][i]!=0&&memory.second==columns)
-                {
-                    ++columns;
-                }
-                if(memory.first!=rows&&memory.second!=columns){break;}
-            }
-        }
-    }
-}
-
-void Level::reduceMatrix()
-{
-    std::vector<std::vector<int>> reduced;
-    if(!matrix.empty())
-    {
-        for(int i=0; i<matrix.size(); ++i)
-        {
-            for(int j=0; j<matrix[0].size(); ++j)
-            {
-                if(matrix[i][j]!=0)
-                {
-                    reduced.push_back(matrix[i]);
-                    break;
-                }
-            }
-        }
-    }
-    matrixReduced = reduced;
 }
 
 void Level::renderMap(SDL_Renderer* renderer)
@@ -358,19 +318,19 @@ void Level::drawDoors(SDL_Renderer* renderer)
             {
                 SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(9),&destBonus);
                 SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(8),&destDoor);
-                if(*getIndexNeighbor(i)<0)
+                if(getIndexNeighbor(i)<0)
                 {
                     animated.renderCircularPortal(destDoor,renderer);
                 }
             }
             else
             {
-                if(*getIndexNeighbor(i)>0)
+                if(getIndexNeighbor(i)>0)
                 {
                     SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(7),&destBonus);
                     SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(6),&destDoor);
                 }
-                else if(*getIndexNeighbor(i)<0)
+                else if(getIndexNeighbor(i)<0)
                 {
                     animated.renderPortal(destDoor,renderer);
                 } 
@@ -387,12 +347,12 @@ void Level::renderRoomLastFrame(SDL_Renderer* renderer)
     {
         SDL_Rect destDoor = fillRect(doors[i*2+1],dimensionsRoom);
         SDL_Rect destBonus = fillRect(doors[i*2],dimensionsRoom);
-        if(*getIndexNeighbor(i)>0)
+        if(getIndexNeighbor(i)>0)
         {
             SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(7),&destBonus);
             SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(6),&destDoor);
         }
-        else if(*getIndexNeighbor(i)<0)
+        else if(getIndexNeighbor(i)<0)
         {
             animated.renderPortal(destDoor,renderer);
         }
@@ -425,8 +385,6 @@ std::pair<int,int> Level::verifyPassRoom(int direction, const SDL_Rect& rectPlay
 {
     if((*getCurrentRoom()->getPaths())[direction]) //Verifica si hay puerta en dicha direccion
     {
-        Room actualRoom = *getCurrentRoom();
-        std::pair<int,int> posNeighbor = *actualRoom.getPos();
         if(direction==0||direction==2) 
         {
             if(std::get<1>(doors[direction*2+1])<=rectPlayer.y) //Verifica si el personaje esta alineado con la puerta
@@ -455,7 +413,7 @@ std::pair<int,int> Level::verifyPassRoom(int direction, const SDL_Rect& rectPlay
 std::pair<int,int> Level::passRoom(int direction, const SDL_Rect& rectPlayer)
 {
     int actualIndex = *getCurrentRoom()->getIndex();
-    int neighborIndex = *getIndexNeighbor(direction);
+    int neighborIndex = getIndexNeighbor(direction);
     setCurrentIndex(std::abs(neighborIndex));
     std::pair<int,int> playerPos;
     for(int i=0; i<4; ++i) //Nos movimos de cuarto y vamos a buscar en que direccion estaba el cuarto del cual venimos
@@ -477,14 +435,14 @@ std::pair<int,int> Level::passRoom(int direction, const SDL_Rect& rectPlayer)
         }
         if(neighborIndex>0)
         {
-            if(*getIndexNeighbor(direction)==actualIndex)
+            if(getIndexNeighbor(direction)==actualIndex)
             {
                 return playerPos;
             } 
         }
         else
         {
-            if(*getIndexNeighbor(direction)==-actualIndex)
+            if(getIndexNeighbor(direction)==-actualIndex)
             {
                 return playerPos;
             } 
