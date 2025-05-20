@@ -2,6 +2,7 @@
 
 #include <Room.hpp>
 #include <unordered_map>
+#include <AnimatedFigure.hpp>
 
 class Level
 {
@@ -16,24 +17,27 @@ class Level
         const std::vector<std::vector<int>>* getMatrix();
         const std::vector<Designar::Graph<Room>::Node*>* getRoomsReference();
         Room* getCurrentRoom();
+        std::pair<int,int> getPosNeighbor(const int& direction);
+        const int* getIndexNeighbor(const int& direction);
 
         void setMap(const Designar::Graph<Room>& value);
         void setShortestPath(const Designar::Graph<Room>& value);
         void setEulerianPath(const Designar::Graph<Room>& value);
         void setMatrix(const std::vector<std::vector<int>>& value);
-        void setTileSet(const char* value, SDL_Renderer* renderer);
+        SDL_Texture* setTexture(const char* value, SDL_Renderer* renderer);
         void insertSourceShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape);
-        void setBackground(const char* value, SDL_Renderer* renderer);
         void setSourceBackground(const int& x, const int& y, const int& w, const int& h);
         std::pair<double,double> setWindowSize(const int& width, const int& height);
         void setCurrentIndex(const int& value);
 
         void printMapConsole();
+        void initializeResources(SDL_Renderer* renderer);
+        std::pair<int,int> verifyPassRoom(int direction, const SDL_Rect& rectPlayer);
         std::pair<int,int> passRoom(int direction, const SDL_Rect& rectPlayer);
         
-        void drawMap(SDL_Renderer* renderer);
-        void drawRoom(SDL_Renderer* renderer);
-        void drawRoomLastFrame(SDL_Renderer* renderer);
+        void renderMap(SDL_Renderer* renderer);
+        void renderRoom(SDL_Renderer* renderer);
+        void renderRoomLastFrame(SDL_Renderer* renderer);
     
     private:
         Designar::Graph<Room> map;
@@ -58,6 +62,7 @@ class Level
         std::unordered_map<int,std::pair<int,int>> dimensionsRoom;
         SDL_Texture* textTileSet;
         SDL_Texture* textBackground;
+        AnimatedFigure animated;
 
         void getRowsColumns();
         void reduceMatrix();

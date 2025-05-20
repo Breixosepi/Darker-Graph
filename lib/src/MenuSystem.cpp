@@ -158,14 +158,8 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
         int width, height;
         SDL_GetWindowSize(window,&width,&height);
         Level level(creator.createMap(false));
+        level.initializeResources(renderer);
         level.setWindowSize(width,height);
-
-        level.setBackground("assets/screenshots/perg.png",renderer);
-        level.setSourceBackground(55,80,260,195);
-        level.setTileSet("assets/screenshots/tileSet.png",renderer);
-        level.insertSourceShape(832,208,32,32,0);
-        level.insertSourceShape(486,202,80,80,1);
-        level.insertSourceShape(832,416,64,64,2);
         
         SDL_Event event;
         bool running = true;
@@ -193,7 +187,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                     } 
                 }  
             }
-            level.drawMap(renderer);    
+            level.renderMap(renderer);    
         }
     }); 
 
@@ -205,22 +199,8 @@ menu->addWidget("load", "Puntuaciones", [&]()
     // room setup
     SDL_GetWindowSize(window,&width,&height);
     Level level(creator.createMap(false));
+    level.initializeResources(renderer);
     std::pair<double,double> borderRoom = level.setWindowSize(width,height);
-    
-    level.setBackground("assets/screenshots/perg.png",renderer);
-    level.setSourceBackground(55,80,260,195);
-    level.setTileSet("assets/screenshots/tileSet.png",renderer);
-    level.insertSourceShape(832,208,32,32,0);
-    level.insertSourceShape(486,202,80,80,1);
-    level.insertSourceShape(832,416,64,64,2);
-    level.insertSourceShape(304,400,64,48,3);
-    level.insertSourceShape(304,400,64,48,4);
-    level.insertSourceShape(640,112,16,80,5);
-    level.insertSourceShape(400,16,80,89,6);
-    level.insertSourceShape(72,52,176,63,7);
-    level.insertSourceShape(400,112,16,80,8);
-    level.insertSourceShape(432,112,16,74,9);
-    level.printMapConsole();
 
     // Player setup
     SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
@@ -292,14 +272,14 @@ menu->addWidget("load", "Puntuaciones", [&]()
         // Renderizado
         SDL_SetRenderDrawColor(renderer, 30, 30, 50, 255); 
         SDL_RenderClear(renderer);
-        level.drawRoom(renderer);
+        level.renderRoom(renderer);
         player.renderPlayer(renderer);
         // player.renderAttackHitbox(renderer);
         // player.renderDebugBounds(renderer);
         enemy.renderEnemy(renderer); 
         // enemy.renderAttackHitbox(renderer);
         // enemy.renderDebugBounds(renderer);
-        level.drawRoomLastFrame(renderer);
+        level.renderRoomLastFrame(renderer);
         SDL_RenderPresent(renderer);
         SDL_Delay(16); 
     }

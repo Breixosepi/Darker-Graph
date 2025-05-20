@@ -11,6 +11,7 @@ Level::Level(std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>:
     if(map.get_num_nodes()!=0){currentIndex = 1;}
     else{currentIndex = -1;}
     setMatrix(std::get<2>(tuple));
+    printMapConsole();
 }
 
 Level::~Level(){}
@@ -26,6 +27,33 @@ const std::vector<std::vector<int>>* Level::getMatrix(){return &matrix;}
 const std::vector<Designar::Graph<Room>::Node*>* Level::getRoomsReference(){return &roomsReference;}
 
 Room* Level::getCurrentRoom(){return &roomsReference[currentIndex-1]->get_info();}
+
+std::pair<int,int> Level::getPosNeighbor(const int& direction)
+{
+    std::pair<int,int> posNeighbor = *getCurrentRoom()->getPos();
+    switch (direction)
+    {
+        case 0:
+            --posNeighbor.second;
+            break;
+        case 1:
+            --posNeighbor.first;
+            break;
+        case 2:
+            ++posNeighbor.second;
+            break;
+        case 3:
+            ++posNeighbor.first;
+            break;
+    }
+    return posNeighbor;
+}
+
+const int* Level::getIndexNeighbor(const int& direction)
+{
+    std::pair<int,int> posNeighbor = getPosNeighbor(direction);
+    return &matrix[posNeighbor.first][posNeighbor.second];
+}
 
 void Level::setMap(const Designar::Graph<Room>& value){map = value;}
 
@@ -134,6 +162,7 @@ std::pair<double,double> Level::setDesignRoom(const bool& centered)
     double heightTile = (cellHeight*(div+extraDim) - shrinkY*2.0)/div;
 
     dimensionsRoom.insert({0,std::make_pair(widthTile,heightTile)}); //piso
+    dimensionsRoom.insert({1,std::make_pair(widthTile,heightTile)}); //Portal
     dimensionsRoom.insert({3,std::make_pair(widthTile,heightTile)}); //pared horizontal
     dimensionsRoom.insert({4,std::make_pair(shrinkX,heightTile+(shrinkY+heightTile)/div)}); //pared vertical, en el alto se considera los margenes hacia arriba y hacia abajo para dibujar las horizontales
     dimensionsRoom.insert({5,std::make_pair(shrinkX*2.0,heightTile)}); //columna
@@ -199,19 +228,21 @@ std::pair<double,double> Level::setDesignRoom(const bool& centered)
     return std::make_pair(shrinkX,shrinkY);
 }
 
-void Level::setTileSet(const char* value, SDL_Renderer* renderer)
+SDL_Texture* Level::setTexture(const char* value, SDL_Renderer* renderer)
 {
-    SDL_Surface* surfTileSet = IMG_Load(value);
-    if(surfTileSet)
+    SDL_Surface* surf = IMG_Load(value);
+    if(surf)
     {
-        textTileSet = SDL_CreateTextureFromSurface(renderer,surfTileSet);
-        if(!textTileSet)
+        SDL_Texture* text = SDL_CreateTextureFromSurface(renderer,surf);
+        if(!text)
         {
             std::cout<<"Texture "<<value<<" dont created."<<std::endl;
         }
-        SDL_FreeSurface(surfTileSet);
+        SDL_FreeSurface(surf);
+        return text;
     }
     else{std::cout<<"Surface "<<value<<" dont created."<<std::endl;}
+    return nullptr;
 }
 
 void Level::insertSourceShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape)
@@ -219,19 +250,22 @@ void Level::insertSourceShape(const int& x, const int& y, const int& w, const in
     if(!sourceShapes.insert({numOfShape,{x,y,w,h}}).second){std::cout<<"Num of Shape is already in use"<<std::endl;}
 }
 
-void Level::setBackground(const char* value, SDL_Renderer* renderer)
+void Level::initializeResources(SDL_Renderer* renderer)
 {
-    SDL_Surface* surfBackground = IMG_Load(value);
-    if(surfBackground)
-    {
-        textBackground = SDL_CreateTextureFromSurface(renderer,surfBackground);
-        if(!textBackground)
-        {
-            std::cout<<"Texture "<<value<<" dont created."<<std::endl;
-        }
-        SDL_FreeSurface(surfBackground);
-    }
-    else{std::cout<<"Surface "<<value<<" dont created."<<std::endl;}
+    textBackground = setTexture("assets/screenshots/perg.png",renderer);
+    setSourceBackground(55,80,260,195);
+    textTileSet = setTexture("assets/screenshots/tileSet.png",renderer);
+    insertSourceShape(832,208,32,32,0);
+    insertSourceShape(486,202,80,80,1);
+    insertSourceShape(832,416,64,64,2);
+    insertSourceShape(304,400,64,48,3);
+    insertSourceShape(304,400,64,48,4);
+    insertSourceShape(640,112,16,80,5);
+    insertSourceShape(400,16,80,89,6);
+    insertSourceShape(72,52,176,63,7);
+    insertSourceShape(400,112,16,80,8);
+    insertSourceShape(432,112,16,74,9);
+    animated.initialize(renderer);
 }
 
 void Level::setSourceBackground(const int& x, const int& y, const int& w, const int& h){sourceBackground = {x,y,w,h};}
@@ -294,7 +328,7 @@ void Level::reduceMatrix()
     matrixReduced = reduced;
 }
 
-void Level::drawMap(SDL_Renderer* renderer)
+void Level::renderMap(SDL_Renderer* renderer)
 {
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
@@ -303,7 +337,7 @@ void Level::drawMap(SDL_Renderer* renderer)
     SDL_RenderPresent(renderer);
 }
 
-void Level::drawRoom(SDL_Renderer* renderer)
+void Level::renderRoom(SDL_Renderer* renderer)
 {
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
     draw(shapesRoom,dimensionsRoom,renderer);
@@ -324,25 +358,44 @@ void Level::drawDoors(SDL_Renderer* renderer)
             {
                 SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(9),&destBonus);
                 SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(8),&destDoor);
+                if(*getIndexNeighbor(i)<0)
+                {
+                    animated.renderCircularPortal(destDoor,renderer);
+                }
             }
             else
             {
-                SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(7),&destBonus);
-                SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(6),&destDoor);
+                if(*getIndexNeighbor(i)>0)
+                {
+                    SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(7),&destBonus);
+                    SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(6),&destDoor);
+                }
+                else if(*getIndexNeighbor(i)<0)
+                {
+                    animated.renderPortal(destDoor,renderer);
+                } 
             }
         }
     }
 }
 
-void Level::drawRoomLastFrame(SDL_Renderer* renderer)
+void Level::renderRoomLastFrame(SDL_Renderer* renderer)
 {
     draw(lowerFrameRoom,dimensionsRoom,renderer);
-    if((*getCurrentRoom()->getPaths())[3])
+    int i = 3;
+    if((*getCurrentRoom()->getPaths())[i])
     {
-        SDL_Rect destDoor = fillRect(doors[3*2+1],dimensionsRoom);
-        SDL_Rect destBonus = fillRect(doors[3*2],dimensionsRoom);
-        SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(7),&destBonus);
-        SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(6),&destDoor);
+        SDL_Rect destDoor = fillRect(doors[i*2+1],dimensionsRoom);
+        SDL_Rect destBonus = fillRect(doors[i*2],dimensionsRoom);
+        if(*getIndexNeighbor(i)>0)
+        {
+            SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(7),&destBonus);
+            SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(6),&destDoor);
+        }
+        else if(*getIndexNeighbor(i)<0)
+        {
+            animated.renderPortal(destDoor,renderer);
+        }
     }
 }
 
@@ -368,7 +421,7 @@ SDL_Rect Level::fillRect(const PosShape& shape, const std::unordered_map<int,std
     return dest;
 }
 
-std::pair<int,int> Level::passRoom(int direction, const SDL_Rect& rectPlayer)
+std::pair<int,int> Level::verifyPassRoom(int direction, const SDL_Rect& rectPlayer)
 {
     if((*getCurrentRoom()->getPaths())[direction]) //Verifica si hay puerta en dicha direccion
     {
@@ -380,15 +433,7 @@ std::pair<int,int> Level::passRoom(int direction, const SDL_Rect& rectPlayer)
             {
                 if(std::get<1>(doors[direction*2+1])+(dimensionsRoom.at(8)).second>=rectPlayer.y+rectPlayer.h)
                 {
-                    switch (direction)
-                    {
-                    case 0:
-                        --posNeighbor.second;
-                        break;
-                    case 2:
-                        ++posNeighbor.second;
-                        break;
-                    }
+                    return passRoom(direction,rectPlayer);
                 }
             }
         }
@@ -398,59 +443,54 @@ std::pair<int,int> Level::passRoom(int direction, const SDL_Rect& rectPlayer)
             {
                 if(std::get<0>(doors[direction*2+1])+(dimensionsRoom.at(6)).first>=rectPlayer.x+rectPlayer.w)
                 {
-                    switch (direction)
-                    {
-                    case 1:
-                        --posNeighbor.first;
-                        break;
-                    case 3:
-                        ++posNeighbor.first;
-                        break;
-                    }
-
+                    return passRoom(direction,rectPlayer);
                 }
             }
         }
-        if(posNeighbor==*actualRoom.getPos()) //Si no estaba alineado, se retorna su misma posicion
+    }
+    //Si no estaba alineado, se retorna su misma posicion
+    return std::make_pair(rectPlayer.x,rectPlayer.y);     
+}
+
+std::pair<int,int> Level::passRoom(int direction, const SDL_Rect& rectPlayer)
+{
+    int actualIndex = *getCurrentRoom()->getIndex();
+    int neighborIndex = *getIndexNeighbor(direction);
+    setCurrentIndex(std::abs(neighborIndex));
+    std::pair<int,int> playerPos;
+    for(int i=0; i<4; ++i) //Nos movimos de cuarto y vamos a buscar en que direccion estaba el cuarto del cual venimos
+    {
+        switch (direction)
         {
-            return std::make_pair(rectPlayer.x,rectPlayer.y);
+        case 0:
+            playerPos = std::make_pair(std::get<0>(doors[direction*2+1])+rectPlayer.w, std::get<1>(doors[direction*2+1]));
+            break;
+        case 1:
+            playerPos = std::make_pair(std::get<0>(doors[direction*2+1]),std::get<1>(doors[direction*2+1])+rectPlayer.h);
+            break;
+        case 2:
+            playerPos = std::make_pair(std::get<0>(doors[direction*2+1])-rectPlayer.w,std::get<1>(doors[direction*2+1]));
+            break;
+        case 3:
+            playerPos = std::make_pair(std::get<0>(doors[direction*2+1]),std::get<1>(doors[direction*2+1])-rectPlayer.h);
+            break;
         }
-        setCurrentIndex(std::abs(matrix[posNeighbor.first][posNeighbor.second]));
-        posNeighbor = *getCurrentRoom()->getPos();
-        std::pair<int,int> memory = posNeighbor;
-        std::pair<int,int> playerPos;
-        for(int i=0; i<4; ++i) //Nos movimos de cuarto y vamos a buscar en que direccion estaba el cuarto del cual venimos
+        if(neighborIndex>0)
         {
-            switch (direction)
-            {
-            case 0:
-                --posNeighbor.second;
-                playerPos = std::make_pair(std::get<0>(doors[direction*2+1])+rectPlayer.w, std::get<1>(doors[direction*2+1]));
-                break;
-            case 1:
-                --posNeighbor.first;
-                playerPos = std::make_pair(std::get<0>(doors[direction*2+1]),std::get<1>(doors[direction*2+1])+rectPlayer.h);
-                break;
-            case 2:
-                ++posNeighbor.second;
-                playerPos = std::make_pair(std::get<0>(doors[direction*2+1])-rectPlayer.w,std::get<1>(doors[direction*2+1]));
-                break;
-            case 3:
-                ++posNeighbor.first;
-                playerPos = std::make_pair(std::get<0>(doors[direction*2+1]),std::get<1>(doors[direction*2+1])-rectPlayer.h);
-                break;
-            }
-            if(std::abs(matrix[posNeighbor.first][posNeighbor.second])==*actualRoom.getIndex())
+            if(*getIndexNeighbor(direction)==actualIndex)
             {
                 return playerPos;
-            }  
-            else
-            {
-                ++direction;
-                if(direction>3){direction -= 4;}
-                posNeighbor = memory;
-            }
+            } 
         }
+        else
+        {
+            if(*getIndexNeighbor(direction)==-actualIndex)
+            {
+                return playerPos;
+            } 
+        }
+        ++direction;
+        if(direction>3){direction -= 4;}
     }
     return std::make_pair(rectPlayer.x,rectPlayer.y);
 }
