@@ -7,6 +7,8 @@ Player::Player() : texture(nullptr), currentDirection(Direction::RIGHT), current
     isInBound = {false,false,false,false};
 }
 
+void Player::setRenderHelper(HelperPtr value){helper = value;}
+
 void Player::initAnimation(SDL_Renderer* renderer, const TexturePtr &texture) 
 {
     this->texture = texture.get();
@@ -176,7 +178,7 @@ void Player::handleImput(const SDL_Event &event)
     }
 }
 
-void Player::update(float deltaTime, std::pair<double,double> border, int width, int height) 
+void Player::update(float deltaTime) 
 {
     if (currentState == State::TAKING_DAMAGE) 
     {
@@ -190,6 +192,10 @@ void Player::update(float deltaTime, std::pair<double,double> border, int width,
     else if (isMoving) 
     {
         float moveAmount = 200.0f * deltaTime;
+        double borderX = std::get<2>(helper.get()->getMeasuresRoom());
+        double borderY = std::get<3>(helper.get()->getMeasuresRoom());
+        int width = helper.get()->getWindowWitdth();
+        int height = helper.get()->getWindowHeight();
         switch (currentDirection) 
         {
             case Direction::UP:    
@@ -197,14 +203,14 @@ void Player::update(float deltaTime, std::pair<double,double> border, int width,
                 //deduccion: se necesita de unos pixeles vacios por encima de cada sprite
                 //y cuando se reescala se multiplica dicho vacio
                 //para evitar ese error visual se le impide que suba mucho al multiplicar por 0.75
-                if(static_cast<float>(border.second)-destRect.h*0.75<=destRect.y-moveAmount)
+                if(static_cast<float>(borderY)-destRect.h*0.75<=destRect.y-moveAmount)
                 {
                     destRect.y -= moveAmount;
                     isInBound[static_cast<int>(Direction::UP)] = false;
                 }
                 else
                 {
-                    destRect.y = static_cast<float>(border.second)-destRect.h*0.75;
+                    destRect.y = static_cast<float>(borderY)-destRect.h*0.75;
                     isInBound[static_cast<int>(Direction::UP)] = true;
                 }
             } 
@@ -212,14 +218,14 @@ void Player::update(float deltaTime, std::pair<double,double> border, int width,
 
             case Direction::DOWN:  
             {
-                if(height-static_cast<float>(border.second)>=destRect.y+destRect.h+moveAmount)
+                if(height-static_cast<float>(borderY)>=destRect.y+destRect.h+moveAmount)
                 {
                     destRect.y += moveAmount;
                     isInBound[static_cast<int>(Direction::DOWN)] = false;
                 }
                 else
                 {
-                    destRect.y = height-static_cast<float>(border.second)-destRect.h;
+                    destRect.y = height-static_cast<float>(borderY)-destRect.h;
                     isInBound[static_cast<int>(Direction::DOWN)] = true;
                 }
             } 
@@ -227,14 +233,14 @@ void Player::update(float deltaTime, std::pair<double,double> border, int width,
 
             case Direction::LEFT:  
             {
-                if(static_cast<float>(border.first)<=destRect.x-moveAmount)
+                if(static_cast<float>(borderX)<=destRect.x-moveAmount)
                 {
                     destRect.x -= moveAmount;
                     isInBound[static_cast<int>(Direction::LEFT)] = false;
                 }
                 else
                 {
-                    destRect.x = static_cast<float>(border.first);
+                    destRect.x = static_cast<float>(borderX);
                     isInBound[static_cast<int>(Direction::LEFT)] = true;
                 }
             }
@@ -242,14 +248,14 @@ void Player::update(float deltaTime, std::pair<double,double> border, int width,
 
             case Direction::RIGHT: 
             {
-                if(width-static_cast<float>(border.first)>=destRect.x+destRect.w+moveAmount)
+                if(width-static_cast<float>(borderX)>=destRect.x+destRect.w+moveAmount)
                 {
                     destRect.x += moveAmount;
                     isInBound[static_cast<int>(Direction::RIGHT)] = false;
                 }
                 else
                 {
-                    destRect.x = width-static_cast<float>(border.first)-destRect.w;
+                    destRect.x = width-static_cast<float>(borderX)-destRect.w;
                     isInBound[static_cast<int>(Direction::RIGHT)] = true;
                 }
             }

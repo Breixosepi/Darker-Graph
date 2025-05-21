@@ -1,35 +1,13 @@
 #include <AnimatedFigure.hpp>
 
-AnimatedFigure::AnimatedFigure(){}
-
-AnimatedFigure::~AnimatedFigure(){}
-
-void AnimatedFigure::initialize(SDL_Renderer* renderer)
+AnimatedFigure::AnimatedFigure()
 {
     sourcePortal = {32*3,32*3,32,32};
     sourceParticles = {100*7,100*5,100,100};
     sourceCircularPortal = {0,48*2,32,48};
-    textPortal = initializeTexture("assets/sprites/portalRings.png",renderer);
-    textParticles = initializeTexture("assets/sprites/blueParticles.png",renderer);
-    textCircularPortal = initializeTexture("assets/sprites/circularPortal.png",renderer);
 }
 
-SDL_Texture* AnimatedFigure::initializeTexture(const char* path, SDL_Renderer* renderer)
-{
-    SDL_Surface* surf = IMG_Load(path);
-    if(surf)
-    {
-        SDL_Texture* text = SDL_CreateTextureFromSurface(renderer,surf);
-        if(!text)
-        {
-            std::cout<<"Texture "<<path<<" dont created."<<std::endl;
-        }
-        SDL_FreeSurface(surf);
-        return text;
-    }
-    else{std::cout<<"Surface "<<path<<" dont created."<<std::endl;}
-    return nullptr;
-}
+AnimatedFigure::~AnimatedFigure(){}
 
 SDL_Rect* AnimatedFigure::updatePortal()
 {
@@ -45,7 +23,7 @@ SDL_Rect* AnimatedFigure::updatePortal()
 
 void AnimatedFigure::renderPortal(const SDL_Rect& dest, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,textPortal,updatePortal(),&dest);
+    SDL_RenderCopy(renderer,helper.getTexture("assets/sprites/portalRings.png",renderer),updatePortal(),&dest);
 }
 
 SDL_Rect* AnimatedFigure::updateParticles()
@@ -62,7 +40,7 @@ SDL_Rect* AnimatedFigure::updateParticles()
 
 void AnimatedFigure::renderParticles(const SDL_Rect& dest, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,textParticles,updateParticles(),&dest);   
+    SDL_RenderCopy(renderer,helper.getTexture("assets/sprites/blueParticles.png",renderer),updateParticles(),&dest);   
 }
 
 SDL_Rect* AnimatedFigure::updateCircularPortal()
@@ -77,6 +55,6 @@ SDL_Rect* AnimatedFigure::updateCircularPortal()
 
 void AnimatedFigure::renderCircularPortal(const SDL_Rect& dest, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,textCircularPortal,updateCircularPortal(),&dest);
+    SDL_RenderCopy(renderer,helper.getTexture("assets/sprites/circularPortal.png",renderer),updateCircularPortal(),&dest);
 }
 

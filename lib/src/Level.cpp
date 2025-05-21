@@ -6,7 +6,6 @@ Level::Level(std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>:
 {
     map = std::get<0>(tuple);
     roomsReference = std::get<1>(tuple);
-    windowWidth = windowHeight = -1;
     if(map.get_num_nodes()!=0){currentIndex = 1;}
     else{currentIndex = -1;}
     setMatrix(std::get<2>(tuple));
@@ -65,6 +64,8 @@ const int Level::getIndexNeighbor(const int& direction)
     return 0;
 }
 
+const std::pair<int,int> Level::getMatrixSize(){return std::make_pair(matrix.size(),matrix[0].size());}
+
 void Level::setMap(const Designar::Graph<Room>& value){map = value;}
 
 void Level::setShortestPath(const Designar::Graph<Room>& value){shortestPath = value;}
@@ -73,42 +74,47 @@ void Level::setEulerianPath(const Designar::Graph<Room>& value){eulerianPath = v
 
 void Level::setCurrentIndex(const int& value){currentIndex = value;}
 
-std::pair<double,double> Level::setWindowSize(const int& width, const int& height)
+void Level::handleResizeWindow()
 {
-    windowWidth = width;
-    windowHeight = height;
     setShapesMap();
-    return setDesignRoom(false);
+    setDesignRoom();
 }
 
 void Level::setMatrix(const std::vector<std::vector<int>>& value){matrix = value;}
+
+void Level::setRenderHelper(HelperPtr value)
+{
+    helper = value;
+    setSources();
+}
 
 //Actualiza el vector de figuras a dibujar para mostrar el mapa del presente nivel.
 //Trabaja con el ultimo tamano de ventana establecido.
 void Level::setShapesMap()
 {
-    if(!shapesMap.empty())
-    {
-        shapesMap.clear();
-        dimensionsMap.clear();
-    }
+    if(!shapesMap.empty()){shapesMap.clear();}
     if(!matrix.empty())
     {
-        double square = std::min(windowWidth/(matrix[0].size()+1.0),windowHeight/(matrix.size()+1.0)); //se escoge la celda mas pequena
-        double shrink = square/4.0; //se encoge la celda para dejar espacio para los pasillos
-        double tile = square-shrink;
-        double X = (windowWidth-square*matrix[0].size())/2.0 - shrink/2.0;
-        dimensionsMap.insert({0,std::make_pair(tile,tile)});
-        dimensionsMap.insert({1,std::make_pair(tile,tile)});
-        dimensionsMap.insert({2,std::make_pair(shrink,shrink)});
+        Measures measures = helper.get()->getMeasuresMap();
+        double tile = std::get<0>(measures);
+        double shrink = std::get<2>(measures);
+        double square = tile+shrink;
+        double resizeX = std::get<4>(measures);
+        double resizeY = std::get<5>(measures);
+
+        dimensionsMap.insert({"tile",std::make_pair(tile,tile)});
+        dimensionsMap.insert({"trapdoor",std::make_pair(tile,tile)});
+        dimensionsMap.insert({"hallway",std::make_pair(shrink,shrink)});
+
+        double X = resizeX - shrink/2;
         for(int i=0; i<matrix[0].size(); ++i)
         {
-            double Y = (windowHeight-square*matrix.size())/2.0 - shrink/2.0;
+            double Y = resizeY - shrink/2;
             for(int j=0; j<matrix.size(); ++j)
             {
                 if(matrix[j][i]!=0)
                 {
-                    shapesMap.push_back(std::make_tuple(X+shrink,Y+shrink,0));
+                    shapesMap.push_back(std::make_tuple(X+shrink,Y+shrink,"tile"));
                     if(matrix[j][i]>0)
                     {
                         std::vector<bool> paths = *roomsReference[matrix[j][i]-1]->get_info().getPaths();
@@ -119,22 +125,22 @@ void Level::setShapesMap()
                                 switch (k)
                                 {
                                     case 0: //Izquierda
-                                        shapesMap.push_back(std::make_tuple(X,Y+square/2.0,2));
+                                        shapesMap.push_back(std::make_tuple(X,Y+square/2.0,"hallway"));
                                     break;
                                     case 1: //Arriba
-                                        shapesMap.push_back(std::make_tuple(X+square/2.0,Y,2));
+                                        shapesMap.push_back(std::make_tuple(X+square/2.0,Y,"hallway"));
                                     break;
                                     case 2: //Derecha
-                                        shapesMap.push_back(std::make_tuple(X+square,Y+square/2.0,2));
+                                        shapesMap.push_back(std::make_tuple(X+square,Y+square/2.0,"hallway"));
                                     break;
                                     case 3: //Abajo
-                                        shapesMap.push_back(std::make_tuple(X+square/2.0,Y+square,2));
+                                        shapesMap.push_back(std::make_tuple(X+square/2.0,Y+square,"hallway"));
                                     break;
                                 }
                             }
                         }
                     }
-                    else{shapesMap.push_back(std::make_tuple(X+shrink,Y+shrink,1));}
+                    else{shapesMap.push_back(std::make_tuple(X+shrink,Y+shrink,"trapdoor"));}
                 }
                 Y += square;
             }
@@ -146,7 +152,7 @@ void Level::setShapesMap()
 //Actualiza el vector de figuras a dibujar para mostrar el fondo de los cuartos.
 //Trabaja con el ultimo tamano de ventana establecido.
 //Tambien se puede ver modificado a traves de alguno de los 2 parametros que recibe
-std::pair<double,double> Level::setDesignRoom(const bool& centered)
+void Level::setDesignRoom()
 {
     if(!shapesRoom.empty())
     {
@@ -155,55 +161,54 @@ std::pair<double,double> Level::setDesignRoom(const bool& centered)
         lowerFrameRoom.clear();
         doors.clear();
     }
-    int extraDim = 2;
     double div = *getCurrentRoom()->getDivisions();
-    double cellWidth = windowWidth/(div+extraDim);
-    double cellHeight = windowHeight/(div+extraDim);
-    if(centered){cellHeight = cellWidth = std::min(cellHeight,cellWidth);}
-    double shrinkX = cellWidth/4.0; //margen en horizontal Hitbox! en X
-    double shrinkY = cellHeight/2.0; //margen en vertical Hitbox! en Y
-    double widthTile = (cellWidth*(div+extraDim) - shrinkX*2.0)/div;
-    double heightTile = (cellHeight*(div+extraDim) - shrinkY*2.0)/div;
+    Measures measures = helper.get()->getMeasuresRoom(div);
+    
+    double widthTile = std::get<0>(measures);
+    double heightTile = std::get<1>(measures);
+    double shrinkX = std::get<2>(measures);
+    double shrinkY = std::get<3>(measures);
+    double resizeX = std::get<4>(measures);
+    double resizeY = std::get<5>(measures);
 
-    dimensionsRoom.insert({0,std::make_pair(widthTile,heightTile)}); //piso
-    dimensionsRoom.insert({1,std::make_pair(widthTile,heightTile)}); //Portal
-    dimensionsRoom.insert({3,std::make_pair(widthTile,heightTile)}); //pared horizontal
-    dimensionsRoom.insert({4,std::make_pair(shrinkX,heightTile+(shrinkY+heightTile)/div)}); //pared vertical, en el alto se considera los margenes hacia arriba y hacia abajo para dibujar las horizontales
-    dimensionsRoom.insert({5,std::make_pair(shrinkX*2.0,heightTile)}); //columna
-    dimensionsRoom.insert({6,std::make_pair(widthTile,heightTile)}); //puerta superior inferior
-    dimensionsRoom.insert({7,std::make_pair(widthTile,heightTile)}); //oscuridad puerta
-    dimensionsRoom.insert({8,std::make_pair(shrinkX,heightTile)}); //puerta lateral
-    dimensionsRoom.insert({9,std::make_pair(shrinkX,heightTile)}); //marco puerta lateral
+    dimensionsRoom.insert({"tile",std::make_pair(widthTile,heightTile)}); 
+    dimensionsRoom.insert({"portal",std::make_pair(widthTile,heightTile)}); 
+    dimensionsRoom.insert({"horizontalWall",std::make_pair(widthTile,heightTile)}); 
+    dimensionsRoom.insert({"verticalWall",std::make_pair(shrinkX,heightTile+(shrinkY+heightTile)/div)});
+    dimensionsRoom.insert({"column",std::make_pair(shrinkX*2.0,heightTile)}); 
+    dimensionsRoom.insert({"horizontalDoor",std::make_pair(widthTile,heightTile)}); 
+    dimensionsRoom.insert({"darkness",std::make_pair(widthTile,heightTile)});
+    dimensionsRoom.insert({"verticalDoor",std::make_pair(shrinkX,heightTile)});
+    dimensionsRoom.insert({"verticalDoorFrame",std::make_pair(shrinkX,heightTile)});
 
-    double resizeY = (windowHeight-cellHeight*(div+extraDim))/2.0;
-    double resizeX = (windowWidth-cellWidth*(div+extraDim))/2.0;
     double Y = shrinkY + resizeY;
     double supY, infY = -1.0;
+
     for(int i=0; i<div; ++i)
     {
         double X = shrinkX + resizeX;
         for(int j=0; j<div; ++j)
         {
-            shapesRoom.push_back({X,Y,0}); //Baldosas
+            shapesRoom.push_back({X,Y,"tile"}); //Baldosas
             if(i==0 || i==div-1)
             {
                 if(i<div-1)
                 {
                     supY = Y-heightTile; //Linea de los frames mas superiores
-                    shapesRoom.push_back({X,supY,3}); //Paredes Superiores
+                    shapesRoom.push_back({X,supY,"horizontalWall"}); //Paredes Superiores
                 }
                 else
                 {
                     infY = Y+0.75*heightTile; //Linea de los frames mas inferiores, se tapa un cuarto de la baldosa inferior
-                    lowerFrameRoom.push_back({X,infY,3}); //Paredes Inferiores
+                    lowerFrameRoom.push_back({X,infY,"horizontalWall"}); //Paredes Inferiores
                 }
-                if(i==0&&j==div-1){shapesRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,supY,5});} //Columnas Superior Derecha
+                if(i==0&&j==div-1){shapesRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,supY,"column"});} //Columnas Superior Derecha
             }
             if(j==0 || j==div-1)
             {
-                if(i==0&&j==0){shapesRoom.push_back({-shrinkX/2.0+resizeX,supY,5});} //Columna Superior Izquierda
-                if(j<div-1){shapesRoom.push_back({X-shrinkX,Y-shrinkY,4});} //Paredes en Vertical a la izquierda(delgadas)
-                else{shapesRoom.push_back({X+widthTile,Y-shrinkY,4});} //Paredes en Vertical a la derecha
+                if(i==0&&j==0){shapesRoom.push_back({-shrinkX/2.0+resizeX,supY,"column"});} //Columna Superior Izquierda
+                if(j<div-1){shapesRoom.push_back({X-shrinkX,Y-shrinkY,"verticalWall"});} //Paredes en Vertical a la izquierda(delgadas)
+                else{shapesRoom.push_back({X+widthTile,Y-shrinkY,"verticalWall"});} //Paredes en Vertical a la derecha
             }
             X+=widthTile;
         }
@@ -214,65 +219,37 @@ std::pair<double,double> Level::setDesignRoom(const bool& centered)
     double middleY = supY+heightTile*(div+1)/2.0;
     double middleX = widthTile*(div-1)/2.0+shrinkX;
 
-    doors.push_back({resizeX,resizeY+middleY,9}); //izquierda
-    doors.push_back({resizeX,resizeY+middleY,8});
+    doors.push_back({resizeX,resizeY+middleY,"verticalDoorFrame"}); //izquierda
+    doors.push_back({resizeX,resizeY+middleY,"verticalDoor"});
 
-    doors.push_back({resizeX+middleX,supY,7}); //arriba
-    doors.push_back({resizeX+middleX,supY,6});
+    doors.push_back({resizeX+middleX,supY,"darkness"}); //arriba
+    doors.push_back({resizeX+middleX,supY,"horizontalDoor"});
 
-    doors.push_back({resizeX+shrinkX+widthTile*(div),resizeY+middleY,9}); //derecha
-    doors.push_back({resizeX+shrinkX+widthTile*(div),resizeY+middleY,8});
+    doors.push_back({resizeX+shrinkX+widthTile*(div),resizeY+middleY,"verticalDoorFrame"}); //derecha
+    doors.push_back({resizeX+shrinkX+widthTile*(div),resizeY+middleY,"verticalDoor"});
 
-    doors.push_back({middleX,infY,7}); //abajo
-    doors.push_back({middleX,infY,6});
+    doors.push_back({middleX,infY,"darkness"}); //abajo
+    doors.push_back({middleX,infY,"horizontalDoor"});
+
     //Columnas inferiores
-    lowerFrameRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,infY,5});
-    lowerFrameRoom.push_back({-shrinkX/2.0+resizeX,infY,5});
-
-    return std::make_pair(shrinkX,shrinkY);
+    lowerFrameRoom.push_back({widthTile*div+shrinkX/2.0+resizeX,infY,"column"});
+    lowerFrameRoom.push_back({-shrinkX/2.0+resizeX,infY,"column"});
 }
 
-SDL_Texture* Level::setTexture(const char* value, SDL_Renderer* renderer)
+void Level::setSources()
 {
-    SDL_Surface* surf = IMG_Load(value);
-    if(surf)
-    {
-        SDL_Texture* text = SDL_CreateTextureFromSurface(renderer,surf);
-        if(!text)
-        {
-            std::cout<<"Texture "<<value<<" dont created."<<std::endl;
-        }
-        SDL_FreeSurface(surf);
-        return text;
-    }
-    else{std::cout<<"Surface "<<value<<" dont created."<<std::endl;}
-    return nullptr;
+    helper.get()->setSource("backgroundMap",55,80,260,195);
+    helper.get()->setSource("tile",832,208,32,32);
+    helper.get()->setSource("trapdoor",486,202,80,80);
+    helper.get()->setSource("hallway",832,416,64,64);
+    helper.get()->setSource("horizontalWall",304,400,64,48);
+    helper.get()->setSource("verticalWall",304,400,64,48);
+    helper.get()->setSource("column",640,112,16,80);
+    helper.get()->setSource("horizontalDoor",400,16,80,89);
+    helper.get()->setSource("darkness",72,52,176,63);
+    helper.get()->setSource("verticalDoor",400,112,16,80);
+    helper.get()->setSource("verticalDoorFrame",432,112,16,74);
 }
-
-void Level::insertSourceShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape)
-{
-    if(!sourceShapes.insert({numOfShape,{x,y,w,h}}).second){std::cout<<"Num of Shape is already in use"<<std::endl;}
-}
-
-void Level::initializeResources(SDL_Renderer* renderer)
-{
-    textBackground = setTexture("assets/screenshots/perg.png",renderer);
-    setSourceBackground(55,80,260,195);
-    textTileSet = setTexture("assets/screenshots/tileSet.png",renderer);
-    insertSourceShape(832,208,32,32,0);
-    insertSourceShape(486,202,80,80,1);
-    insertSourceShape(832,416,64,64,2);
-    insertSourceShape(304,400,64,48,3);
-    insertSourceShape(304,400,64,48,4);
-    insertSourceShape(640,112,16,80,5);
-    insertSourceShape(400,16,80,89,6);
-    insertSourceShape(72,52,176,63,7);
-    insertSourceShape(400,112,16,80,8);
-    insertSourceShape(432,112,16,74,9);
-    animated.initialize(renderer);
-}
-
-void Level::setSourceBackground(const int& x, const int& y, const int& w, const int& h){sourceBackground = {x,y,w,h};}
 
 void Level::printMapConsole()
 {
@@ -292,8 +269,10 @@ void Level::renderMap(SDL_Renderer* renderer)
 {
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
-    SDL_RenderCopy(renderer,textBackground,&sourceBackground,NULL);
+    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/perg.png",renderer),helper.get()->getSource("backgroundMap"),NULL);
     draw(shapesMap,dimensionsMap,renderer);
+    //SDL_Rect destPlayer = {windowWidth/2.0,windowHeight/2.0,100,100};
+    //SDL_RenderCopy(renderer,helper.getTexture(),&sourceShapes.at(6),&destPlayer);
     SDL_RenderPresent(renderer);
 }
 
@@ -316,8 +295,8 @@ void Level::drawDoors(SDL_Renderer* renderer)
             destBonus = fillRect(doors[i*2],dimensionsRoom);
             if(i==0||i==2)
             {
-                SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(9),&destBonus);
-                SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(8),&destDoor);
+                SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("verticalDoorFrame"),&destBonus);
+                SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("verticalDoor"),&destDoor);
                 if(getIndexNeighbor(i)<0)
                 {
                     animated.renderCircularPortal(destDoor,renderer);
@@ -327,8 +306,8 @@ void Level::drawDoors(SDL_Renderer* renderer)
             {
                 if(getIndexNeighbor(i)>0)
                 {
-                    SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(7),&destBonus);
-                    SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(6),&destDoor);
+                    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("darkness"),&destBonus);
+                    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("horizontalDoor"),&destDoor);
                 }
                 else if(getIndexNeighbor(i)<0)
                 {
@@ -349,8 +328,8 @@ void Level::renderRoomLastFrame(SDL_Renderer* renderer)
         SDL_Rect destBonus = fillRect(doors[i*2],dimensionsRoom);
         if(getIndexNeighbor(i)>0)
         {
-            SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(7),&destBonus);
-            SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(6),&destDoor);
+            SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("darkness"),&destBonus);
+            SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("horizontalDoor"),&destDoor);
         }
         else if(getIndexNeighbor(i)<0)
         {
@@ -359,17 +338,17 @@ void Level::renderRoomLastFrame(SDL_Renderer* renderer)
     }
 }
 
-void Level::draw(const std::vector<PosShape>& shapes, const std::unordered_map<int,std::pair<int,int>>& dimensions, SDL_Renderer* renderer)
+void Level::draw(const std::vector<PosShape>& shapes, const std::unordered_map<std::string,std::pair<int,int>>& dimensions, SDL_Renderer* renderer)
 {
     SDL_Rect destTileSet;
     for(PosShape shape : shapes)
     {
         destTileSet = fillRect(shape,dimensions);
-        SDL_RenderCopy(renderer,textTileSet,&sourceShapes.at(std::get<2>(shape)),&destTileSet);
+        SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource(std::get<2>(shape)),&destTileSet);
     }
 }
 
-SDL_Rect Level::fillRect(const PosShape& shape, const std::unordered_map<int,std::pair<int,int>>& dimensions)
+SDL_Rect Level::fillRect(const PosShape& shape, const std::unordered_map<std::string,std::pair<int,int>>& dimensions)
 {
     SDL_Rect dest;
     std::pair<int,int> widthHeight;
@@ -389,7 +368,7 @@ std::pair<int,int> Level::verifyPassRoom(int direction, const SDL_Rect& rectPlay
         {
             if(std::get<1>(doors[direction*2+1])<=rectPlayer.y) //Verifica si el personaje esta alineado con la puerta
             {
-                if(std::get<1>(doors[direction*2+1])+(dimensionsRoom.at(8)).second>=rectPlayer.y+rectPlayer.h)
+                if(std::get<1>(doors[direction*2+1])+(dimensionsRoom.at("verticalDoor")).second>=rectPlayer.y+rectPlayer.h)
                 {
                     return passRoom(direction,rectPlayer);
                 }
@@ -399,7 +378,7 @@ std::pair<int,int> Level::verifyPassRoom(int direction, const SDL_Rect& rectPlay
         {
             if(std::get<0>(doors[direction*2+1])<=rectPlayer.x) //Verifica si el personaje esta alineado con la puerta
             {
-                if(std::get<0>(doors[direction*2+1])+(dimensionsRoom.at(6)).first>=rectPlayer.x+rectPlayer.w)
+                if(std::get<0>(doors[direction*2+1])+(dimensionsRoom.at("horizontalDoor")).first>=rectPlayer.x+rectPlayer.w)
                 {
                     return passRoom(direction,rectPlayer);
                 }

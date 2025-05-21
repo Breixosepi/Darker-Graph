@@ -3,6 +3,7 @@
 #include <Room.hpp>
 #include <unordered_map>
 #include <AnimatedFigure.hpp>
+#include <RenderHelper.hpp>
 
 class Level
 {
@@ -17,6 +18,7 @@ class Level
         const std::vector<std::vector<int>>* getMatrix();
         const std::vector<Designar::Graph<Room>::Node*>* getRoomsReference();
         Room* getCurrentRoom();
+        const std::pair<int,int> getMatrixSize();
         const std::pair<int,int> getPosNeighbor(const int& direction);
         const int getIndexNeighbor(const int& direction);
 
@@ -24,14 +26,14 @@ class Level
         void setShortestPath(const Designar::Graph<Room>& value);
         void setEulerianPath(const Designar::Graph<Room>& value);
         void setMatrix(const std::vector<std::vector<int>>& value);
-        SDL_Texture* setTexture(const char* value, SDL_Renderer* renderer);
-        void insertSourceShape(const int& x, const int& y, const int& w, const int& h, const int& numOfShape);
-        void setSourceBackground(const int& x, const int& y, const int& w, const int& h);
-        std::pair<double,double> setWindowSize(const int& width, const int& height);
+        void setRenderHelper(HelperPtr value);
+
+        void handleResizeWindow();
         void setCurrentIndex(const int& value);
 
         void printMapConsole();
-        void initializeResources(SDL_Renderer* renderer);
+        void setSources();
+
         std::pair<int,int> verifyPassRoom(int direction, const SDL_Rect& rectPlayer);
         std::pair<int,int> passRoom(int direction, const SDL_Rect& rectPlayer);
         
@@ -44,27 +46,24 @@ class Level
         Designar::Graph<Room> shortestPath;
         Designar::Graph<Room> eulerianPath;
         std::vector<std::vector<int>> matrix;
-        int windowWidth;
-        int windowHeight;
 
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
         int currentIndex;
-        SDL_Rect sourceBackground;
-        //0:Tile, 1:Portal, 2:Path, 3:WallHorizontal, 4:WallVertical, 5:Column, 6:Door, 7:Darkness
-        std::unordered_map<int,SDL_Rect> sourceShapes;
+        
         std::vector<PosShape> shapesMap;
         std::vector<PosShape> shapesRoom;
         std::vector<PosShape> doors;
         std::vector<PosShape> lowerFrameRoom;
-        std::unordered_map<int,std::pair<int,int>> dimensionsMap;
-        std::unordered_map<int,std::pair<int,int>> dimensionsRoom;
-        SDL_Texture* textTileSet;
-        SDL_Texture* textBackground;
+
+        std::unordered_map<std::string,std::pair<int,int>> dimensionsMap;
+        std::unordered_map<std::string,std::pair<int,int>> dimensionsRoom;
+
         AnimatedFigure animated;
+        HelperPtr helper;
 
         void setShapesMap();
-        std::pair<double,double> setDesignRoom(const bool& centered);
-        void draw(const std::vector<PosShape>& shapes, const std::unordered_map<int,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);
+        void setDesignRoom();
+        void draw(const std::vector<PosShape>& shapes, const std::unordered_map<std::string,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);
         void drawDoors(SDL_Renderer* renderer);
-        SDL_Rect fillRect(const PosShape& shape, const std::unordered_map<int,std::pair<int,int>>& dimensions);
+        SDL_Rect fillRect(const PosShape& shape, const std::unordered_map<std::string,std::pair<int,int>>& dimensions);
 };

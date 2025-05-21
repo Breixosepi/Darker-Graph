@@ -2,6 +2,7 @@
 #include <Utilities.hpp>
 #include <iostream>
 #include "HealthBar.hpp"
+#include <RenderHelper.hpp>
 
 class Enemy;
         
@@ -21,7 +22,7 @@ class Player
         Player();
         void initAnimation(SDL_Renderer* renderer, const TexturePtr &texture);
         void renderPlayer(SDL_Renderer* renderer);
-        void update(float deltaTime, std::pair<double,double> border, int width, int height);
+        void update(float deltaTime);
         void setPosition(int x, int y);
         void setPosition(std::pair<int,int> value);
         void updateAnimation(float deltaTime);
@@ -43,9 +44,10 @@ class Player
         void setHasHit(bool hit);
         void takeDamage(int damage);
         void handleWindowResize(int newWidth, int newHeight);
-        
+        void setRenderHelper(HelperPtr value);
 
     private:
+        HelperPtr helper;
         SDL_Texture* texture;
         SDL_Rect srcRect;
         SDL_Rect destRect;

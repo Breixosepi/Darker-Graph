@@ -10,6 +10,13 @@
 
 struct SDL_Deleter 
 {
+    SDL_Deleter() = default;
+    SDL_Deleter(const SDL_Deleter&) = default;
+    SDL_Deleter& operator=(const SDL_Deleter&) = default;
+
+    SDL_Deleter(SDL_Deleter&&) = default;
+    SDL_Deleter& operator=(SDL_Deleter&&) = default;
+    
     void operator()(SDL_Window* window) const 
     { 
         if (window) SDL_DestroyWindow(window); 

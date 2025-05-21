@@ -8,6 +8,7 @@ MenuSystem::MenuSystem()
     head = nullptr;
     tail = nullptr;
     current = nullptr;
+    helper = std::make_shared<RenderHelper>();
 }
 
 MenuSystem::MenuSystem(SDL_Renderer* render, TTF_Font* fonts, SDL_Window* wind)
@@ -18,6 +19,7 @@ MenuSystem::MenuSystem(SDL_Renderer* render, TTF_Font* fonts, SDL_Window* wind)
     head = nullptr;
     tail = nullptr;
     current = nullptr;
+    helper = std::make_shared<RenderHelper>();
     setMainMenu(this);
 }
 
@@ -110,10 +112,10 @@ void MenuSystem::handleEvent(const SDL_Event& event)
     }
 }
 
-void MenuSystem::render() const 
+void MenuSystem::render()  
 {
     if (!renderer) return;
-    
+    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/background-title.png",renderer),NULL,NULL);
     if (font && !widgets.empty()) 
     {
         for (const auto& widget : widgets) 
@@ -154,13 +156,19 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
 { 
     menu->addWidget("start", "Iniciar Juego", [&]()
     {   
-        MyGraph creator;
-        int width, height;
-        SDL_GetWindowSize(window,&width,&height);
-        Level level(creator.createMap(false));
-        level.initializeResources(renderer);
-        level.setWindowSize(width,height);
+        while(!levels.empty()){levels.pop();}
+        levels.push(creator.createMap(0));
+        //levels.push(creator.createMap(0));
+        //levels.push(creator.createMap(0));
         
+        Level actualLevel = levels.front();
+        actualLevel.setRenderHelper(helper);
+        levels.pop();
+        
+        SDL_GetWindowSize(window,&windowWidth,&windowHeight);
+        helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize(),*actualLevel.getCurrentRoom()->getIndex());
+        actualLevel.handleResizeWindow();
+
         SDL_Event event;
         bool running = true;
         while (running) 
@@ -182,25 +190,31 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 {
                     if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                     {
-                        SDL_GetWindowSize(window, &width, &height);
-                        level.setWindowSize(width,height);
+                        SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+                        helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize(),*actualLevel.getCurrentRoom()->getIndex());
+                        actualLevel.handleResizeWindow();
                     } 
                 }  
             }
-            level.renderMap(renderer);    
+            actualLevel.renderMap(renderer);    
         }
     }); 
 
 menu->addWidget("load", "Puntuaciones", [&]() 
 {
-    MyGraph creator;
-    int width, height;
-
     // room setup
-    SDL_GetWindowSize(window,&width,&height);
-    Level level(creator.createMap(false));
-    level.initializeResources(renderer);
-    std::pair<double,double> borderRoom = level.setWindowSize(width,height);
+    while(!levels.empty()){levels.pop();}
+    levels.push(creator.createMap(0));
+    //levels.push(creator.createMap(0));
+    //levels.push(creator.createMap(0));
+        
+    Level actualLevel = levels.front();
+    actualLevel.setRenderHelper(helper);
+    levels.pop();
+        
+    SDL_GetWindowSize(window,&windowWidth,&windowHeight);
+    helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize(),*actualLevel.getCurrentRoom()->getIndex());
+    actualLevel.handleResizeWindow();
 
     // Player setup
     SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
@@ -209,6 +223,7 @@ menu->addWidget("load", "Puntuaciones", [&]()
     Player player;
     player.initAnimation(renderer, playerTexture);
     player.setPosition(400, 300); 
+    player.setRenderHelper(helper);
 
     // Enemy setup 
     SDL_Surface* enemySurface = IMG_Load("assets/sprites/Orc.png");
@@ -245,15 +260,15 @@ menu->addWidget("load", "Puntuaciones", [&]()
             {
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                 {
-                    SDL_GetWindowSize(window, &width, &height);
-                    level.setWindowSize(width,height);
-                    player.handleWindowResize(width, height);
+                    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+                    helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize(),*actualLevel.getCurrentRoom()->getIndex());
+                    actualLevel.handleResizeWindow();
                 } 
             }  
         }
 
         // Actualización de objetos
-        player.update(deltaTime,borderRoom,width,height);
+        player.update(deltaTime);
         player.attack(enemy);
         enemy.detectPlayer(player.getBounds());
         enemy.attack(player);
@@ -261,25 +276,25 @@ menu->addWidget("load", "Puntuaciones", [&]()
 
         if(player.getIsInBound()&&player.getState()==State::RUNNING)
         {
-            int index = *level.getCurrentRoom()->getIndex();
-            player.setPosition(level.verifyPassRoom(static_cast<int>(player.getDirection()),player.getBounds()));
-            if(index!=*level.getCurrentRoom()->getIndex())
+            int index = *actualLevel.getCurrentRoom()->getIndex();
+            player.setPosition(actualLevel.verifyPassRoom(static_cast<int>(player.getDirection()),player.getBounds()));
+            if(index!=*actualLevel.getCurrentRoom()->getIndex())
             {
-                std::cout<<"Te moviste al cuarto Numero: "<<*level.getCurrentRoom()->getIndex()<<" Provienes del Cuarto Numero: "<<index<<std::endl;
+                std::cout<<"Te moviste al cuarto Numero: "<<*actualLevel.getCurrentRoom()->getIndex()<<" Provienes del Cuarto Numero: "<<index<<std::endl;
             }
         }
 
         // Renderizado
         SDL_SetRenderDrawColor(renderer, 30, 30, 50, 255); 
         SDL_RenderClear(renderer);
-        level.renderRoom(renderer);
+        actualLevel.renderRoom(renderer);
         player.renderPlayer(renderer);
         // player.renderAttackHitbox(renderer);
         // player.renderDebugBounds(renderer);
         enemy.renderEnemy(renderer); 
         // enemy.renderAttackHitbox(renderer);
         // enemy.renderDebugBounds(renderer);
-        level.renderRoomLastFrame(renderer);
+        actualLevel.renderRoomLastFrame(renderer);
         SDL_RenderPresent(renderer);
         SDL_Delay(16); 
     }

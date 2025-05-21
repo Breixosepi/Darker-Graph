@@ -51,23 +51,7 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
         isRunning = false;
     }
 
-    if((IMG_Init({IMG_INIT_PNG|IMG_INIT_JPG}))&IMG_INIT_PNG)
-    {
-        SDL_Surface* surfaceBackground = IMG_Load("assets/screenshots/background-title.png");
-        if(surfaceBackground)
-        {
-            textureBackground = SDL_CreateTextureFromSurface(renderer.get(),surfaceBackground);
-            if(!textureBackground)
-            {
-                isRunning = false;
-            }
-            SDL_FreeSurface(surfaceBackground);
-        }
-        else
-        {
-            isRunning = false;
-        }
-    }
+    if((IMG_Init({IMG_INIT_PNG|IMG_INIT_JPG}))&IMG_INIT_PNG){}
     else
     {
         isRunning = false;
@@ -110,7 +94,6 @@ void Game::render()
     
     if (mainMenu) 
     {
-        SDL_RenderCopy(renderer.get(),textureBackground,NULL,NULL);
         mainMenu->render();
     }
     

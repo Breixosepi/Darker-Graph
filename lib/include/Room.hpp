@@ -6,7 +6,7 @@
 #include <vector>
 #include <graph.hpp>
 
-using PosShape = std::tuple<int,int,int>; //Get<0>=X, Get<1>=Y, Get<2>=typeShape 
+using PosShape = std::tuple<int,int,std::string>; //Get<0>=X, Get<1>=Y, Get<2>=typeShape 
 
 class Room
 {
