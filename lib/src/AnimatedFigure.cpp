@@ -9,6 +9,8 @@ AnimatedFigure::AnimatedFigure()
 
 AnimatedFigure::~AnimatedFigure(){}
 
+void AnimatedFigure::setRenderHelper(HelperPtr value){helper = value;}
+
 SDL_Rect* AnimatedFigure::updatePortal()
 {
     sourcePortal.x += 32;
@@ -23,7 +25,7 @@ SDL_Rect* AnimatedFigure::updatePortal()
 
 void AnimatedFigure::renderPortal(const SDL_Rect& dest, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,helper.getTexture("assets/sprites/portalRings.png",renderer),updatePortal(),&dest);
+    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/portalRings.png",renderer),updatePortal(),&dest);
 }
 
 SDL_Rect* AnimatedFigure::updateParticles()
@@ -40,7 +42,7 @@ SDL_Rect* AnimatedFigure::updateParticles()
 
 void AnimatedFigure::renderParticles(const SDL_Rect& dest, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,helper.getTexture("assets/sprites/blueParticles.png",renderer),updateParticles(),&dest);   
+    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/blueParticles.png",renderer),updateParticles(),&dest);   
 }
 
 SDL_Rect* AnimatedFigure::updateCircularPortal()
@@ -55,6 +57,6 @@ SDL_Rect* AnimatedFigure::updateCircularPortal()
 
 void AnimatedFigure::renderCircularPortal(const SDL_Rect& dest, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,helper.getTexture("assets/sprites/circularPortal.png",renderer),updateCircularPortal(),&dest);
+    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/circularPortal.png",renderer),updateCircularPortal(),&dest);
 }
 

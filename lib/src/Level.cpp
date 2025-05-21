@@ -85,6 +85,7 @@ void Level::setMatrix(const std::vector<std::vector<int>>& value){matrix = value
 void Level::setRenderHelper(HelperPtr value)
 {
     helper = value;
+    animated.setRenderHelper(value);
     setSources();
 }
 
