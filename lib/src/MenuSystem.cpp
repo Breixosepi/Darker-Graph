@@ -223,15 +223,6 @@ menu->addWidget("load", "Puntuaciones", [&]()
     player.setPosition(400, 300); 
     player.setRenderHelper(helper);
 
-    // Enemy setup 
-    SDL_Surface* enemySurface = IMG_Load("assets/sprites/Orc.png");
-    TexturePtr enemyTexture(SDL_CreateTextureFromSurface(renderer, enemySurface));
-    SDL_FreeSurface(enemySurface);
-    std::vector<Enemy> enemies;
-    Enemy enemy;
-    enemy.initAnimation(renderer, enemyTexture);
-    enemy.setPosition(450, 200);
-
     bool running = true;
     SDL_Event event;
     Uint32 lastTime = SDL_GetTicks();
@@ -267,10 +258,6 @@ menu->addWidget("load", "Puntuaciones", [&]()
 
         // Actualización de objetos
         player.update(deltaTime);
-        player.attack(enemy);
-        enemy.detectPlayer(player.getBounds());
-        enemy.attack(player);
-        enemy.update(deltaTime);
 
         if(player.getIsInBound()&&player.getState()==State::RUNNING)
         {
@@ -289,9 +276,6 @@ menu->addWidget("load", "Puntuaciones", [&]()
         player.renderPlayer(renderer);
         // player.renderAttackHitbox(renderer);
         // player.renderDebugBounds(renderer);
-        enemy.renderEnemy(renderer); 
-        // enemy.renderAttackHitbox(renderer);
-        // enemy.renderDebugBounds(renderer);
         actualLevel.renderRoomLastFrame(renderer);
         SDL_RenderPresent(renderer);
         SDL_Delay(16); 

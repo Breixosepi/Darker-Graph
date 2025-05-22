@@ -2,9 +2,7 @@
 #include <Widget.hpp>
 #include <Level.hpp>
 #include <MyGraph.hpp>
-#include <Player.hpp>
-#include <Enemy.hpp>
-#include <RenderHelper.hpp>
+#include <EnemyManager.hpp>
 
 class MenuSystem 
 {
@@ -16,8 +14,8 @@ class MenuSystem
         MenuSystem& operator=(const MenuSystem&) = delete;  
         void handleEvent(const SDL_Event& event);
         void render();
-        void setupLevel(Level& level, Player& player, Enemy& enemy);
-        void playGameLoop(Level& level, Player& player, Enemy& enemy);
+        void setupLevel(Level& level, Player& player);
+        void playGameLoop(Level& level, Player& player);
     
     private:
         SDL_Window* window;
@@ -31,6 +29,7 @@ class MenuSystem
         HelperPtr helper;
         MyGraph creator;
         std::queue<Level> levels;
+        EnemyManager enemyManager;
 
         int windowWidth;
         int windowHeight;
