@@ -285,14 +285,14 @@ menu->addWidget("load", "Puntuaciones", [&]()
         // Renderizado
         SDL_SetRenderDrawColor(renderer, 30, 30, 50, 255); 
         SDL_RenderClear(renderer);
-        actualLevel.renderRoom(renderer);
+        actualLevel.renderRoom(renderer,deltaTime);
         player.renderPlayer(renderer);
         // player.renderAttackHitbox(renderer);
         // player.renderDebugBounds(renderer);
         enemy.renderEnemy(renderer); 
         // enemy.renderAttackHitbox(renderer);
         // enemy.renderDebugBounds(renderer);
-        actualLevel.renderRoomLastFrame(renderer);
+        actualLevel.renderRoomLastFrame(renderer,deltaTime);
         SDL_RenderPresent(renderer);
         SDL_Delay(16); 
     }

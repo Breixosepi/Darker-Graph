@@ -33,3 +33,5 @@ class Room
         std::vector<PosShape> shapes;
         double divisions;
 };
+
+using Dungeon = std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>::Node*>,std::vector<std::vector<int>>>;

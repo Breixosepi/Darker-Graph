@@ -31,8 +31,32 @@ const Measures& RenderHelper::getMeasuresRoom(const int& numDivisions)
 //Utiliza las Medidas Calculadas con el ultimo numero de divisiones/numero de Baldosas ingresado
 const Measures& RenderHelper::getMeasuresRoom()
 {
-    if(lastDivisions==-1){std::cout<<"The measurements of the room have not been calculated previously."<<std::endl;}
+    if(!measuresRoom.count(lastDivisions))
+    {
+        std::cout<<"The measurements of the room have not been calculated previously."<<std::endl;
+        return Measures{};
+    }
     return measuresRoom.at(lastDivisions);
+}
+
+const int& RenderHelper::getMiddlePointInX()
+{
+    if(!middlePoints.count(lastDivisions))
+    {
+        std::cout<<"The measurements of the room have not been calculated previously."<<std::endl;
+        return int{};
+    }
+    return middlePoints.at(lastDivisions).first;
+}
+
+const int& RenderHelper::getMiddlePointInY()
+{
+    if(!middlePoints.count(lastDivisions))
+    {
+        std::cout<<"The measurements of the room have not been calculated previously."<<std::endl;
+        return int{};
+    }
+    return middlePoints.at(lastDivisions).second;
 }
 
 SDL_Texture* RenderHelper::getTexture(const std::string& path, SDL_Renderer* renderer)
@@ -104,7 +128,6 @@ void RenderHelper::calcMap(const std::pair<int,int>& matrix)
 Measures RenderHelper::calcRoom(const double& numDivisions)
 {
     int extraDim = 2;
-    std::cout<<numDivisions<<std::endl;
     double cellWidth = windowWidth/(numDivisions+extraDim);
     double cellHeight = windowHeight/(numDivisions+extraDim);
     //if(centered){cellHeight = cellWidth = std::min(cellHeight,cellWidth);}
@@ -114,5 +137,6 @@ Measures RenderHelper::calcRoom(const double& numDivisions)
     double heightTile = (cellHeight*(numDivisions+extraDim) - shrinkY*2.0)/numDivisions;
     double resizeY = (windowHeight-cellHeight*(numDivisions+extraDim))/2.0;
     double resizeX = (windowWidth-cellWidth*(numDivisions+extraDim))/2.0;
+    middlePoints.insert({numDivisions,{resizeX+shrinkX+widthTile*numDivisions/2.0,resizeY+shrinkY+heightTile*numDivisions/2.0}});
     return std::make_tuple(widthTile,heightTile,shrinkX,shrinkY,resizeX,resizeY);
 }
