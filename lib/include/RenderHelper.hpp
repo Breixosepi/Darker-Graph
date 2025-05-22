@@ -17,6 +17,8 @@ class RenderHelper
         const Measures& getMeasuresMap();
         const Measures& getMeasuresRoom();
         const Measures& getMeasuresRoom(const int& numDivisions);
+        const int& getMiddlePointInX();
+        const int& getMiddlePointInY();
         const int& getWindowWitdth();
         const int& getWindowHeight();
         void handleWindowResize(const int& width, const int& height, const std::pair<int,int>& matrix);
@@ -26,6 +28,7 @@ class RenderHelper
         std::unordered_map<std::string,SDL_Texture*> textures;
         std::unordered_map<std::string,SDL_Rect> sources;
         std::unordered_map<int,Measures> measuresRoom;
+        std::unordered_map<int,std::pair<int,int>> middlePoints;
         Measures measuresMap;
         int windowWidth;
         int windowHeight;

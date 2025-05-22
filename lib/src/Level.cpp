@@ -2,12 +2,13 @@
 
 Level::Level(){}
 
-Level::Level(std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>::Node*>,std::vector<std::vector<int>>> tuple)
+Level::Level(Dungeon level)
 {
-    map = std::get<0>(tuple);
-    roomsReference = std::get<1>(tuple);
+    map = std::get<0>(level);
+    roomsReference = std::get<1>(level);
     currentIndex = 1; //Cuarto 1, Entrada del Nivel
-    setMatrix(std::get<2>(tuple));
+    flagReward = true;
+    setMatrix(std::get<2>(level));
     printMapConsole();
 }
 
@@ -199,8 +200,8 @@ void Level::setDesignRoom()
     dimensionsRoom.insert({"column",std::make_pair(shrinkX*2.0,heightTile)}); 
     dimensionsRoom.insert({"horizontalDoor",std::make_pair(widthTile,heightTile)}); 
     dimensionsRoom.insert({"darkness",std::make_pair(widthTile,heightTile)});
-    dimensionsRoom.insert({"verticalDoor",std::make_pair(shrinkX,heightTile)});
-    dimensionsRoom.insert({"verticalDoorFrame",std::make_pair(shrinkX,heightTile)});
+    dimensionsRoom.insert({"verticalDoor",std::make_pair(shrinkX,heightTile+(shrinkY+heightTile)/div)});
+    dimensionsRoom.insert({"verticalDoorFrame",std::make_pair(shrinkX,heightTile+(shrinkY+heightTile)/div)});
 
     double Y = shrinkY + resizeY;
     double supY, infY = -1.0;
@@ -271,6 +272,8 @@ void Level::setSources()
     helper.get()->setSource("verticalDoor",400,112,16,80);
     helper.get()->setSource("verticalDoorFrame",432,112,16,74);
     helper.get()->setSource("dwarfInMap",104,114,15,14);
+    helper.get()->setSource("leftStairs",796,54,42,52); //Escaleras que miran a la izquierda
+    helper.get()->setSource("rigthStairs",728,54,42,52); //Escaleras que miran a la derecha
 }
 
 void Level::printMapConsole()
@@ -297,14 +300,35 @@ void Level::renderMap(SDL_Renderer* renderer)
     SDL_RenderPresent(renderer);
 }
 
-void Level::renderRoom(SDL_Renderer* renderer)
+void Level::renderRoom(SDL_Renderer* renderer, const float& deltaTime)
 {
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
     draw(shapesRoom,dimensionsRoom,renderer);
-    drawDoors(renderer);
+    drawDoors(renderer,deltaTime);
+    if(currentIndex==1) //Fogata
+    {
+        double widthTile = std::get<0>(helper.get()->getMeasuresRoom());
+        double heightTile = std::get<1>(helper.get()->getMeasuresRoom());
+        SDL_Rect destCampfire = {helper.get()->getMiddlePointInX()-widthTile/4.0,helper.get()->getMiddlePointInY()-heightTile/4.0,widthTile/2.0,heightTile/2.0};
+        animated.renderCampfire(destCampfire,renderer,deltaTime);
+    }
+    if(currentIndex==map.get_num_nodes()) //Escaleras
+    {
+        double widthTile = std::get<0>(helper.get()->getMeasuresRoom());
+        double heightTile = std::get<1>(helper.get()->getMeasuresRoom());
+        SDL_Rect destStairs = {helper.get()->getMiddlePointInX()-widthTile/2.0,helper.get()->getMiddlePointInY()-heightTile/2.0,widthTile,heightTile};
+        if((*getCurrentRoom()->getPaths())[0])
+        {
+            SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("leftStairs"),&destStairs);
+        }
+        else
+        {
+            SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("rigthStairs"),&destStairs);
+        }
+    }
 }
 
-void Level::drawDoors(SDL_Renderer* renderer)
+void Level::drawDoors(SDL_Renderer* renderer, const float& deltaTime)
 {
     SDL_Rect destDoor;
     SDL_Rect destBonus;
@@ -320,7 +344,7 @@ void Level::drawDoors(SDL_Renderer* renderer)
                 SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("verticalDoor"),&destDoor);
                 if(getIndexNeighbor(i)<0)
                 {
-                    animated.renderCircularPortal(destDoor,renderer);
+                    animated.renderCircularPortal(destDoor,renderer,deltaTime);
                 }
             }
             else
@@ -332,14 +356,14 @@ void Level::drawDoors(SDL_Renderer* renderer)
                 }
                 else if(getIndexNeighbor(i)<0)
                 {
-                    animated.renderPortal(destDoor,renderer);
+                    animated.renderPortal(destDoor,renderer,deltaTime);
                 } 
             }
         }
     }
 }
 
-void Level::renderRoomLastFrame(SDL_Renderer* renderer)
+void Level::renderRoomLastFrame(SDL_Renderer* renderer, const float& deltaTime)
 {
     draw(lowerFrameRoom,dimensionsRoom,renderer);
     int i = 3;
@@ -354,7 +378,7 @@ void Level::renderRoomLastFrame(SDL_Renderer* renderer)
         }
         else if(getIndexNeighbor(i)<0)
         {
-            animated.renderPortal(destDoor,renderer);
+            animated.renderPortal(destDoor,renderer,deltaTime);
         }
     }
 }
@@ -387,7 +411,7 @@ std::pair<int,int> Level::verifyPassRoom(int direction, const SDL_Rect& rectPlay
     {
         if(direction==0||direction==2) 
         {
-            if(std::get<1>(doors[direction*2+1])<=rectPlayer.y) //Verifica si el personaje esta alineado con la puerta
+            if(std::get<1>(doors[direction*2+1])<=rectPlayer.y*1.10) //Verifica si el personaje esta alineado con la puerta
             {
                 if(std::get<1>(doors[direction*2+1])+(dimensionsRoom.at("verticalDoor")).second>=rectPlayer.y+rectPlayer.h)
                 {
@@ -412,38 +436,42 @@ std::pair<int,int> Level::verifyPassRoom(int direction, const SDL_Rect& rectPlay
 
 std::pair<int,int> Level::passRoom(int direction, const SDL_Rect& rectPlayer)
 {
-    int actualIndex = *getCurrentRoom()->getIndex();
+    int aux = currentIndex; //Index original antes del cambio
     int neighborIndex = getIndexNeighbor(direction);
     setCurrentIndex(std::abs(neighborIndex));
     std::pair<int,int> playerPos;
     for(int i=0; i<4; ++i) //Nos movimos de cuarto y vamos a buscar en que direccion estaba el cuarto del cual venimos
     {
+        int X = std::get<0>(doors[direction*2+1]); //Ubicacion de la puerta que se esta revisando
+        int Y = std::get<1>(doors[direction*2+1]);
         switch (direction)
         {
         case 0:
-            playerPos = std::make_pair(std::get<0>(doors[direction*2+1])+rectPlayer.w, std::get<1>(doors[direction*2+1]));
+            playerPos = std::make_pair(X+rectPlayer.w, Y+(dimensionsRoom.at("verticalDoor").second-rectPlayer.h)/2);
             break;
         case 1:
-            playerPos = std::make_pair(std::get<0>(doors[direction*2+1]),std::get<1>(doors[direction*2+1])+rectPlayer.h);
+            playerPos = std::make_pair(X+(dimensionsRoom.at("horizontalDoor").first-rectPlayer.w)/2, Y+rectPlayer.h);
             break;
         case 2:
-            playerPos = std::make_pair(std::get<0>(doors[direction*2+1])-rectPlayer.w,std::get<1>(doors[direction*2+1]));
+            playerPos = std::make_pair(X-dimensionsRoom.at("verticalDoor").first-rectPlayer.w, Y+(dimensionsRoom.at("verticalDoor").second-rectPlayer.h)/2);
             break;
         case 3:
-            playerPos = std::make_pair(std::get<0>(doors[direction*2+1]),std::get<1>(doors[direction*2+1])-rectPlayer.h);
+            playerPos = std::make_pair(X+(dimensionsRoom.at("horizontalDoor").first-rectPlayer.w)/2, Y-rectPlayer.h);
             break;
         }
-        if(neighborIndex>0)
+        if(neighborIndex>0) //Pasar entre cuarto y cuarto
         {
-            if(getIndexNeighbor(direction)==actualIndex)
+            if(getIndexNeighbor(direction)==aux)
             {
+                if(flagReward){markArc(aux);}
                 return playerPos;
             } 
         }
-        else
+        else //Pasar entre portal y portal
         {
-            if(getIndexNeighbor(direction)==-actualIndex)
+            if(getIndexNeighbor(direction)==-aux)
             {
+                if(flagReward){markArc(aux);}
                 return playerPos;
             } 
         }
@@ -451,4 +479,22 @@ std::pair<int,int> Level::passRoom(int direction, const SDL_Rect& rectPlayer)
         if(direction>3){direction -= 4;}
     }
     return std::make_pair(rectPlayer.x,rectPlayer.y);
+}
+
+void Level::markArc(const int& comp)
+{
+    auto arcs = map.adjacent_arcs(roomsReference[currentIndex-1]);
+    for(auto it=arcs.begin(); it!=arcs.end(); ++it)
+    {
+        if(*(*it)->get_src_node()->get_info().getIndex()==comp||*(*it)->get_tgt_node()->get_info().getIndex()==comp)
+        {
+            if(!visitedArcs.insert(*it).second)
+            {
+                std::cout<<"This hallway has already been visited, Reward lost."<<std::endl;
+                flagReward = false;
+                break;
+            }
+            if(visitedArcs.size()==map.get_num_arcs()){std::cout<<"Eulerian path done! Reward Win."<<std::endl;}
+        }
+    }
 }

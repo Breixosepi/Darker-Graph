@@ -4,12 +4,13 @@
 #include <unordered_map>
 #include <AnimatedFigure.hpp>
 #include <RenderHelper.hpp>
+#include <unordered_set>
 
 class Level
 {
     public:
         Level();
-        Level(std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>::Node*>,std::vector<std::vector<int>>>);
+        Level(Dungeon level);
         ~Level();
 
         const Designar::Graph<Room>* getMap();
@@ -32,8 +33,8 @@ class Level
         void printMapConsole();
         
         void renderMap(SDL_Renderer* renderer);
-        void renderRoom(SDL_Renderer* renderer);
-        void renderRoomLastFrame(SDL_Renderer* renderer);
+        void renderRoom(SDL_Renderer* renderer, const float& deltaTime);
+        void renderRoomLastFrame(SDL_Renderer* renderer, const float& deltaTime);
     
     private:
         Designar::Graph<Room> map;
@@ -42,6 +43,8 @@ class Level
         std::vector<std::vector<int>> matrix;
 
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
+        std::unordered_set<Designar::Graph<Room>::Arc*> visitedArcs;
+        bool flagReward;
         int currentIndex;
         
         std::vector<PosShape> shapesMap;
@@ -62,9 +65,10 @@ class Level
         void setDesignRoom();
         void setCurrentIndex(const int& value);
         void draw(const std::vector<PosShape>& shapes, const std::unordered_map<std::string,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);
-        void drawDoors(SDL_Renderer* renderer);
+        void drawDoors(SDL_Renderer* renderer, const float& deltaTime);
         const std::pair<int,int> getPosNeighbor(const int& direction);
         const int getIndexNeighbor(const int& direction);
         std::pair<int,int> passRoom(int direction, const SDL_Rect& rectPlayer);
+        void markArc(const int& comp);
         SDL_Rect fillRect(const PosShape& shape, const std::unordered_map<std::string,std::pair<int,int>>& dimensions);
 };
