@@ -19,7 +19,7 @@ class RenderHelper
         const Measures& getMeasuresRoom(const int& numDivisions);
         const int& getWindowWitdth();
         const int& getWindowHeight();
-        void handleWindowResize(const int& width, const int& height, const std::pair<int,int>& matrix, const int& numDivisions);
+        void handleWindowResize(const int& width, const int& height, const std::pair<int,int>& matrix);
         void setSource(const std::string& figure, const int& x, const int& y, const int& w, const int& h);
 
     private:

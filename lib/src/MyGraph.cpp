@@ -2,9 +2,9 @@
 
 MyGraph::MyGraph()
 {
-    numRooms = 8;
+    numRooms = 6;
     maxGrade = 4;
-    probability = 50.0;
+    probability = 75.0;
     evenOdd = {numRooms,0};
 }
 
@@ -12,35 +12,48 @@ MyGraph::~MyGraph(){};
 
 //Devuelve una tupla con: el mapa (Grafo conexo, dirigido y con un camino euleriano como minimo), 
 //un vector con referencia a los nodos y una matriz con las posiciones de las salas y portales.
-std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>::Node*>,std::vector<std::vector<int>>> MyGraph::createMap(const bool& custom)
+Dungeon MyGraph::createMap(const bool& custom)
 {
-    if(custom){getData();}
+    if(map.get_num_nodes()>0){reset();}
     if(numRooms>0)
     {
-        if(map.get_num_nodes()>0){reset();}
-        std::mt19937 random(std::random_device{}());
-        std::uniform_int_distribution<int> chooseSide(0, 3); // 0:Izquierda, 1:Arriba, 2:Derecha, 3:Abajo
-        std::uniform_real_distribution<double> probabilityAdd(0, 1.0);
-
-        matrix.resize(numRooms*2 - 1); //num filas
-        for (int i = 0; i < matrix.size(); ++i) //num columnas
+        while(!verifyCreateMap(custom))
         {
-            matrix[i].resize(numRooms*2 - 1, 0);
+            std::cout<<"eulerian path NOT exist."<<std::endl;
+            reset();
         }
-
-        generateEntry(random,probabilityAdd,chooseSide);
-        while(!queue.empty())
-        {
-            if(map.get_num_nodes()==numRooms){break;}
-            Designar::Graph<Room>::Node* room = queue.front();
-            queue.pop();
-            generateEvenRooms(room,random,probabilityAdd,chooseSide);
-        }
-        fixMap(random,chooseSide);
+        std::cout<<"eulerian path exist!"<<std::endl;
+        std::cout<<"Num of Rooms: "<<map.get_num_nodes()<<std::endl;
         reduceMatrix();
-        ++numRooms;
     }
+    ++numRooms;
     return std::make_tuple(map,roomsReference,matrix);
+}
+
+bool MyGraph::verifyCreateMap(const bool& custom)
+{
+    if(custom){getData();}
+
+    std::mt19937 random(std::random_device{}());
+    std::uniform_int_distribution<int> chooseSide(0, 3); // 0:Izquierda, 1:Arriba, 2:Derecha, 3:Abajo
+    std::uniform_real_distribution<double> probabilityAdd(0, 1.0);
+
+    matrix.resize(numRooms*2 - 1); //num filas
+    for (int i = 0; i < matrix.size(); ++i) //num columnas
+    {
+        matrix[i].resize(numRooms*2 - 1, 0);
+    }
+
+    generateEntry(random,probabilityAdd,chooseSide);
+    while(!queue.empty())
+    {
+        if(map.get_num_nodes()==numRooms){break;}
+        Designar::Graph<Room>::Node* room = queue.front();
+        queue.pop();
+        generateEvenRooms(room,random,probabilityAdd,chooseSide);
+    }
+
+    return fixMap(random,chooseSide);
 }
 
 void MyGraph::getData()
@@ -148,21 +161,24 @@ bool MyGraph::verifyPath(int& side, std::pair<int,int>& pos)
             switch (side)
             {
                 case 0: //Izquierda
-                    --pos.first;
-                break;
-                case 1: //Arriba
-                    ++pos.second;
-                break;
-                case 2: //Derecha
-                    ++pos.first;
-                break;
-                case 3: //Abajo
                     --pos.second;
                 break;
+                case 1: //Arriba
+                    --pos.first;
+                break;
+                case 2: //Derecha
+                    ++pos.second;
+                break;
+                case 3: //Abajo
+                    ++pos.first;
+                break;
             }
-            Designar::Graph<Room>::Node* neighbor = roomsReference[(matrix[pos.first][pos.second])-1];
-            insertPath(room,neighbor,side);
-            return true;
+            if(matrix[pos.first][pos.second]>1)
+            {
+                Designar::Graph<Room>::Node* neighbor = roomsReference[(matrix[pos.first][pos.second])-1];
+                insertPath(room,neighbor,side);
+                return true;
+            }
         }
         ++side;
         if(side==4){side -= 4;}
@@ -185,6 +201,11 @@ void MyGraph::generateEntry(std::mt19937 random, std::uniform_real_distribution<
             }
             else{break;}
         }
+    }
+    neighborsEntry.insert(1);
+    for(auto arc : map.adjacent_arcs(room))
+    {
+        neighborsEntry.insert(*arc->get_tgt_node()->get_info().getIndex());
     }
 }
 
@@ -209,14 +230,32 @@ void MyGraph::generateEvenRooms(Designar::Graph<Room>::Node*& room, std::mt19937
 
 bool MyGraph::limitRoom(Designar::Graph<Room>::Node*& room)
 {
-    return map.get_num_nodes()+2<=numRooms && room->get_num_arcs()+2<=maxGrade;
+    if(map.get_num_nodes()+2<=numRooms && room->get_num_arcs()+2<=maxGrade)
+    {
+        //Evita bugs sobre que algun cuarto se quiera generar y conectar con la entrada
+        if(!neighborsEntry.count(*room->get_info().getIndex()))
+        {
+            std::pair<int,int> pos = *room->get_info().getPos();
+            int row = pos.first;
+            int column = pos.second;
+            //numRooms-1 es la posicion de la entrada en la matriz, tanto en X como en Y
+            if(std::abs((numRooms-1)-row)==1||std::abs((numRooms-1)-column)==1)
+            {
+                if(matrix[row][column-1]==1){return false;} //Izquierda
+                if(matrix[row-1][column]==1){return false;} //Arriba
+                if(matrix[row][column+1]==1){return false;} //Derecha
+                if(matrix[row+1][column]==1){return false;} //Abajo
+            }
+        }
+        return true;
+    }
+    return false;
 }
 
 //Termina de conectar los cuartos impares para que entonces el grafo cumpla con las condiciones necesarias
-void MyGraph::fixMap(std::mt19937 random, std::uniform_int_distribution<int> side)
+bool MyGraph::fixMap(std::mt19937 random, std::uniform_int_distribution<int> side)
 {
-    if(evenOdd.second==2){std::cout<<"Finish map Creation! eulerian path exist."<<std::endl;}
-    else
+    if(evenOdd.second!=2) //Si no hay 2 impares se procede a intentar corregir
     {
         if(!queue.empty())
         {
@@ -253,11 +292,13 @@ void MyGraph::fixMap(std::mt19937 random, std::uniform_int_distribution<int> sid
                 aux += 2;
                 evenOdd.second -= 2;
             }
+            std::cout<<"Correction Made. Finish map Creation!."<<std::endl;
+            return searchOdds()==2;
         }
-        if(evenOdd.second==2){std::cout<<"Correction Made. Finish map Creation! eulerian path exist."<<std::endl;}
-        else{std::cout<<"Correction Made. Finish map Creation! eulerian path NOT exist."<<std::endl;}
+        return false;
     }
-    std::cout<<"Num of Rooms: "<<map.get_num_nodes()<<std::endl;
+    std::cout<<"Finish map Creation!."<<std::endl;
+    return true;
 }
 
 //De la matriz cuenta las filas y columnas donde hayan salas.
@@ -283,6 +324,7 @@ std::pair<int,int> MyGraph::getRowsColumns()
     return pair;
 }
 
+//Toma la matriz y elimina todas las filas y columnas donde no haya ningun cuarto en ellas
 void MyGraph::reduceMatrix()
 {
     std::vector<std::vector<int>> rowsWithRooms;
@@ -334,6 +376,18 @@ void MyGraph::reduceMatrix()
     }
 }
 
+//Cuenta los nodos impares, se detiene cuando ha contado mas de 2
+int MyGraph::searchOdds()
+{
+    int result = 0;
+    for(auto it=map.nodes_begin();it!=map.nodes_end();++it)
+    {
+        if((*it)->get_num_arcs()%2!=0){++result;}
+        if(result>2){return result;}
+    }
+    return result;
+}
+
 void MyGraph::printLastGraph()
 {
     map.for_each_node([&](Designar::Graph<Room>::Node* room)
@@ -360,6 +414,7 @@ void MyGraph::reset()
 {
     std::cout<<"Limpiando..."<<std::endl;
     map.clear();
+    neighborsEntry.clear();
     roomsReference.clear();
     while(!queue.empty()){queue.pop();}
     evenOdd = {numRooms,0};

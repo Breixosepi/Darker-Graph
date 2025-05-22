@@ -19,8 +19,6 @@ class Level
         const std::vector<Designar::Graph<Room>::Node*>* getRoomsReference();
         Room* getCurrentRoom();
         const std::pair<int,int> getMatrixSize();
-        const std::pair<int,int> getPosNeighbor(const int& direction);
-        const int getIndexNeighbor(const int& direction);
 
         void setMap(const Designar::Graph<Room>& value);
         void setShortestPath(const Designar::Graph<Room>& value);
@@ -29,13 +27,9 @@ class Level
         void setRenderHelper(HelperPtr value);
 
         void handleResizeWindow();
-        void setCurrentIndex(const int& value);
+        std::pair<int,int> verifyPassRoom(int direction, const SDL_Rect& rectPlayer);
 
         void printMapConsole();
-        void setSources();
-
-        std::pair<int,int> verifyPassRoom(int direction, const SDL_Rect& rectPlayer);
-        std::pair<int,int> passRoom(int direction, const SDL_Rect& rectPlayer);
         
         void renderMap(SDL_Renderer* renderer);
         void renderRoom(SDL_Renderer* renderer);
@@ -55,15 +49,22 @@ class Level
         std::vector<PosShape> doors;
         std::vector<PosShape> lowerFrameRoom;
 
+        SDL_Rect playerInMap;
         std::unordered_map<std::string,std::pair<int,int>> dimensionsMap;
         std::unordered_map<std::string,std::pair<int,int>> dimensionsRoom;
 
         AnimatedFigure animated;
         HelperPtr helper;
 
+        void calcPosInMap();
+        void setSources();
         void setShapesMap();
         void setDesignRoom();
+        void setCurrentIndex(const int& value);
         void draw(const std::vector<PosShape>& shapes, const std::unordered_map<std::string,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);
         void drawDoors(SDL_Renderer* renderer);
+        const std::pair<int,int> getPosNeighbor(const int& direction);
+        const int getIndexNeighbor(const int& direction);
+        std::pair<int,int> passRoom(int direction, const SDL_Rect& rectPlayer);
         SDL_Rect fillRect(const PosShape& shape, const std::unordered_map<std::string,std::pair<int,int>>& dimensions);
 };

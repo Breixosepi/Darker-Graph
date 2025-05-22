@@ -162,12 +162,11 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
         //levels.push(creator.createMap(0));
         
         Level actualLevel = levels.front();
-        actualLevel.setRenderHelper(helper);
         levels.pop();
         
         SDL_GetWindowSize(window,&windowWidth,&windowHeight);
-        helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize(),*actualLevel.getCurrentRoom()->getIndex());
-        actualLevel.handleResizeWindow();
+        helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
+        actualLevel.setRenderHelper(helper);
 
         SDL_Event event;
         bool running = true;
@@ -191,7 +190,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                     if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                     {
                         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-                        helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize(),*actualLevel.getCurrentRoom()->getIndex());
+                        helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
                         actualLevel.handleResizeWindow();
                     } 
                 }  
@@ -209,12 +208,11 @@ menu->addWidget("load", "Puntuaciones", [&]()
     //levels.push(creator.createMap(0));
         
     Level actualLevel = levels.front();
-    actualLevel.setRenderHelper(helper);
     levels.pop();
         
     SDL_GetWindowSize(window,&windowWidth,&windowHeight);
-    helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize(),*actualLevel.getCurrentRoom()->getIndex());
-    actualLevel.handleResizeWindow();
+    helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
+    actualLevel.setRenderHelper(helper);
 
     // Player setup
     SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
@@ -261,7 +259,7 @@ menu->addWidget("load", "Puntuaciones", [&]()
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                 {
                     SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-                    helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize(),*actualLevel.getCurrentRoom()->getIndex());
+                    helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
                     actualLevel.handleResizeWindow();
                 } 
             }  

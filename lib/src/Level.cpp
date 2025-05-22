@@ -6,8 +6,7 @@ Level::Level(std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>:
 {
     map = std::get<0>(tuple);
     roomsReference = std::get<1>(tuple);
-    if(map.get_num_nodes()!=0){currentIndex = 1;}
-    else{currentIndex = -1;}
+    currentIndex = 1; //Cuarto 1, Entrada del Nivel
     setMatrix(std::get<2>(tuple));
     printMapConsole();
 }
@@ -26,6 +25,7 @@ const std::vector<Designar::Graph<Room>::Node*>* Level::getRoomsReference(){retu
 
 Room* Level::getCurrentRoom(){return &roomsReference[currentIndex-1]->get_info();}
 
+//Devuelve la posicion en la matriz del vecino en la direccion indicada 
 const std::pair<int,int> Level::getPosNeighbor(const int& direction)
 {
     if(currentIndex>0)
@@ -51,6 +51,7 @@ const std::pair<int,int> Level::getPosNeighbor(const int& direction)
     return std::make_pair(-1,-1);
 }
 
+//Devuelve el Index del vecino en la direccion indicada o 0 si no hay cuarto vecino
 const int Level::getIndexNeighbor(const int& direction)
 {
     std::pair<int,int> posNeighbor = getPosNeighbor(direction);
@@ -64,6 +65,7 @@ const int Level::getIndexNeighbor(const int& direction)
     return 0;
 }
 
+//Devuelve un par con numero de Filas y numero de Columnas de la Matriz
 const std::pair<int,int> Level::getMatrixSize(){return std::make_pair(matrix.size(),matrix[0].size());}
 
 void Level::setMap(const Designar::Graph<Room>& value){map = value;}
@@ -72,11 +74,27 @@ void Level::setShortestPath(const Designar::Graph<Room>& value){shortestPath = v
         
 void Level::setEulerianPath(const Designar::Graph<Room>& value){eulerianPath = value;}
 
-void Level::setCurrentIndex(const int& value){currentIndex = value;}
+void Level::calcPosInMap()
+{
+    std::pair<int,int> pos = *getCurrentRoom()->getPos();
+    Measures measures = helper.get()->getMeasuresMap();
+    int tile = std::get<0>(measures);
+    int square = std::get<0>(measures) + std::get<2>(measures);
+    int X = std::get<4>(measures) + std::get<2>(measures)/2.0;
+    int Y = std::get<5>(measures) + std::get<3>(measures)/2.0;
+    playerInMap = {X+pos.second*(square),Y+pos.first*(square),tile,tile};
+}
+
+void Level::setCurrentIndex(const int& value)
+{
+    currentIndex = value;
+    calcPosInMap();
+}
 
 void Level::handleResizeWindow()
 {
     setShapesMap();
+    calcPosInMap();
     setDesignRoom();
 }
 
@@ -87,80 +105,82 @@ void Level::setRenderHelper(HelperPtr value)
     helper = value;
     animated.setRenderHelper(value);
     setSources();
+    handleResizeWindow();
 }
 
 //Actualiza el vector de figuras a dibujar para mostrar el mapa del presente nivel.
-//Trabaja con el ultimo tamano de ventana establecido.
+//Trabaja con las ultimas dimensiones establecidas en helper
 void Level::setShapesMap()
 {
-    if(!shapesMap.empty()){shapesMap.clear();}
-    if(!matrix.empty())
+    if(!shapesMap.empty())
     {
-        Measures measures = helper.get()->getMeasuresMap();
-        double tile = std::get<0>(measures);
-        double shrink = std::get<2>(measures);
-        double square = tile+shrink;
-        double resizeX = std::get<4>(measures);
-        double resizeY = std::get<5>(measures);
+        shapesMap.clear();
+        dimensionsMap.clear();
+    }
 
-        dimensionsMap.insert({"tile",std::make_pair(tile,tile)});
-        dimensionsMap.insert({"trapdoor",std::make_pair(tile,tile)});
-        dimensionsMap.insert({"hallway",std::make_pair(shrink,shrink)});
+    Measures measures = helper.get()->getMeasuresMap();
+    double tile = std::get<0>(measures);
+    double shrink = std::get<2>(measures);
+    double square = tile+shrink;
+    double resizeX = std::get<4>(measures);
+    double resizeY = std::get<5>(measures);
 
-        double X = resizeX - shrink/2;
-        for(int i=0; i<matrix[0].size(); ++i)
+    dimensionsMap.insert({"tile",std::make_pair(tile,tile)});
+    dimensionsMap.insert({"trapdoor",std::make_pair(tile,tile)});
+    dimensionsMap.insert({"hallway",std::make_pair(shrink,shrink)});
+
+    double X = resizeX - shrink/2;
+    for(int i=0; i<matrix[0].size(); ++i)
+    {
+        double Y = resizeY - shrink/2;
+        for(int j=0; j<matrix.size(); ++j)
         {
-            double Y = resizeY - shrink/2;
-            for(int j=0; j<matrix.size(); ++j)
+            if(matrix[j][i]!=0)
             {
-                if(matrix[j][i]!=0)
+                shapesMap.push_back(std::make_tuple(X+shrink,Y+shrink,"tile"));
+                if(matrix[j][i]>0)
                 {
-                    shapesMap.push_back(std::make_tuple(X+shrink,Y+shrink,"tile"));
-                    if(matrix[j][i]>0)
+                    std::vector<bool> paths = *roomsReference[matrix[j][i]-1]->get_info().getPaths();
+                    for(int k=0; k<paths.size(); ++k)
                     {
-                        std::vector<bool> paths = *roomsReference[matrix[j][i]-1]->get_info().getPaths();
-                        for(int k=0; k<paths.size(); ++k)
+                        if(paths[k])
                         {
-                            if(paths[k])
+                            switch (k)
                             {
-                                switch (k)
-                                {
-                                    case 0: //Izquierda
-                                        shapesMap.push_back(std::make_tuple(X,Y+square/2.0,"hallway"));
-                                    break;
-                                    case 1: //Arriba
-                                        shapesMap.push_back(std::make_tuple(X+square/2.0,Y,"hallway"));
-                                    break;
-                                    case 2: //Derecha
-                                        shapesMap.push_back(std::make_tuple(X+square,Y+square/2.0,"hallway"));
-                                    break;
-                                    case 3: //Abajo
-                                        shapesMap.push_back(std::make_tuple(X+square/2.0,Y+square,"hallway"));
-                                    break;
-                                }
+                                case 0: //Izquierda
+                                    shapesMap.push_back(std::make_tuple(X,Y+square/2.0,"hallway"));
+                                break;
+                                case 1: //Arriba
+                                    shapesMap.push_back(std::make_tuple(X+square/2.0,Y,"hallway"));
+                                break;
+                                case 2: //Derecha
+                                    shapesMap.push_back(std::make_tuple(X+square,Y+square/2.0,"hallway"));
+                                break;
+                                case 3: //Abajo
+                                    shapesMap.push_back(std::make_tuple(X+square/2.0,Y+square,"hallway"));
+                                break;
                             }
                         }
                     }
-                    else{shapesMap.push_back(std::make_tuple(X+shrink,Y+shrink,"trapdoor"));}
                 }
-                Y += square;
+                else{shapesMap.push_back(std::make_tuple(X+shrink,Y+shrink,"trapdoor"));}
             }
-            X += square;
+            Y += square;
         }
+        X += square;
     }
 }
 
 //Actualiza el vector de figuras a dibujar para mostrar el fondo de los cuartos.
-//Trabaja con el ultimo tamano de ventana establecido.
-//Tambien se puede ver modificado a traves de alguno de los 2 parametros que recibe
+//Trabaja con las ultimas dimensiones establecidas en helper
 void Level::setDesignRoom()
 {
     if(!shapesRoom.empty())
     {
         shapesRoom.clear();
-        dimensionsRoom.clear();
         lowerFrameRoom.clear();
         doors.clear();
+        dimensionsRoom.clear();
     }
     double div = *getCurrentRoom()->getDivisions();
     Measures measures = helper.get()->getMeasuresRoom(div);
@@ -250,6 +270,7 @@ void Level::setSources()
     helper.get()->setSource("darkness",72,52,176,63);
     helper.get()->setSource("verticalDoor",400,112,16,80);
     helper.get()->setSource("verticalDoorFrame",432,112,16,74);
+    helper.get()->setSource("dwarfInMap",104,114,15,14);
 }
 
 void Level::printMapConsole()
@@ -272,8 +293,7 @@ void Level::renderMap(SDL_Renderer* renderer)
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
     SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/perg.png",renderer),helper.get()->getSource("backgroundMap"),NULL);
     draw(shapesMap,dimensionsMap,renderer);
-    //SDL_Rect destPlayer = {windowWidth/2.0,windowHeight/2.0,100,100};
-    //SDL_RenderCopy(renderer,helper.getTexture(),&sourceShapes.at(6),&destPlayer);
+    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/dwarf.png",renderer),helper.get()->getSource("dwarfInMap"),&playerInMap);
     SDL_RenderPresent(renderer);
 }
 

@@ -16,6 +16,7 @@ const int& RenderHelper::getWindowHeight(){return windowHeight;}
 const Measures& RenderHelper::getMeasuresMap(){return measuresMap;};
 
 //Get<0>=WidthTile, Get<1>=HeightTile, Get<2>=ShrinkX, Get<3>=ShrinkY, Get<4>=ResizeX, Get<5>=ResizeY
+//Calcula las medidas segun el numero de divisiones/numero de baldosas ingresado
 const Measures& RenderHelper::getMeasuresRoom(const int& numDivisions)
 {
     lastDivisions = numDivisions;
@@ -27,7 +28,12 @@ const Measures& RenderHelper::getMeasuresRoom(const int& numDivisions)
 }
 
 //Get<0>=WidthTile, Get<1>=HeightTile, Get<2>=ShrinkX, Get<3>=ShrinkY, Get<4>=ResizeX, Get<5>=ResizeY
-const Measures& RenderHelper::getMeasuresRoom(){return measuresRoom.at(lastDivisions);}
+//Utiliza las Medidas Calculadas con el ultimo numero de divisiones/numero de Baldosas ingresado
+const Measures& RenderHelper::getMeasuresRoom()
+{
+    if(lastDivisions==-1){std::cout<<"The measurements of the room have not been calculated previously."<<std::endl;}
+    return measuresRoom.at(lastDivisions);
+}
 
 SDL_Texture* RenderHelper::getTexture(const std::string& path, SDL_Renderer* renderer)
 {
@@ -74,19 +80,15 @@ SDL_Rect* RenderHelper::getSource(const std::string& figure)
 
 void RenderHelper::setSource(const std::string& figure, const int& x, const int& y, const int& w, const int& h)
 {
-    if(!sources.count(figure))
-    {
-        sources.insert({figure,{x,y,w,h}});
-    }
+    sources.insert({figure,{x,y,w,h}});
 }
 
-void RenderHelper::handleWindowResize(const int& width, const int& height, const std::pair<int,int>& matrix, const int& numDivisions)
+void RenderHelper::handleWindowResize(const int& width, const int& height, const std::pair<int,int>& matrix)
 {
     windowWidth = width;
     windowHeight = height;
     calcMap(matrix);
     if(!measuresRoom.empty()){measuresRoom.clear();}
-    calcRoom(numDivisions);
 }
 
 void RenderHelper::calcMap(const std::pair<int,int>& matrix)
@@ -102,6 +104,7 @@ void RenderHelper::calcMap(const std::pair<int,int>& matrix)
 Measures RenderHelper::calcRoom(const double& numDivisions)
 {
     int extraDim = 2;
+    std::cout<<numDivisions<<std::endl;
     double cellWidth = windowWidth/(numDivisions+extraDim);
     double cellHeight = windowHeight/(numDivisions+extraDim);
     //if(centered){cellHeight = cellWidth = std::min(cellHeight,cellWidth);}

@@ -4,7 +4,7 @@ AnimatedFigure::AnimatedFigure()
 {
     sourcePortal = {32*3,32*3,32,32};
     sourceParticles = {100*7,100*5,100,100};
-    sourceCircularPortal = {0,48*2,32,48};
+    sourceCircularPortal = {32*3,48*3,32,48};
 }
 
 AnimatedFigure::~AnimatedFigure(){}
@@ -51,6 +51,8 @@ SDL_Rect* AnimatedFigure::updateCircularPortal()
     if(sourceCircularPortal.x==32*4)
     {
         sourceCircularPortal.x = 0;
+        sourceCircularPortal.y += 48;
+        if(sourceCircularPortal.y==48*4){sourceCircularPortal.y = 48*2;}
     }
     return &sourceCircularPortal;
 }
