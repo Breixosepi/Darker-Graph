@@ -70,8 +70,6 @@ void Game::handleEvents()
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                 {
-                    //int newWidth = std::max(event.window.data1, 800);
-                    //int newHeight = std::max(event.window.data2, 800);
                     
                     if (event.window.data1 > 800 && event.window.data2 > 800) 
                     {

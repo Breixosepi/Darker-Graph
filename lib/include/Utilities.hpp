@@ -6,6 +6,10 @@
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
+#include <iostream>
+#include <queue>
+#include <graph.hpp>
+#include <random>
 
 
 struct SDL_Deleter 

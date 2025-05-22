@@ -1,7 +1,7 @@
 #pragma once 
 #include <Utilities.hpp>
 #include <iostream>
-#include "HealthBar.hpp"
+#include <HealthBar.hpp>
 #include <RenderHelper.hpp>
 
 class Enemy;

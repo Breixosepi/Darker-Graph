@@ -87,6 +87,10 @@ int Player::getAnimationRow() const
 
 void Player::handleImput(const SDL_Event &event) 
 {
+    if(currentState == State::DEAD ) 
+    {
+        return;
+    }
     if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) 
     {
         bool keyPressed = (event.type == SDL_KEYDOWN);

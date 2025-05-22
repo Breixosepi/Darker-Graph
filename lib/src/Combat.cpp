@@ -2,6 +2,10 @@
 
 void Combat::playerAttack(Player& player, Enemy& enemy) 
 {
+    if(enemy.getState() == EnemyState::DEAD)
+    {
+        return;
+    }
     if (player.getState() != State::ATTACKING || player.getCurrentFrame() != 2) 
     {
         player.setHasHit(false);
@@ -24,8 +28,16 @@ void Combat::playerAttack(Player& player, Enemy& enemy)
 
 void Combat::enemyAttack(Enemy& enemy, Player& player) 
 {
-    if (enemy.getState() != EnemyState::ATTACKING || enemy.getCurrentFrame() < 3) 
+    if (player.getState() == State::DEAD)
     {
+        if (enemy.getState() == EnemyState::ATTACKING) 
+        {
+            enemy.setState(EnemyState::PATROLLING); 
+        }
+        return;
+    }
+    if (enemy.getState() != EnemyState::ATTACKING || enemy.getCurrentFrame() < 3) 
+    { 
         enemy.setHasHit(false);
         return;
     }
@@ -58,14 +70,15 @@ void Combat::playerTakeDamage(Player& player, int damage)
 
 void Combat::enemyTakeDamage(Enemy& enemy, int damage) 
 {
-    if(enemy.getState()== EnemyState::DEAD)   
-    {
-        return;
-    }
-    enemy.setHealth(enemy.getHealth() - damage);
-    if (enemy.getHealth() <= 0) 
+
+    if (enemy.getHealth() <= 0 && enemy.getState() != EnemyState::DEAD) 
     {
         enemy.setState(EnemyState::DEAD);
     }
-    std::cout << "Enemy health: " << enemy.getHealth() << std::endl;
+    else if(enemy.getState() != EnemyState::DEAD)
+    {
+        enemy.setHealth(enemy.getHealth() - damage);
+    }
+    // std::cout << "Enemy health: " << enemy.getHealth() << std::endl;
+    // std::cout << "Enemy state: " << int(enemy.getState()) << std::endl;
 }

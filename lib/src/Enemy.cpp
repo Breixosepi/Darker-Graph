@@ -36,7 +36,14 @@ void Enemy::update(float deltaTime)
 {
     if (currentState == EnemyState::DEAD)
     {
-        updateAnimation(deltaTime);
+        if (currentFrame < 3) 
+        {
+            updateAnimation(deltaTime);
+        }
+        else
+        {
+            deathCompleted = true; 
+        }
         return;
     }
     else if (currentState == EnemyState::ATTACKING)
@@ -93,10 +100,20 @@ void Enemy::updateAnimation(float deltaTime)
     if (animTimer >= animSpeed)
     {
         animTimer = 0.0f;
-        currentFrame = (currentFrame + 1) % 4;
-        if (currentState == EnemyState::ATTACKING && currentFrame == 0 && attackInProgress)
+        if (currentState == EnemyState::DEAD)
         {
-            attackInProgress = false;
+            if (currentFrame < 3)
+            {
+                currentFrame++;
+            }
+        }
+        else
+        {
+            currentFrame = (currentFrame + 1) % 4;
+            if (currentState == EnemyState::ATTACKING && currentFrame == 0 && attackInProgress)
+            {
+                attackInProgress = false;
+            }
         }
     }
     srcRect.x = currentFrame * frameWidth;
@@ -127,15 +144,16 @@ void Enemy::setState(EnemyState newState)
 
     if (currentState != newState)
     {
-        if (currentState == EnemyState::DEAD)
-        {
-            return;
-        }
         if (currentState == EnemyState::TAKING_DAMAGE && newState != EnemyState::PATROLLING) 
         {
+            if (newState == EnemyState::DEAD) 
+            {
+                currentState = newState;
+                currentFrame = 0;
+                animTimer = 0.0f;
+            }           
             return;
         }
-        
         currentState = newState;
         currentFrame = 0;
         animTimer = 0.0f;
@@ -308,4 +326,8 @@ int Enemy::getHealth() const
 void Enemy::setHealth(int health) 
 {
     this->health = health;
+}
+bool Enemy::isDeathAnimationComplete() const
+{
+    return deathCompleted;
 }

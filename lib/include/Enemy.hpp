@@ -36,6 +36,7 @@ public:
     void setHasHit(bool hit);
     int getHealth() const;
     void setHealth(int health);
+    bool isDeathAnimationComplete() const;
  
 
 private:
@@ -52,4 +53,5 @@ private:
     bool attackInProgress = false;
     bool hasHit = false;
     int health = 2;
+    bool deathCompleted = false;
 };
