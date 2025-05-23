@@ -7,11 +7,13 @@
 class MenuSystem 
 {
     public:
+
         MenuSystem();
         MenuSystem(SDL_Renderer* render, TTF_Font* fonts, SDL_Window* wind);
         ~MenuSystem() = default;
         MenuSystem(const MenuSystem&) = delete;
         MenuSystem& operator=(const MenuSystem&) = delete;  
+
         void handleEvent(const SDL_Event& event);
         void render();
         void showGameOverScreen(int score);
@@ -21,22 +23,24 @@ class MenuSystem
     private:
         SDL_Window* window;
         SDL_Renderer* renderer;
-        TTF_Font* font;
         TexturePtr inputTexture;
+        HelperPtr helper;
+
+        TTF_Font* font;
         std::vector<std::unique_ptr<Widget>> widgets;
         Widget* head;
         Widget* tail;
         Widget* current;
-
-        HelperPtr helper;
         MyGraph creator;
-        std::queue<Level> levels;
-        EnemyManager enemyManager;
         Level level;
+        EnemyManager enemyManager;
+        std::queue<Level> levels;
         std::vector<std::pair<std::string, int>> highScores;
+
 
         int windowWidth;
         int windowHeight;
+        
         void showHighScores();
         void setMainMenu(MenuSystem* menu);
         void addWidget(const std::string& name, const std::string& label, std::function<void()> action);

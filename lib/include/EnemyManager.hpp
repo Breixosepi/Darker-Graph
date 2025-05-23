@@ -15,6 +15,7 @@ private:
     std::vector<RoomData> roomsEnemies;
     TexturePtr enemyTexture;
     SDL_Renderer* renderer;
+
     int currentRoomIndex;
     int score;
 
@@ -28,6 +29,7 @@ public:
     void update(float deltaTime, Player& player);
     void render();
     void handlePlayerAttack(Player& player);
-    int getScore() const;
     void setScore(int newScore) ;
+
+    int getScore() const;
 };

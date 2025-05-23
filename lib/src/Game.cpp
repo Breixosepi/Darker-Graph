@@ -43,6 +43,17 @@ void Game::initialize(const char* title,int x_pos,int y_pos, int width, int heig
 
         mainMenu = std::make_unique<MenuSystem>(renderer.get(), font.get(), window.get());
 
+        SDL_Surface* iconSurface = IMG_Load("assets/icons/rpg.png"); 
+        if (!iconSurface)
+        {
+            std::cerr << "Failed to load window icon: " << IMG_GetError() << std::endl;   
+        }
+        else
+        {
+            SDL_SetWindowIcon(window.get(), iconSurface);
+            SDL_FreeSurface(iconSurface); 
+        }
+
         SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 0);
         isRunning = true;
     }
