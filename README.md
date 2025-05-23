@@ -19,7 +19,9 @@ Un juego de ventana donde **los grafos gobiernan todo**: potenciado por la gener
 Ubuntu: sudo apt update, 
 sudo apt-get install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev
 
-# Ejecutar
+# Compilación 
 make
+
+# Ejecutar
 ./DarkerGraph
 
