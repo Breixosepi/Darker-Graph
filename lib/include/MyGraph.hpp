@@ -14,6 +14,8 @@ class MyGraph
         ~MyGraph();
 
         Dungeon createMap(const bool& custom);
+        void levelUp();
+        void restart();
 
     private:
 

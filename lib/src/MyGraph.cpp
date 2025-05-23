@@ -10,6 +10,10 @@ MyGraph::MyGraph()
 
 MyGraph::~MyGraph(){};
 
+void MyGraph::levelUp(){++numRooms;}
+        
+void MyGraph::restart(){numRooms=6;}
+
 //Devuelve una tupla con: el mapa (Grafo conexo, dirigido y con un camino euleriano como minimo), 
 //un vector con referencia a los nodos y una matriz con las posiciones de las salas y portales.
 Dungeon MyGraph::createMap(const bool& custom)
@@ -26,7 +30,6 @@ Dungeon MyGraph::createMap(const bool& custom)
         std::cout<<"Num of Rooms: "<<map.get_num_nodes()<<std::endl;
         reduceMatrix();
     }
-    ++numRooms;
     return std::make_tuple(map,roomsReference,matrix);
 }
 

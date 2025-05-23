@@ -2,7 +2,7 @@
 
 Level::Level(){}
 
-Level::Level(Dungeon level)
+Level::Level(const Dungeon& level)
 {
     map = std::get<0>(level);
     roomsReference = std::get<1>(level);
@@ -25,6 +25,21 @@ const std::vector<std::vector<int>>* Level::getMatrix(){return &matrix;}
 const std::vector<Designar::Graph<Room>::Node*>* Level::getRoomsReference(){return &roomsReference;}
 
 Room* Level::getCurrentRoom(){return &roomsReference[currentIndex-1]->get_info();}
+
+const bool Level::IsEulerianPath()
+{
+    if(flagReward)
+    {
+        if(visitedArcs.size()==map.get_num_arcs())
+        {
+            std::cout<<"right path, eulerian path made!"<<std::endl;
+            return true;
+        }
+        else{std::cout<<"you did not walk down all the hallways."<<std::endl;}
+    }
+    else{std::cout<<"you walked down the same hallway more than once."<<std::endl;}
+    return false;
+}
 
 //Devuelve la posicion en la matriz del vecino en la direccion indicada 
 const std::pair<int,int> Level::getPosNeighbor(const int& direction)
@@ -490,11 +505,9 @@ void Level::markArc(const int& comp)
         {
             if(!visitedArcs.insert(*it).second)
             {
-                std::cout<<"This hallway has already been visited, Reward lost."<<std::endl;
                 flagReward = false;
                 break;
             }
-            if(visitedArcs.size()==map.get_num_arcs()){std::cout<<"Eulerian path done! Reward Win."<<std::endl;}
         }
     }
 }

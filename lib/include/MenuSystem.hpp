@@ -30,6 +30,7 @@ class MenuSystem
         MyGraph creator;
         std::queue<Level> levels;
         EnemyManager enemyManager;
+        Level level;
 
         int windowWidth;
         int windowHeight;

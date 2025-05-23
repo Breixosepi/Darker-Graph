@@ -10,7 +10,7 @@ class Level
 {
     public:
         Level();
-        Level(Dungeon level);
+        Level(const Dungeon& level);
         ~Level();
 
         const Designar::Graph<Room>* getMap();
@@ -20,6 +20,7 @@ class Level
         const std::vector<Designar::Graph<Room>::Node*>* getRoomsReference();
         Room* getCurrentRoom();
         const std::pair<int,int> getMatrixSize();
+        const bool IsEulerianPath();
 
         void setMap(const Designar::Graph<Room>& value);
         void setShortestPath(const Designar::Graph<Room>& value);

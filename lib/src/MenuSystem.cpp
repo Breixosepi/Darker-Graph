@@ -155,170 +155,157 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
 { 
     menu->addWidget("start", "Iniciar Juego", [&]()
     {   
-        while(!levels.empty()){levels.pop();}
-        levels.push(creator.createMap(0));
-        //levels.push(creator.createMap(0));
-        //levels.push(creator.createMap(0));
-        
-        Level actualLevel = levels.front();
-        levels.pop();
+        creator.restart();
+        bool gameOver = false;
+        while(!gameOver)
+        {
+      // room setup
+        Level level = Level(creator.createMap(false));
         
         SDL_GetWindowSize(window,&windowWidth,&windowHeight);
-        helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
-        actualLevel.setRenderHelper(helper);
+        helper.get()->handleWindowResize(windowWidth,windowHeight,level.getMatrixSize());
+        level.setRenderHelper(helper);
 
-        SDL_Event event;
+      // Player setup
+        SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
+        TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer, playerSurface));
+        SDL_FreeSurface(playerSurface);
+        Player player;
+        player.initAnimation(renderer, playerTexture);
+        player.setPosition(400, 300); 
+        player.setRenderHelper(helper);
+
+      // Enemy setup 
+        // EnemyManager enemies;
+        // enemies.init(renderer, "assets/sprites/Orc.png");
+        // std::random_device rd;
+        // std::mt19937 gen(rd());
+        // std::uniform_int_distribution<> countDist(1, 3); // 1-3 enemigos por sala
+
+        // auto* dungeonGraph = actualLevel.getMap();
+        // if (dungeonGraph) 
+        // {
+        //     dungeonGraph->enum_for_each_node([&](Designar::nat_t index, Designar::GraphNode<Room, Designar::EmptyClass, Designar::EmptyClass>* node) 
+        //     {
+        //         if (node) 
+        //         {
+        //             if(index !=0 )
+        //             {
+        //                 Room& room = node->get_info();
+        //                 int enemyCount = countDist(gen);
+        //                 std::uniform_int_distribution<> xDist(100, 400);
+        //                 std::uniform_int_distribution<> yDist(100, 300);
+                        
+        //                 for (int i = 0; i < enemyCount; ++i) 
+        //                 {
+        //                     enemies.addEnemy(xDist(gen), yDist(gen));
+        //                     std::cout << "Enemigo creado en sala " << index << " en posición (" << xDist(gen) << ", " << yDist(gen) << ")" << std::endl;
+        //                 }
+        //             }
+        //         }
+        //         return true;
+        //     });
+        // }
+
         bool running = true;
+        bool showMap = false;
+        SDL_Event event;
+        Uint32 lastTime = SDL_GetTicks();
+
         while (running) 
         {
+            Uint32 currentTime = SDL_GetTicks();
+            float deltaTime = (currentTime - lastTime) / 1000.0f; 
+            lastTime = currentTime;
+
             while (SDL_PollEvent(&event)) 
             {
+                player.handleImput(event);
                 if (event.type == SDL_QUIT) 
                 {
                     running = false;
+                    gameOver = true;
+                    SDL_PushEvent(&event); 
                 }
                 else if (event.type == SDL_KEYDOWN) 
                 {
-                    switch (event.key.keysym.sym) 
+                    switch (event.key.keysym.sym)
                     {
-                        case SDLK_ESCAPE: running = false; break;
-                    }
+                    case SDLK_ESCAPE:
+                        if(showMap){showMap = false;}
+                        else
+                        {
+                            running = false;
+                            gameOver = true;
+                        } 
+                        break;
+                    case SDLK_m: //Con la tecla 'm' se muestra el mapa de la dungeon
+                        if(showMap){showMap = false;}
+                        else{showMap = true;}
+                        break;
+                    }  
                 }
                 else if(event.type == SDL_WINDOWEVENT)
                 {
                     if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                     {
                         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-                        helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
-                        actualLevel.handleResizeWindow();
+                        helper.get()->handleWindowResize(windowWidth,windowHeight,level.getMatrixSize());
+                        level.handleResizeWindow();
                     } 
                 }  
             }
-            actualLevel.renderMap(renderer);    
-        }
-    }); 
-
-menu->addWidget("load", "Puntuaciones", [&]() 
-{
-    // room setup
-    while(!levels.empty()){levels.pop();}
-    levels.push(creator.createMap(0));
-    //levels.push(creator.createMap(0));
-    //levels.push(creator.createMap(0));
-        
-    Level actualLevel = levels.front();
-    levels.pop();
-
-        
-    SDL_GetWindowSize(window,&windowWidth,&windowHeight);
-    helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
-    actualLevel.setRenderHelper(helper);
-
-    // Player setup
-    SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
-    TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer, playerSurface));
-    SDL_FreeSurface(playerSurface);
-    Player player;
-    player.initAnimation(renderer, playerTexture);
-    player.setPosition(400, 300); 
-    player.setRenderHelper(helper);
-
-    EnemyManager enemies;
-    enemies.init(renderer, "assets/sprites/Orc.png");
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> countDist(1, 3); // 1-3 enemigos por sala
-
-    auto* dungeonGraph = actualLevel.getMap();
-    if (dungeonGraph) 
-    {
-        dungeonGraph->enum_for_each_node([&](Designar::nat_t index, Designar::GraphNode<Room, Designar::EmptyClass, Designar::EmptyClass>* node) 
-        {
-            if (node) 
+            if(!showMap)
             {
-                if(index !=0 )
+                // Actualización de objetos
+                player.update(deltaTime);
+                // enemies.update(deltaTime, player);  
+                // enemies.handlePlayerAttack(player);
+
+                //Comprueba si despues de moverse se encuentra en los limites del cuarto actual
+                if(player.getIsInBound()&&player.getState()==State::RUNNING)
                 {
-                    Room& room = node->get_info();
-                    int enemyCount = countDist(gen);
-                    std::uniform_int_distribution<> xDist(100, 400);
-                    std::uniform_int_distribution<> yDist(100, 300);
-                    
-                    for (int i = 0; i < enemyCount; ++i) 
+                    int index = *level.getCurrentRoom()->getIndex();
+                    player.setPosition(level.verifyPassRoom(static_cast<int>(player.getDirection()),player.getBounds()));
+                    if(index!=*level.getCurrentRoom()->getIndex())
                     {
-                        enemies.addEnemy(xDist(gen), yDist(gen));
-                        std::cout << "Enemigo creado en sala " << index << " en posición (" << xDist(gen) << ", " << yDist(gen) << ")" << std::endl;
+                        std::cout<<"you advanced to room number: "<<*level.getCurrentRoom()->getIndex()<<" you come from room number: "<<index<<std::endl;
                     }
                 }
-            }
-            return true;
-        });
-    }
-    bool running = true;
-    SDL_Event event;
-    Uint32 lastTime = SDL_GetTicks();
-
-    while (running) 
-    {
-        Uint32 currentTime = SDL_GetTicks();
-        float deltaTime = (currentTime - lastTime) / 1000.0f; 
-        lastTime = currentTime;
-
-        while (SDL_PollEvent(&event)) 
-        {
-            player.handleImput(event);
-            if (event.type == SDL_QUIT) 
-            {
-                running = false;
-                SDL_PushEvent(&event); 
-            }
-            else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) 
-            {
-                running = false; 
-            }
-            else if(event.type == SDL_WINDOWEVENT)
-            {
-                if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
+                //Si esta en la Ultima sala, comprueba que este sobre la escalera para avanzar de nivel
+                else if(*level.getCurrentRoom()->getIndex()==level.getMap()->get_num_nodes())
                 {
-                    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-                    helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
-                    actualLevel.handleResizeWindow();
-                } 
-            }  
-        }
-
-        // Actualización de objetos
-
-        player.update(deltaTime);
-        enemies.update(deltaTime, player);
-        enemies.handlePlayerAttack(player);
-
-        if(player.getIsInBound()&&player.getState()==State::RUNNING)
-        {
-            int index = *actualLevel.getCurrentRoom()->getIndex();
-            player.setPosition(actualLevel.verifyPassRoom(static_cast<int>(player.getDirection()),player.getBounds()));
-            if(index!=*actualLevel.getCurrentRoom()->getIndex())
-            {
-                std::cout<<"Te moviste al cuarto Numero: "<<*actualLevel.getCurrentRoom()->getIndex()<<" Provienes del Cuarto Numero: "<<index<<std::endl;
+                    int middleX = helper.get()->getMiddlePointInX();
+                    int middleY = helper.get()->getMiddlePointInY();
+                    SDL_Rect dest = player.getBounds();
+                    if(std::abs(middleX-(dest.x+dest.w/2))<=dest.w/2&&std::abs(middleY-(dest.y+dest.h))<=dest.h/4)
+                    {
+                        bool result = level.IsEulerianPath(); //retorna true si se hizo correctamente un camino euleriano
+                        std::cout<<"Loading New Level!"<<std::endl;
+                        running = false;
+                        creator.levelUp();
+                        SDL_Delay(650);
+                    }
+                }
+                // Renderizado
+                SDL_SetRenderDrawColor(renderer, 30, 30, 50, 255); 
+                SDL_RenderClear(renderer);
+                level.renderRoom(renderer,deltaTime);
+                player.renderPlayer(renderer);
+                //  enemies.render();
+                level.renderRoomLastFrame(renderer,deltaTime);
+                SDL_RenderPresent(renderer);
+                SDL_Delay(16); 
             }
+            else{level.renderMap(renderer);}
         }
+        }     
+    }); 
 
-        // Renderizado
-        SDL_SetRenderDrawColor(renderer, 30, 30, 50, 255); 
-        SDL_RenderClear(renderer);
-        actualLevel.renderRoom(renderer,deltaTime);
-        player.renderPlayer(renderer);
-        // player.renderAttackHitbox(renderer);
-        // player.renderDebugBounds(renderer);
-        actualLevel.renderRoomLastFrame(renderer,deltaTime);
-        enemies.render();
-        // enemy.renderEnemy(renderer); 
-        // enemy.renderAttackHitbox(renderer);
-        // enemy.renderDebugBounds(renderer);
-        actualLevel.renderRoomLastFrame(renderer,deltaTime);
-        SDL_RenderPresent(renderer);
-        SDL_Delay(16); 
-    }
-});
+    menu->addWidget("load", "Puntuaciones", []() 
+    {
+    
+    });
 
     
     menu->addWidget("options", "Opciones", []() 
