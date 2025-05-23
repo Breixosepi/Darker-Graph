@@ -30,7 +30,7 @@ class MenuSystem
 
         HelperPtr helper;
         MyGraph creator;
-        std::queue<Level> levels;
+        Level level;
 
         int windowWidth;
         int windowHeight;

@@ -156,147 +156,136 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
 { 
     menu->addWidget("start", "Iniciar Juego", [&]()
     {   
-        while(!levels.empty()){levels.pop();}
-        levels.push(creator.createMap(0));
-        //levels.push(creator.createMap(0));
-        //levels.push(creator.createMap(0));
-        
-        Level actualLevel = levels.front();
-        levels.pop();
+        creator.restart();
+        bool gameOver = false;
+        while(!gameOver)
+        {
+      // room setup
+        Level level = Level(creator.createMap(false));
         
         SDL_GetWindowSize(window,&windowWidth,&windowHeight);
-        helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
-        actualLevel.setRenderHelper(helper);
+        helper.get()->handleWindowResize(windowWidth,windowHeight,level.getMatrixSize());
+        level.setRenderHelper(helper);
 
-        SDL_Event event;
+      // Player setup
+        SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
+        TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer, playerSurface));
+        SDL_FreeSurface(playerSurface);
+        Player player;
+        player.initAnimation(renderer, playerTexture);
+        player.setPosition(400, 300); 
+        player.setRenderHelper(helper);
+
+      // Enemy setup 
+        SDL_Surface* enemySurface = IMG_Load("assets/sprites/Orc.png");
+        TexturePtr enemyTexture(SDL_CreateTextureFromSurface(renderer, enemySurface));
+        SDL_FreeSurface(enemySurface);
+        std::vector<Enemy> enemies;
+        Enemy enemy;
+        enemy.initAnimation(renderer, enemyTexture);
+        enemy.setPosition(450, 200);
+
         bool running = true;
+        bool showMap = false;
+        SDL_Event event;
+        Uint32 lastTime = SDL_GetTicks();
+
         while (running) 
         {
+            Uint32 currentTime = SDL_GetTicks();
+            float deltaTime = (currentTime - lastTime) / 1000.0f; 
+            lastTime = currentTime;
+
             while (SDL_PollEvent(&event)) 
             {
+                player.handleImput(event);
                 if (event.type == SDL_QUIT) 
                 {
                     running = false;
+                    gameOver = true;
+                    SDL_PushEvent(&event); 
                 }
                 else if (event.type == SDL_KEYDOWN) 
                 {
-                    switch (event.key.keysym.sym) 
+                    switch (event.key.keysym.sym)
                     {
-                        case SDLK_ESCAPE: running = false; break;
-                    }
+                    case SDLK_ESCAPE:
+                        if(showMap){showMap = false;}
+                        else
+                        {
+                            running = false;
+                            gameOver = true;
+                        } 
+                        break;
+                    case SDLK_m: //Con la tecla 'm' se muestra el mapa de la dungeon
+                        if(showMap){showMap = false;}
+                        else{showMap = true;}
+                        break;
+                    }  
                 }
                 else if(event.type == SDL_WINDOWEVENT)
                 {
                     if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                     {
                         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-                        helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
-                        actualLevel.handleResizeWindow();
+                        helper.get()->handleWindowResize(windowWidth,windowHeight,level.getMatrixSize());
+                        level.handleResizeWindow();
                     } 
                 }  
             }
-            actualLevel.renderMap(renderer);    
+            if(!showMap)
+            {
+                // Actualización de objetos
+                player.update(deltaTime);
+                player.attack(enemy);
+                enemy.detectPlayer(player.getBounds());
+                enemy.attack(player);
+                enemy.update(deltaTime);
+
+                //Comprueba si despues de moverse se encuentra en los limites del cuarto actual
+                if(player.getIsInBound()&&player.getState()==State::RUNNING)
+                {
+                    int index = *level.getCurrentRoom()->getIndex();
+                    player.setPosition(level.verifyPassRoom(static_cast<int>(player.getDirection()),player.getBounds()));
+                    if(index!=*level.getCurrentRoom()->getIndex())
+                    {
+                        std::cout<<"you advanced to room number: "<<*level.getCurrentRoom()->getIndex()<<" you come from room number: "<<index<<std::endl;
+                    }
+                }
+                //Si esta en la Ultima sala, comprueba que este sobre la escalera para avanzar de nivel
+                else if(*level.getCurrentRoom()->getIndex()==level.getMap()->get_num_nodes())
+                {
+                    int middleX = helper.get()->getMiddlePointInX();
+                    int middleY = helper.get()->getMiddlePointInY();
+                    SDL_Rect dest = player.getBounds();
+                    if(std::abs(middleX-(dest.x+dest.w/2))<=dest.w/2&&std::abs(middleY-(dest.y+dest.h))<=dest.h/4)
+                    {
+                        bool result = level.IsEulerianPath(); //retorna true si se hizo correctamente un camino euleriano
+                        std::cout<<"Loading New Level!"<<std::endl;
+                        running = false;
+                        creator.levelUp();
+                        SDL_Delay(650);
+                    }
+                }
+                // Renderizado
+                SDL_SetRenderDrawColor(renderer, 30, 30, 50, 255); 
+                SDL_RenderClear(renderer);
+                level.renderRoom(renderer,deltaTime);
+                player.renderPlayer(renderer);
+                enemy.renderEnemy(renderer); 
+                level.renderRoomLastFrame(renderer,deltaTime);
+                SDL_RenderPresent(renderer);
+                SDL_Delay(16); 
+            }
+            else{level.renderMap(renderer);}
         }
+        }     
     }); 
 
-menu->addWidget("load", "Puntuaciones", [&]() 
-{
-    // room setup
-    while(!levels.empty()){levels.pop();}
-    levels.push(creator.createMap(0));
-    //levels.push(creator.createMap(0));
-    //levels.push(creator.createMap(0));
-        
-    Level actualLevel = levels.front();
-    levels.pop();
-        
-    SDL_GetWindowSize(window,&windowWidth,&windowHeight);
-    helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
-    actualLevel.setRenderHelper(helper);
-
-    // Player setup
-    SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
-    TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer, playerSurface));
-    SDL_FreeSurface(playerSurface);
-    Player player;
-    player.initAnimation(renderer, playerTexture);
-    player.setPosition(400, 300); 
-    player.setRenderHelper(helper);
-
-    // Enemy setup 
-    SDL_Surface* enemySurface = IMG_Load("assets/sprites/Orc.png");
-    TexturePtr enemyTexture(SDL_CreateTextureFromSurface(renderer, enemySurface));
-    SDL_FreeSurface(enemySurface);
-    std::vector<Enemy> enemies;
-    Enemy enemy;
-    enemy.initAnimation(renderer, enemyTexture);
-    enemy.setPosition(450, 200);
-
-    bool running = true;
-    SDL_Event event;
-    Uint32 lastTime = SDL_GetTicks();
-
-    while (running) 
+    menu->addWidget("load", "Puntuaciones", []() 
     {
-        Uint32 currentTime = SDL_GetTicks();
-        float deltaTime = (currentTime - lastTime) / 1000.0f; 
-        lastTime = currentTime;
-
-        while (SDL_PollEvent(&event)) 
-        {
-            player.handleImput(event);
-            if (event.type == SDL_QUIT) 
-            {
-                running = false;
-                SDL_PushEvent(&event); 
-            }
-            else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) 
-            {
-                running = false; 
-            }
-            else if(event.type == SDL_WINDOWEVENT)
-            {
-                if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
-                {
-                    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-                    helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
-                    actualLevel.handleResizeWindow();
-                } 
-            }  
-        }
-
-        // Actualización de objetos
-        player.update(deltaTime);
-        player.attack(enemy);
-        enemy.detectPlayer(player.getBounds());
-        enemy.attack(player);
-        enemy.update(deltaTime);
-
-        if(player.getIsInBound()&&player.getState()==State::RUNNING)
-        {
-            int index = *actualLevel.getCurrentRoom()->getIndex();
-            player.setPosition(actualLevel.verifyPassRoom(static_cast<int>(player.getDirection()),player.getBounds()));
-            if(index!=*actualLevel.getCurrentRoom()->getIndex())
-            {
-                std::cout<<"Te moviste al cuarto Numero: "<<*actualLevel.getCurrentRoom()->getIndex()<<" Provienes del Cuarto Numero: "<<index<<std::endl;
-            }
-        }
-
-        // Renderizado
-        SDL_SetRenderDrawColor(renderer, 30, 30, 50, 255); 
-        SDL_RenderClear(renderer);
-        actualLevel.renderRoom(renderer,deltaTime);
-        player.renderPlayer(renderer);
-        // player.renderAttackHitbox(renderer);
-        // player.renderDebugBounds(renderer);
-        enemy.renderEnemy(renderer); 
-        // enemy.renderAttackHitbox(renderer);
-        // enemy.renderDebugBounds(renderer);
-        actualLevel.renderRoomLastFrame(renderer,deltaTime);
-        SDL_RenderPresent(renderer);
-        SDL_Delay(16); 
-    }
-});
+    
+    });
 
     
     menu->addWidget("options", "Opciones", []() 
