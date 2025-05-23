@@ -4,7 +4,7 @@
 Un juego de ventana donde **los grafos gobiernan todo**: desde la generación procedural de mazmorras hasta puzzles basados en caminos. ¡Combate enemigos, resuelve desafíos de caminos eulerianos y escapa de la oscuridad! Desarrollado con la libreria de SDL2 y complementos se busca plasmar dicha aventura con un diseno en 2.5D.
 
 <p align="center">
-  <img src="assets/screenshots/gameplay.gif" width="500" alt="Demo del Juego">
+  <img src="assets/screenshots/caveBack.jpg" width="500">
 </p>
 
 ## 🔥 Características
