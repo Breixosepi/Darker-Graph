@@ -4,3 +4,4 @@ Fernando 300
 
  Victor 200
 Joel 0
+Reginfo 100

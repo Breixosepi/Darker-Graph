@@ -20,6 +20,7 @@ MenuSystem::MenuSystem(SDL_Renderer* render, TTF_Font* fonts, SDL_Window* wind)
     current = nullptr;
     helper = std::make_shared<RenderHelper>();
     setMainMenu(this);
+    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
 }
 
 void MenuSystem::addWidget(const std::string& name, const std::string& label, std::function<void()> action) 
@@ -340,53 +341,57 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
     });
 } 
 
-void MenuSystem::showGameOverScreen(int score) 
+void MenuSystem::showGameOverScreen(int score)
 {
     bool nameEntered = false;
     std::string playerName;
-    SDL_Color textColor = {255, 255, 255, 255}; 
+    SDL_Color textColor = {255, 255, 255, 255};
     SDL_Surface* screenScore = IMG_Load("assets/screenshots/caveBack.jpg");
     TexturePtr background(SDL_CreateTextureFromSurface(renderer, screenScore));
     SDL_FreeSurface(screenScore);
 
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, "Ingresa tu nombre:", textColor);
-    TexturePtr textTexture(SDL_CreateTextureFromSurface(renderer, textSurface));
-    SDL_Rect textRect = {250, 200, textSurface->w, textSurface->h};
-    SDL_FreeSurface(textSurface);
-    
-    SDL_Rect inputRect = {300, 250, 300, 40};
-    
     SDL_StartTextInput();
     bool running = true;
-    while (running && !nameEntered) 
+    while (running && !nameEntered)
     {
         SDL_Event event;
-        while (SDL_PollEvent(&event)) 
+        while (SDL_PollEvent(&event))
         {
-            switch (event.type) 
+            switch (event.type)
             {
                 case SDL_QUIT:
                     running = false;
                     break;
-                    
+
                 case SDL_TEXTINPUT:
-                    if (playerName.length() < 20) 
-                    { 
+                    if (playerName.length() < 20)
+                    {
                         playerName += event.text.text;
                         updateInputTexture(playerName, textColor);
                     }
                     break;
-                    
+
                 case SDL_KEYDOWN:
-                    if (event.key.keysym.sym == SDLK_BACKSPACE && !playerName.empty()) 
+                    if (event.key.keysym.sym == SDLK_BACKSPACE && !playerName.empty())
                     {
                         playerName.pop_back();
                         updateInputTexture(playerName, textColor);
                     }
-                    else if (event.key.keysym.sym == SDLK_RETURN && !playerName.empty()) 
+                    else if (event.key.keysym.sym == SDLK_RETURN && !playerName.empty())
                     {
                         nameEntered = true;
                         saveHighScore(playerName, score);
+                    }
+                    else if (event.key.keysym.sym == SDLK_ESCAPE) 
+                    {
+                        running = false;
+                        nameEntered = true;
+                    }
+                    break;
+                case SDL_WINDOWEVENT:
+                    if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                    {
+                        SDL_GetWindowSize(window, &windowWidth, &windowHeight);
                     }
                     break;
             }
@@ -394,12 +399,34 @@ void MenuSystem::showGameOverScreen(int score)
 
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, background.get(), NULL, NULL);
+
+        SDL_Surface* textSurface = TTF_RenderText_Solid(font, "Ingresa tu nombre:", textColor);
+        TexturePtr textTexture(SDL_CreateTextureFromSurface(renderer, textSurface));
+        SDL_Rect textRect;
+        textRect.w = static_cast<int>(textSurface->w * (windowWidth / 800.0)); 
+        textRect.h = static_cast<int>(textSurface->h * (windowHeight / 800.0)); 
+        textRect.x = (windowWidth / 2) - (textRect.w / 2);
+        textRect.y = static_cast<int>(windowHeight * 0.25); 
+        SDL_FreeSurface(textSurface);
         SDL_RenderCopy(renderer, textTexture.get(), NULL, &textRect);
-        if (!playerName.empty()) 
+
+        SDL_Rect inputRect;
+        inputRect.w = static_cast<int>(300 * (windowWidth / 800.0)); 
+        inputRect.h = static_cast<int>(40 * (windowHeight / 800.0)); 
+        inputRect.x = (windowWidth / 2) - (inputRect.w / 2);
+        inputRect.y = static_cast<int>(windowHeight * 0.35); 
+
+        if (!playerName.empty())
         {
-            SDL_RenderCopy(renderer, inputTexture.get(), NULL, &inputRect);
+            updateInputTexture(playerName, textColor);
+            SDL_Rect playerNameRect;
+            playerNameRect.w = static_cast<int>(playerName.length() * 20 * (windowWidth / 800.0)); 
+            playerNameRect.h = static_cast<int>(50 * (windowHeight / 800.0)); 
+            playerNameRect.x = (windowWidth / 2) - (playerNameRect.w / 2);
+            playerNameRect.y = inputRect.y + (inputRect.h / 2) - (playerNameRect.h / 2); 
+            SDL_RenderCopy(renderer, inputTexture.get(), NULL, &playerNameRect);
         }
-        
+
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderDrawRect(renderer, &inputRect);
         SDL_RenderPresent(renderer);
@@ -424,22 +451,17 @@ void MenuSystem::saveHighScore(const std::string& name, int score)
         file.close();
         std::cout << "Puntaje guardado para " << name << ": " << score << std::endl;
     } 
-    else 
-    {
-        std::cerr << "Error al guardar el puntaje" << std::endl;
-    }
 }
 
 void MenuSystem::showHighScores()
 {
-
     highScores.clear();
     std::ifstream file("highscores.txt");
     if (file.is_open())
     {
         std::string name;
         int score;
-        while (file >> name >> score) 
+        while (file >> name >> score)
         {
             size_t firstChar = name.find_first_not_of(" \t");
             if (std::string::npos != firstChar)
@@ -455,14 +477,14 @@ void MenuSystem::showHighScores()
         }
         file.close();
 
-        std::sort(highScores.begin(), highScores.end(), [](const auto& a, const auto& b) 
+        std::sort(highScores.begin(), highScores.end(), [](const auto& a, const auto& b)
         {
-            return a.second > b.second; 
+            return a.second > b.second;
         });
     }
 
-    SDL_Color textColor = {255, 255, 255, 255}; 
-    SDL_Color bgColor = {30, 30, 50, 255};    
+    SDL_Color textColor = {255, 255, 255, 255};
+    SDL_Color bgColor = {30, 30, 50, 255};
 
     bool showingScores = true;
     SDL_Event event;
@@ -473,17 +495,23 @@ void MenuSystem::showHighScores()
         {
             if (event.type == SDL_QUIT)
             {
-                showingScores = false; 
+                showingScores = false;
             }
             if (event.type == SDL_KEYDOWN)
             {
                 if (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_RETURN)
                 {
-                    showingScores = false; 
+                    showingScores = false;
+                }
+            }
+            if (event.type == SDL_WINDOWEVENT)
+            {
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
                 }
             }
         }
-
         SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
         SDL_RenderClear(renderer);
 
@@ -491,14 +519,20 @@ void MenuSystem::showHighScores()
         if (titleSurface)
         {
             SDL_Texture* titleTexture = SDL_CreateTextureFromSurface(renderer, titleSurface);
-            SDL_Rect titleRect = { (windowWidth / 2) - (titleSurface->w / 2), 50, titleSurface->w, titleSurface->h };
+            SDL_Rect titleRect;
+            titleRect.w = static_cast<int>(titleSurface->w * (windowWidth / 800.0)); 
+            titleRect.h = static_cast<int>(titleSurface->h * (windowHeight / 800.0)); 
+            titleRect.x = (windowWidth / 2) - (titleRect.w / 2);
+            titleRect.y = static_cast<int>(windowHeight * 0.0625); 
             SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
             SDL_FreeSurface(titleSurface);
             SDL_DestroyTexture(titleTexture);
         }
 
-        int startY = 150;
-        int maxScoresToShow = 10; 
+        int startY = static_cast<int>(windowHeight * 0.1875); 
+        int maxScoresToShow = 10;
+        int scoreLineHeight = static_cast<int>(40 * (windowHeight / 800.0)); 
+
         for (size_t i = 0; i < highScores.size() && i < maxScoresToShow; ++i)
         {
             std::string scoreText = std::to_string(i + 1) + ". " + highScores[i].first + ": " + std::to_string(highScores[i].second);
@@ -506,23 +540,16 @@ void MenuSystem::showHighScores()
             if (scoreSurface)
             {
                 SDL_Texture* scoreTexture = SDL_CreateTextureFromSurface(renderer, scoreSurface);
-                SDL_Rect scoreRect = { (windowWidth / 2) - (scoreSurface->w / 2), startY + (int)(i * 40), scoreSurface->w, scoreSurface->h };
+                SDL_Rect scoreRect;
+                scoreRect.w = static_cast<int>(scoreSurface->w * (windowWidth / 800.0)); 
+                scoreRect.h = static_cast<int>(scoreSurface->h * (windowHeight / 800.0)); 
+                scoreRect.x = (windowWidth / 2) - (scoreRect.w / 2);
+                scoreRect.y = startY + (int)(i * scoreLineHeight);
                 SDL_RenderCopy(renderer, scoreTexture, NULL, &scoreRect);
                 SDL_FreeSurface(scoreSurface);
                 SDL_DestroyTexture(scoreTexture);
             }
         }
-
-        SDL_Surface* exitSurface = TTF_RenderText_Solid(font, "Presiona ESC o ENTER para volver al Menu", textColor);
-        if (exitSurface)
-        {
-            SDL_Texture* exitTexture = SDL_CreateTextureFromSurface(renderer, exitSurface);
-            SDL_Rect exitRect = { (windowWidth / 2) - (exitSurface->w / 2), windowHeight - 50, exitSurface->w, exitSurface->h };
-            SDL_RenderCopy(renderer, exitTexture, NULL, &exitRect);
-            SDL_FreeSurface(exitSurface);
-            SDL_DestroyTexture(exitTexture);
-        }
-
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
