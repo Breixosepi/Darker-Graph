@@ -4,6 +4,8 @@
 #include <random>
 #include <unordered_set>
 
+using Dungeon = std::tuple<Designar::Graph<Room>,std::vector<Designar::Graph<Room>::Node*>,std::vector<std::vector<int>>>;
+
 class MyGraph
 {
     public:

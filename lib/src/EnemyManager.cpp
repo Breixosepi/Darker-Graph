@@ -13,15 +13,19 @@ EnemyManager::~EnemyManager()
     // Destructor
 }
 
-void EnemyManager::init(SDL_Renderer* renderer, TexturePtr enemyTex)
+void EnemyManager::init(SDL_Renderer* renderer, const std::string& texturePath)
 {
-    enemyTexture = std::move(enemyTex);
+    this->renderer= renderer;
+    SDL_Surface* surface = IMG_Load(texturePath.c_str());
+    enemyTexture.reset(SDL_CreateTextureFromSurface(renderer, surface));
+    SDL_FreeSurface(surface);
+
 }
 
 void EnemyManager::addEnemy(int x, int y)
 {
-    auto newEnemy = std::make_unique<Enemy>();
-    newEnemy->initAnimation(nullptr, enemyTexture);
+    std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>();
+    newEnemy->initAnimation(renderer, enemyTexture);
     newEnemy->setPosition(x, y);
     newEnemy->setHealth(2); 
     newEnemy->setState(EnemyState::PATROLLING);
@@ -55,13 +59,14 @@ void EnemyManager::update(float deltaTime, Player& player)
         if (enemy->getState() == EnemyState::DEAD && enemy->isDeathAnimationComplete()) 
         {
             score += 100;
+            std::cout<< "score"<<score<<std::endl;
             return true; 
         }
         return false;
     }), enemies.end());
 }
 
-void EnemyManager::render(SDL_Renderer* renderer)
+void EnemyManager::render()
 {
     for (auto& enemy : enemies)
     {

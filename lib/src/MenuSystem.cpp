@@ -1,7 +1,6 @@
 #include "MenuSystem.hpp"
 #include <iostream>
 #include <Player.hpp>
-#include <Enemy.hpp>
 
 MenuSystem::MenuSystem()
 {
@@ -209,6 +208,7 @@ menu->addWidget("load", "Puntuaciones", [&]()
         
     Level actualLevel = levels.front();
     levels.pop();
+
         
     SDL_GetWindowSize(window,&windowWidth,&windowHeight);
     helper.get()->handleWindowResize(windowWidth,windowHeight,actualLevel.getMatrixSize());
@@ -223,6 +223,36 @@ menu->addWidget("load", "Puntuaciones", [&]()
     player.setPosition(400, 300); 
     player.setRenderHelper(helper);
 
+    EnemyManager enemies;
+    enemies.init(renderer, "assets/sprites/Orc.png");
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> countDist(1, 3); // 1-3 enemigos por sala
+
+    auto* dungeonGraph = actualLevel.getMap();
+    if (dungeonGraph) 
+    {
+        dungeonGraph->enum_for_each_node([&](Designar::nat_t index, Designar::GraphNode<Room, Designar::EmptyClass, Designar::EmptyClass>* node) 
+        {
+            if (node) 
+            {
+                if(index !=0 )
+                {
+                    Room& room = node->get_info();
+                    int enemyCount = countDist(gen);
+                    std::uniform_int_distribution<> xDist(100, 400);
+                    std::uniform_int_distribution<> yDist(100, 300);
+                    
+                    for (int i = 0; i < enemyCount; ++i) 
+                    {
+                        enemies.addEnemy(xDist(gen), yDist(gen));
+                        std::cout << "Enemigo creado en sala " << index << " en posición (" << xDist(gen) << ", " << yDist(gen) << ")" << std::endl;
+                    }
+                }
+            }
+            return true;
+        });
+    }
     bool running = true;
     SDL_Event event;
     Uint32 lastTime = SDL_GetTicks();
@@ -257,7 +287,10 @@ menu->addWidget("load", "Puntuaciones", [&]()
         }
 
         // Actualización de objetos
+
         player.update(deltaTime);
+        enemies.update(deltaTime, player);
+        enemies.handlePlayerAttack(player);
 
         if(player.getIsInBound()&&player.getState()==State::RUNNING)
         {
@@ -276,14 +309,12 @@ menu->addWidget("load", "Puntuaciones", [&]()
         player.renderPlayer(renderer);
         // player.renderAttackHitbox(renderer);
         // player.renderDebugBounds(renderer);
-<<<<<<< HEAD
-        actualLevel.renderRoomLastFrame(renderer);
-=======
-        enemy.renderEnemy(renderer); 
+        actualLevel.renderRoomLastFrame(renderer,deltaTime);
+        enemies.render();
+        // enemy.renderEnemy(renderer); 
         // enemy.renderAttackHitbox(renderer);
         // enemy.renderDebugBounds(renderer);
         actualLevel.renderRoomLastFrame(renderer,deltaTime);
->>>>>>> c68a53ccaae76e941ec3bfc703f4e368edc6b8db
         SDL_RenderPresent(renderer);
         SDL_Delay(16); 
     }
