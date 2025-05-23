@@ -14,8 +14,6 @@ class MenuSystem
         MenuSystem& operator=(const MenuSystem&) = delete;  
         void handleEvent(const SDL_Event& event);
         void render();
-        void setupLevel(Level& level, Player& player);
-        void playGameLoop(Level& level, Player& player);
     
     private:
         SDL_Window* window;

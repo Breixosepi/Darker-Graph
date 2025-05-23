@@ -22,75 +22,114 @@ void EnemyManager::init(SDL_Renderer* renderer, const std::string& texturePath)
 
 }
 
-void EnemyManager::addEnemy(int x, int y)
+void EnemyManager::addEnemy(int roomIndex, int x, int y) 
 {
+    auto it = std::find_if(roomsEnemies.begin(), roomsEnemies.end(),[roomIndex](const RoomData& rd) { return rd.roomIndex == roomIndex; });
+    
+    if (it == roomsEnemies.end()) 
+    {
+        roomsEnemies.push_back({roomIndex, {}});
+        it = roomsEnemies.end() - 1;
+    }
+    
     std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>();
     newEnemy->initAnimation(renderer, enemyTexture);
     newEnemy->setPosition(x, y);
-    newEnemy->setHealth(2); 
+    newEnemy->setHealth(2);
     newEnemy->setState(EnemyState::PATROLLING);
-    enemies.push_back(std::move(newEnemy));
-    std::cout << "Enemy added at: " << x << ", " << y << std::endl;
+    
+    it->enemies.push_back(std::move(newEnemy));
+    
+    std::cout << "Enemy added in room " << roomIndex << " at: " << x << ", " << y << std::endl;
 }
 
-void EnemyManager::update(float deltaTime, Player& player)
+void EnemyManager::setCurrentRoom(int roomIndex) 
 {
+    currentRoomIndex = roomIndex;
+}
+
+void EnemyManager::update(float deltaTime, Player& player) 
+{
+    auto it = std::find_if(roomsEnemies.begin(), roomsEnemies.end(),[this](const RoomData& rd) 
+    { 
+        return rd.roomIndex == currentRoomIndex; 
+    });
     
-    for (auto& enemy : enemies)
+    if (it != roomsEnemies.end()) 
     {
-        enemy->detectPlayer(player.getBounds());
-        if (enemy->getState() != EnemyState::DEAD || !enemy->isDeathAnimationComplete())
+        
+        for (auto& enemy : it->enemies) 
         {
-            enemy->update(deltaTime);
-            if (enemy->getState() == EnemyState::ATTACKING)
+            enemy->detectPlayer(player.getBounds());
+            if (enemy->getState() != EnemyState::DEAD || !enemy->isDeathAnimationComplete()) 
             {
-                SDL_Rect enemyAttackHitbox = enemy->getAttackHitbox();
-                SDL_Rect playerBounds = player.getBounds();
-                if (SDL_HasIntersection(&enemyAttackHitbox, &playerBounds))
+                enemy->update(deltaTime);
+                
+                if (enemy->getState() == EnemyState::ATTACKING) 
                 {
-                    Combat::enemyAttack(*enemy, player);
+                    SDL_Rect enemyAttackHitbox = enemy->getAttackHitbox();
+                    SDL_Rect playerBounds = player.getBounds();
+                    if (SDL_HasIntersection(&enemyAttackHitbox, &playerBounds)) 
+                    {
+                        Combat::enemyAttack(*enemy, player);
+                    }
                 }
             }
         }
-    }
-
-    enemies.erase(std::remove_if(enemies.begin(), enemies.end(),[this](const std::unique_ptr<Enemy>& enemy) 
-    {
-        if (enemy->getState() == EnemyState::DEAD && enemy->isDeathAnimationComplete()) 
+        
+        it->enemies.erase(std::remove_if(it->enemies.begin(), it->enemies.end(),[this](const std::unique_ptr<Enemy>& enemy) 
         {
-            score += 100;
-            std::cout<< "score"<<score<<std::endl;
-            return true; 
-        }
-        return false;
-    }), enemies.end());
-}
-
-void EnemyManager::render()
-{
-    for (auto& enemy : enemies)
-    {
-        if (enemy->getState() != EnemyState::DEAD || !enemy->isDeathAnimationComplete())
-        {
-            enemy->renderEnemy(renderer);
-            enemy->renderDebugBounds(renderer);
-            enemy->renderAttackHitbox(renderer);
-        }
+                if (enemy->getState() == EnemyState::DEAD && enemy->isDeathAnimationComplete()) 
+                {
+                    score += 100;
+                    std::cout << "Enemy defeated! Score: " << score << std::endl;
+                    return true;
+                }
+                return false;
+            }), it->enemies.end());
     }
 }
 
-void EnemyManager::handlePlayerAttack(Player& player)
+void EnemyManager::render() 
 {
-    SDL_Rect playerAttackHitbox = player.getAttackHitbox();
-
-    for (auto& enemy : enemies)
+    auto it = std::find_if(roomsEnemies.begin(), roomsEnemies.end(),[this](const RoomData& rd) 
+    { 
+        return rd.roomIndex == currentRoomIndex; 
+    });
+    
+    if (it != roomsEnemies.end()) 
     {
-        if (enemy->getState() != EnemyState::DEAD)
+        for (auto& enemy : it->enemies) 
         {
-            SDL_Rect enemyBounds = enemy->getBounds();
-            if (SDL_HasIntersection(&playerAttackHitbox, &enemyBounds))
+            if (enemy->getState() != EnemyState::DEAD || !enemy->isDeathAnimationComplete()) 
             {
-                Combat::playerAttack(player, *enemy);
+                enemy->renderEnemy(renderer);
+                enemy->renderDebugBounds(renderer);      
+                enemy->renderAttackHitbox(renderer);     
+            }
+        }
+    }
+}
+
+void EnemyManager::handlePlayerAttack(Player& player) 
+{
+    auto it = std::find_if(roomsEnemies.begin(), roomsEnemies.end(),[this](const RoomData& rd) 
+    { 
+        return rd.roomIndex == currentRoomIndex; 
+    });
+    
+    if (it != roomsEnemies.end()) 
+    {
+        SDL_Rect playerAttackHitbox = player.getAttackHitbox();
+        
+        for (auto& enemy : it->enemies) 
+        {
+            if (enemy->getState() != EnemyState::DEAD) 
+            {
+                SDL_Rect enemyBounds = enemy->getBounds();
+                if (SDL_HasIntersection(&playerAttackHitbox, &enemyBounds)) {
+                    Combat::playerAttack(player, *enemy);
+                }
             }
         }
     }

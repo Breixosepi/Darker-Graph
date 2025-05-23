@@ -176,36 +176,32 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
         player.setRenderHelper(helper);
 
       // Enemy setup 
-        // EnemyManager enemies;
-        // enemies.init(renderer, "assets/sprites/Orc.png");
-        // std::random_device rd;
-        // std::mt19937 gen(rd());
-        // std::uniform_int_distribution<> countDist(1, 3); // 1-3 enemigos por sala
-
-        // auto* dungeonGraph = actualLevel.getMap();
-        // if (dungeonGraph) 
-        // {
-        //     dungeonGraph->enum_for_each_node([&](Designar::nat_t index, Designar::GraphNode<Room, Designar::EmptyClass, Designar::EmptyClass>* node) 
-        //     {
-        //         if (node) 
-        //         {
-        //             if(index !=0 )
-        //             {
-        //                 Room& room = node->get_info();
-        //                 int enemyCount = countDist(gen);
-        //                 std::uniform_int_distribution<> xDist(100, 400);
-        //                 std::uniform_int_distribution<> yDist(100, 300);
-                        
-        //                 for (int i = 0; i < enemyCount; ++i) 
-        //                 {
-        //                     enemies.addEnemy(xDist(gen), yDist(gen));
-        //                     std::cout << "Enemigo creado en sala " << index << " en posición (" << xDist(gen) << ", " << yDist(gen) << ")" << std::endl;
-        //                 }
-        //             }
-        //         }
-        //         return true;
-        //     });
-        // }
+        EnemyManager enemies;
+        enemies.init(renderer, "assets/sprites/Orc.png");
+        auto* dungeonGraph = level.getMap();
+        if (dungeonGraph) 
+        {
+        dungeonGraph->enum_for_each_node([&](Designar::nat_t index, auto* node) 
+        {
+            if (node) 
+            {
+                int roomIndex = index;
+                
+                std::random_device rd;
+                std::mt19937 gen(rd());
+                std::uniform_int_distribution<> countDist(1, 3);
+                int enemyCount = countDist(gen);
+                
+                for (int i = 0; i < enemyCount; ++i) 
+                {
+                    std::uniform_int_distribution<> xDist(100, 400);
+                    std::uniform_int_distribution<> yDist(100, 300);
+                    enemies.addEnemy(roomIndex, xDist(gen), yDist(gen));
+                }
+            }
+            return true;
+        });
+    }
 
         bool running = true;
         bool showMap = false;
@@ -257,10 +253,12 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
             }
             if(!showMap)
             {
+                int currentRoomIndex = *level.getCurrentRoom()->getIndex();
+                enemies.setCurrentRoom(currentRoomIndex);
                 // Actualización de objetos
                 player.update(deltaTime);
-                // enemies.update(deltaTime, player);  
-                // enemies.handlePlayerAttack(player);
+                enemies.update(deltaTime, player);
+                enemies.handlePlayerAttack(player);
 
                 //Comprueba si despues de moverse se encuentra en los limites del cuarto actual
                 if(player.getIsInBound()&&player.getState()==State::RUNNING)
@@ -292,7 +290,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 SDL_RenderClear(renderer);
                 level.renderRoom(renderer,deltaTime);
                 player.renderPlayer(renderer);
-                //  enemies.render();
+                enemies.render();
                 level.renderRoomLastFrame(renderer,deltaTime);
                 SDL_RenderPresent(renderer);
                 SDL_Delay(16); 
