@@ -43,14 +43,15 @@ void MenuSystem::addWidget(const std::string& name, const std::string& label, st
     {
         head = widget.get();
         current = head;
+        tail = widget.get();
     } 
     else 
     {
         tail->setNext(widget.get());
         widget->setPrev(tail);
+        tail = widget.get();
     }
 
-    tail = widget.get();
     widgets.push_back(std::move(widget));
 
     if (widgets.size() > 1) 
@@ -196,7 +197,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 for (int i = 0; i < enemyCount; ++i) 
                 {
                     std::uniform_int_distribution<> xDist(0, 500);
-                    std::uniform_int_distribution<> yDist(-150, 400);
+                    std::uniform_int_distribution<> yDist(-150, 370);
                     enemies.addEnemy(roomIndex, xDist(gen), yDist(gen));
                 }
             }
@@ -324,15 +325,13 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
     });
 
     
-    menu->addWidget("options", "Opciones", []() 
-    {
-        std::cout << "Opciones seleccionadas\n";
-    });
+    // menu->addWidget("options", "Opciones", []() 
+    // {
+    // });
 
-    menu->addWidget("credits", "Creditos", []() 
-    {
-        std::cout << "todo: Eugenio El musculoso!\n" << "Nada : Francisco el negro\n" ;
-    });
+    // menu->addWidget("credits", "Creditos", []() 
+    // {
+    // });
     
     menu->addWidget("exit", "Salir", []() 
     {
@@ -349,7 +348,6 @@ void MenuSystem::showGameOverScreen(int score)
     SDL_Surface* screenScore = IMG_Load("assets/screenshots/caveBack.jpg");
     TexturePtr background(SDL_CreateTextureFromSurface(renderer, screenScore));
     SDL_FreeSurface(screenScore);
-
     SDL_StartTextInput();
     bool running = true;
     while (running && !nameEntered)
@@ -523,15 +521,15 @@ void MenuSystem::showHighScores()
             titleRect.w = static_cast<int>(titleSurface->w * (windowWidth / 800.0)); 
             titleRect.h = static_cast<int>(titleSurface->h * (windowHeight / 800.0)); 
             titleRect.x = (windowWidth / 2) - (titleRect.w / 2);
-            titleRect.y = static_cast<int>(windowHeight * 0.0625); 
+            titleRect.y = static_cast<int>(windowHeight * 0.0725); 
             SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
             SDL_FreeSurface(titleSurface);
             SDL_DestroyTexture(titleTexture);
         }
 
-        int startY = static_cast<int>(windowHeight * 0.1875); 
+        int startY = static_cast<int>(windowHeight * 0.2); 
         int maxScoresToShow = 10;
-        int scoreLineHeight = static_cast<int>(40 * (windowHeight / 800.0)); 
+        int scoreLineHeight = static_cast<int>(50 * (windowHeight / 800.0)); 
 
         for (size_t i = 0; i < highScores.size() && i < maxScoresToShow; ++i)
         {
