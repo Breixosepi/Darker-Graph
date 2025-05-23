@@ -1,7 +1,7 @@
 # 🕶️ Darker Graph - Explorador de Mazmorras con Grafos
 
 
-Un juego de ventana donde **los grafos gobiernan todo**: desde la generación procedural de mazmorras hasta puzzles basados en caminos. ¡Combate enemigos, resuelve desafíos de caminos eulerianos y escapa de la oscuridad! Desarrollado con la libreria de SDL2 y complementos se busca plasmar dicha aventura con un diseno en 2.5D.
+Un juego de ventana donde **los grafos gobiernan todo**: potenciado por la generación procedural de mazmorras y caminos peculiares. ¡Combate enemigos, resuelve desafíos y escapa de la oscuridad! Desarrollado con la libreria de SDL2 y complementos se busca plasmar dicha aventura con un diseno en 2.5D.
 
 <p align="center">
   <img src="assets/screenshots/caveBack.jpg" width="500">
@@ -10,7 +10,8 @@ Un juego de ventana donde **los grafos gobiernan todo**: desde la generación pr
 ## 🔥 Características
 - **Mazmorras procedurales** 
 - **Combate en tiempo real** ataques en cualquier direccion cardinal
-- **Puzzles de grafos** 
+- **Caminos Eulerianos existentes**
+- **Representacion de Grafos a traves de mapas** conexos y no dirigidos
 - **Muerte permanente** con registro de puntajes
 - **Videojuego de escritorio con uso de Ventana**
 
