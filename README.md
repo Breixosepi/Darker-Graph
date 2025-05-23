@@ -20,5 +20,5 @@ Ubuntu: sudo apt update
 sudo apt-get install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev
 
 # Ejecutar
-./Darker_Graph
+./DarkerGraph
 
