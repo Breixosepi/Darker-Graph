@@ -98,20 +98,22 @@ void Game::render()
     SDL_RenderPresent(renderer.get());
     
 }
-void Game::cleanup()
-{
-    std::cout<<"Start Cleanup"<<std::endl;
-    mainMenu.reset();
+void Game::cleanup() {
+    std::cout << "Start Cleanup" << std::endl;
+    mainMenu.reset();  
+    std::cout << "MainMenu Clean" << std::endl;
     font.reset();
+    std::cout << "Font Clean" << std::endl;
     renderer.reset();
+    std::cout << "Renderer Clean" << std::endl;
     window.reset();
-    std::cout<<"Pointers Clean"<<std::endl;
+    std::cout << "Window Clean" << std::endl;
     IMG_Quit();
-    std::cout<<"IMG Clean"<<std::endl;
+    std::cout << "IMG Clean" << std::endl;
     TTF_Quit();
-    std::cout<<"TTF Clean"<<std::endl;
+    std::cout << "TTF Clean" << std::endl;
     SDL_Quit();
-    std::cout<<"SDL Clean"<<std::endl;
+    std::cout << "SDL Clean" << std::endl;
 }
 
 bool Game::running()
