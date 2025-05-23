@@ -489,3 +489,8 @@ void Player::handleWindowResize(int newWidth, int newHeight)
 {
     healthBar.handleWindowResize(newWidth, newHeight);
 }
+
+bool Player::isAlive() const
+{
+    return lives > 0;
+}

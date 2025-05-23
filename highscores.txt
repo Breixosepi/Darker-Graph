@@ -1,0 +1,6 @@
+Francisco 200
+Eugenio 500
+Fernando 300
+
+ Victor 200
+Joel 0

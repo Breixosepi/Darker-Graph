@@ -189,13 +189,13 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 
                 std::random_device rd;
                 std::mt19937 gen(rd());
-                std::uniform_int_distribution<> countDist(1, 3);
+                std::uniform_int_distribution<> countDist(1, 5);
                 int enemyCount = countDist(gen);
                 
                 for (int i = 0; i < enemyCount; ++i) 
                 {
-                    std::uniform_int_distribution<> xDist(100, 400);
-                    std::uniform_int_distribution<> yDist(100, 300);
+                    std::uniform_int_distribution<> xDist(0, 500);
+                    std::uniform_int_distribution<> yDist(-150, 400);
                     enemies.addEnemy(roomIndex, xDist(gen), yDist(gen));
                 }
             }
@@ -233,6 +233,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                         {
                             running = false;
                             gameOver = true;
+                            
                         } 
                         break;
                     case SDLK_m: //Con la tecla 'm' se muestra el mapa de la dungeon
@@ -279,6 +280,13 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                     if(std::abs(middleX-(dest.x+dest.w/2))<=dest.w/2&&std::abs(middleY-(dest.y+dest.h))<=dest.h/4)
                     {
                         bool result = level.IsEulerianPath(); //retorna true si se hizo correctamente un camino euleriano
+                        if(result)
+                        {
+                            // std::cout<<"score x2, score actual:" <<enemies.getScore() <<std::endl;
+                            enemies.setScore(enemies.getScore()*2);
+                            // std::cout<<"nuevo score:" <<enemies.getScore() <<std::endl;
+
+                        }
                         std::cout<<"Loading New Level!"<<std::endl;
                         running = false;
                         creator.levelUp();
@@ -293,6 +301,12 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 enemies.render();
                 level.renderRoomLastFrame(renderer,deltaTime);
                 SDL_RenderPresent(renderer);
+                if(!player.isAlive())
+                {
+                    showGameOverScreen(enemies.getScore());
+                    running = false;
+                    gameOver = true;
+                }
                 SDL_Delay(16); 
             }
             else{level.renderMap(renderer);}
@@ -300,9 +314,12 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
         }     
     }); 
 
-    menu->addWidget("load", "Puntuaciones", []() 
+    menu->addWidget("load", "Puntuaciones", [&]() 
     {
-    
+        
+        std::cout << "Puntuaciones seleccionadas\n";
+        showHighScores();
+        
     });
 
     
@@ -322,3 +339,191 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
         SDL_PushEvent(&quitEvent);
     });
 } 
+
+void MenuSystem::showGameOverScreen(int score) 
+{
+    bool nameEntered = false;
+    std::string playerName;
+    SDL_Color textColor = {255, 255, 255, 255}; 
+    SDL_Surface* screenScore = IMG_Load("assets/screenshots/caveBack.jpg");
+    TexturePtr background(SDL_CreateTextureFromSurface(renderer, screenScore));
+    SDL_FreeSurface(screenScore);
+
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, "Ingresa tu nombre:", textColor);
+    TexturePtr textTexture(SDL_CreateTextureFromSurface(renderer, textSurface));
+    SDL_Rect textRect = {250, 200, textSurface->w, textSurface->h};
+    SDL_FreeSurface(textSurface);
+    
+    SDL_Rect inputRect = {300, 250, 300, 40};
+    
+    SDL_StartTextInput();
+    bool running = true;
+    while (running && !nameEntered) 
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) 
+        {
+            switch (event.type) 
+            {
+                case SDL_QUIT:
+                    running = false;
+                    break;
+                    
+                case SDL_TEXTINPUT:
+                    if (playerName.length() < 20) 
+                    { 
+                        playerName += event.text.text;
+                        updateInputTexture(playerName, textColor);
+                    }
+                    break;
+                    
+                case SDL_KEYDOWN:
+                    if (event.key.keysym.sym == SDLK_BACKSPACE && !playerName.empty()) 
+                    {
+                        playerName.pop_back();
+                        updateInputTexture(playerName, textColor);
+                    }
+                    else if (event.key.keysym.sym == SDLK_RETURN && !playerName.empty()) 
+                    {
+                        nameEntered = true;
+                        saveHighScore(playerName, score);
+                    }
+                    break;
+            }
+        }
+
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, background.get(), NULL, NULL);
+        SDL_RenderCopy(renderer, textTexture.get(), NULL, &textRect);
+        if (!playerName.empty()) 
+        {
+            SDL_RenderCopy(renderer, inputTexture.get(), NULL, &inputRect);
+        }
+        
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderDrawRect(renderer, &inputRect);
+        SDL_RenderPresent(renderer);
+        SDL_Delay(16);
+    }
+    SDL_StopTextInput();
+}
+
+void MenuSystem::updateInputTexture(const std::string& text, SDL_Color color) 
+{
+    SDL_Surface* surface = TTF_RenderText_Solid(font, text.c_str(), color);
+    inputTexture.reset(SDL_CreateTextureFromSurface(renderer, surface));
+    SDL_FreeSurface(surface);
+}
+
+void MenuSystem::saveHighScore(const std::string& name, int score) 
+{
+    std::ofstream file("highscores.txt", std::ios::app); 
+    if (file.is_open()) 
+    {
+        file << name << " " << score << "\n";
+        file.close();
+        std::cout << "Puntaje guardado para " << name << ": " << score << std::endl;
+    } 
+    else 
+    {
+        std::cerr << "Error al guardar el puntaje" << std::endl;
+    }
+}
+
+void MenuSystem::showHighScores()
+{
+
+    highScores.clear();
+    std::ifstream file("highscores.txt");
+    if (file.is_open())
+    {
+        std::string name;
+        int score;
+        while (file >> name >> score) 
+        {
+            size_t firstChar = name.find_first_not_of(" \t");
+            if (std::string::npos != firstChar)
+            {
+                name = name.substr(firstChar);
+            }
+            size_t lastChar = name.find_last_not_of(" \t");
+            if (std::string::npos != lastChar)
+            {
+                name = name.substr(0, lastChar + 1);
+            }
+            highScores.push_back({name, score});
+        }
+        file.close();
+
+        std::sort(highScores.begin(), highScores.end(), [](const auto& a, const auto& b) 
+        {
+            return a.second > b.second; 
+        });
+    }
+
+    SDL_Color textColor = {255, 255, 255, 255}; 
+    SDL_Color bgColor = {30, 30, 50, 255};    
+
+    bool showingScores = true;
+    SDL_Event event;
+
+    while (showingScores)
+    {
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                showingScores = false; 
+            }
+            if (event.type == SDL_KEYDOWN)
+            {
+                if (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_RETURN)
+                {
+                    showingScores = false; 
+                }
+            }
+        }
+
+        SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
+        SDL_RenderClear(renderer);
+
+        SDL_Surface* titleSurface = TTF_RenderText_Solid(font, "Puntuaciones Altas", textColor);
+        if (titleSurface)
+        {
+            SDL_Texture* titleTexture = SDL_CreateTextureFromSurface(renderer, titleSurface);
+            SDL_Rect titleRect = { (windowWidth / 2) - (titleSurface->w / 2), 50, titleSurface->w, titleSurface->h };
+            SDL_RenderCopy(renderer, titleTexture, NULL, &titleRect);
+            SDL_FreeSurface(titleSurface);
+            SDL_DestroyTexture(titleTexture);
+        }
+
+        int startY = 150;
+        int maxScoresToShow = 10; 
+        for (size_t i = 0; i < highScores.size() && i < maxScoresToShow; ++i)
+        {
+            std::string scoreText = std::to_string(i + 1) + ". " + highScores[i].first + ": " + std::to_string(highScores[i].second);
+            SDL_Surface* scoreSurface = TTF_RenderText_Solid(font, scoreText.c_str(), textColor);
+            if (scoreSurface)
+            {
+                SDL_Texture* scoreTexture = SDL_CreateTextureFromSurface(renderer, scoreSurface);
+                SDL_Rect scoreRect = { (windowWidth / 2) - (scoreSurface->w / 2), startY + (int)(i * 40), scoreSurface->w, scoreSurface->h };
+                SDL_RenderCopy(renderer, scoreTexture, NULL, &scoreRect);
+                SDL_FreeSurface(scoreSurface);
+                SDL_DestroyTexture(scoreTexture);
+            }
+        }
+
+        SDL_Surface* exitSurface = TTF_RenderText_Solid(font, "Presiona ESC o ENTER para volver al Menu", textColor);
+        if (exitSurface)
+        {
+            SDL_Texture* exitTexture = SDL_CreateTextureFromSurface(renderer, exitSurface);
+            SDL_Rect exitRect = { (windowWidth / 2) - (exitSurface->w / 2), windowHeight - 50, exitSurface->w, exitSurface->h };
+            SDL_RenderCopy(renderer, exitTexture, NULL, &exitRect);
+            SDL_FreeSurface(exitSurface);
+            SDL_DestroyTexture(exitTexture);
+        }
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(16);
+    }
+}

@@ -24,7 +24,10 @@ void EnemyManager::init(SDL_Renderer* renderer, const std::string& texturePath)
 
 void EnemyManager::addEnemy(int roomIndex, int x, int y) 
 {
-    auto it = std::find_if(roomsEnemies.begin(), roomsEnemies.end(),[roomIndex](const RoomData& rd) { return rd.roomIndex == roomIndex; });
+    auto it = std::find_if(roomsEnemies.begin(), roomsEnemies.end(),[roomIndex](const RoomData& rd) 
+    { 
+        return rd.roomIndex == roomIndex; 
+    });
     
     if (it == roomsEnemies.end()) 
     {
@@ -39,8 +42,7 @@ void EnemyManager::addEnemy(int roomIndex, int x, int y)
     newEnemy->setState(EnemyState::PATROLLING);
     
     it->enemies.push_back(std::move(newEnemy));
-    
-    std::cout << "Enemy added in room " << roomIndex << " at: " << x << ", " << y << std::endl;
+    // std::cout << "Enemy added in room " << roomIndex << " at: " << x << ", " << y << std::endl;
 }
 
 void EnemyManager::setCurrentRoom(int roomIndex) 
@@ -104,8 +106,8 @@ void EnemyManager::render()
             if (enemy->getState() != EnemyState::DEAD || !enemy->isDeathAnimationComplete()) 
             {
                 enemy->renderEnemy(renderer);
-                enemy->renderDebugBounds(renderer);      
-                enemy->renderAttackHitbox(renderer);     
+                // enemy->renderDebugBounds(renderer);      
+                // enemy->renderAttackHitbox(renderer);     
             }
         }
     }
@@ -138,4 +140,9 @@ void EnemyManager::handlePlayerAttack(Player& player)
 int EnemyManager::getScore() const
 {
     return score;
+}
+
+void EnemyManager::setScore(int newScore)
+{
+    score = newScore;
 }

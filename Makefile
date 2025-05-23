@@ -1,6 +1,6 @@
 # Configuración básica
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -g -Ilib/include -Iexternal/DeSiGNAR-2.0.0/include
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -Ilib/include -Iexternal/DeSiGNAR-2.0.0/include -w
 LDFLAGS = -Lexternal/DeSiGNAR-2.0.0/build -lDesignar
 
 # Directorios

@@ -29,4 +29,5 @@ public:
     void render();
     void handlePlayerAttack(Player& player);
     int getScore() const;
+    void setScore(int newScore) ;
 };
