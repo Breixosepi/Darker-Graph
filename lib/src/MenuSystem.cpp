@@ -167,7 +167,8 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
         Level level = Level(creator.createMap(false));
         
         SDL_GetWindowSize(window,&windowWidth,&windowHeight);
-        helper.get()->handleWindowResize(windowWidth,windowHeight,level.getMatrixSize());
+        helper.get()->setMatrixSize(level.getMatrixSize());
+        helper.get()->handleWindowResize(windowWidth,windowHeight);
         level.setRenderHelper(helper);
         level.setDeltaTime(deltaTime);
 
@@ -253,7 +254,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                     if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                     {
                         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-                        helper.get()->handleWindowResize(windowWidth,windowHeight,level.getMatrixSize());
+                        helper.get()->handleWindowResize(windowWidth,windowHeight);
                         level.handleResizeWindow();
                     } 
                 }  

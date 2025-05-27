@@ -13,55 +13,61 @@ const int& RenderHelper::getWindowWitdth(){return windowWidth;}
 const int& RenderHelper::getWindowHeight(){return windowHeight;}
 
 //Get<0>=WidthTile, Get<1>=HeightTile, Get<2>=ShrinkX, Get<3>=ShrinkY, Get<4>=ResizeX, Get<5>=ResizeY
-const Measures& RenderHelper::getMeasuresMap(){return measuresMap;};
+const Measures& RenderHelper::getMeasuresMap(){return measuresMap;}
 
 //Get<0>=WidthTile, Get<1>=HeightTile, Get<2>=ShrinkX, Get<3>=ShrinkY, Get<4>=ResizeX, Get<5>=ResizeY
 //Calcula las medidas segun el numero de divisiones/numero de baldosas ingresado
 const Measures& RenderHelper::getMeasuresRoom(const int& numDivisions)
 {
     lastDivisions = numDivisions;
-    if(!measuresRoom.count(numDivisions))
+    auto it = measuresRoom.find(numDivisions);
+    if(it==measuresRoom.end())
     {
-        measuresRoom.insert({numDivisions,calcRoom(numDivisions)});
+        auto result = measuresRoom.emplace(numDivisions,calcRoom(numDivisions));
+        return result.first->second;
     }
-    return measuresRoom.at(numDivisions);
+    return (*it).second;
 }
 
 //Get<0>=WidthTile, Get<1>=HeightTile, Get<2>=ShrinkX, Get<3>=ShrinkY, Get<4>=ResizeX, Get<5>=ResizeY
 //Utiliza las Medidas Calculadas con el ultimo numero de divisiones/numero de Baldosas ingresado
 const Measures& RenderHelper::getMeasuresRoom()
 {
-    if(!measuresRoom.count(lastDivisions))
+    auto it = measuresRoom.find(lastDivisions);
+    if(it==measuresRoom.end())
     {
         std::cout<<"The measurements of the room have not been calculated previously."<<std::endl;
         return Measures{};
     }
-    return measuresRoom.at(lastDivisions);
+    return (*it).second;
 }
 
 const int& RenderHelper::getMiddlePointInX()
 {
-    if(!middlePoints.count(lastDivisions))
+    auto it = middlePoints.find(lastDivisions);
+    if(it==middlePoints.end())
     {
         std::cout<<"The measurements of the room have not been calculated previously."<<std::endl;
         return int{};
     }
-    return middlePoints.at(lastDivisions).first;
+    return (*it).second.first;
 }
 
 const int& RenderHelper::getMiddlePointInY()
 {
-    if(!middlePoints.count(lastDivisions))
+    auto it = middlePoints.find(lastDivisions);
+    if(it==middlePoints.end())
     {
         std::cout<<"The measurements of the room have not been calculated previously."<<std::endl;
         return int{};
     }
-    return middlePoints.at(lastDivisions).second;
+    return (*it).second.second;
 }
 
 SDL_Texture* RenderHelper::getTexture(const std::string& path, SDL_Renderer* renderer)
 {
-    if(!textures.count(path))
+    auto it = textures.find(path);
+    if(it==textures.end())
     {
         if(!renderer)
         {
@@ -82,7 +88,8 @@ SDL_Texture* RenderHelper::getTexture(const std::string& path, SDL_Renderer* ren
                 }
                 else
                 {
-                    textures.insert({path,text});
+                    auto result = textures.emplace(path,text);
+                    return result.first->second;
                 }
             }
             else
@@ -92,12 +99,16 @@ SDL_Texture* RenderHelper::getTexture(const std::string& path, SDL_Renderer* ren
             }
         }
     }
-    return textures.at(path);
+    return (*it).second;
 }
 
 SDL_Rect* RenderHelper::getSource(const std::string& figure)
 {
-    if(sources.count(figure)){return &sources.at(figure);}
+    auto it = sources.find(figure);
+    if(it!=sources.end())
+    {
+        return &(*it).second;
+    }
     std::cout<<"Source "<<figure<<" not present."<<std::endl;
     return nullptr;
 }
@@ -107,21 +118,23 @@ void RenderHelper::setSource(const std::string& figure, const int& x, const int&
     sources.insert({figure,{x,y,w,h}});
 }
 
-void RenderHelper::handleWindowResize(const int& width, const int& height, const std::pair<int,int>& matrix)
+void RenderHelper::setMatrixSize(const std::pair<int,int>& value){matrixSize = value;}
+
+void RenderHelper::handleWindowResize(const int& width, const int& height)
 {
     windowWidth = width;
     windowHeight = height;
-    calcMap(matrix);
+    calcMap();
     if(!measuresRoom.empty()){measuresRoom.clear();}
 }
 
-void RenderHelper::calcMap(const std::pair<int,int>& matrix)
+void RenderHelper::calcMap()
 {
-    double square = std::min(windowWidth/(matrix.second+1.0),windowHeight/(matrix.first+1.0)); //se escoge la celda mas pequena
+    double square = std::min(windowWidth/(matrixSize.second+1.0),windowHeight/(matrixSize.first+1.0)); //se escoge la celda mas pequena
     double shrink = square/4.0; //se encoge la celda para dejar espacio para los pasillos
     double tile = square-shrink;
-    double resizeX = (windowWidth-square*matrix.second)/2.0;
-    double resizeY = (windowHeight-square*matrix.first)/2.0;
+    double resizeX = (windowWidth-square*matrixSize.second)/2.0;
+    double resizeY = (windowHeight-square*matrixSize.first)/2.0;
     measuresMap = std::make_tuple(tile,tile,shrink,shrink,resizeX,resizeY);
 }
 

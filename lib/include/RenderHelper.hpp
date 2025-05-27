@@ -21,8 +21,9 @@ class RenderHelper
         const int& getMiddlePointInY();
         const int& getWindowWitdth();
         const int& getWindowHeight();
-        void handleWindowResize(const int& width, const int& height, const std::pair<int,int>& matrix);
+        void handleWindowResize(const int& width, const int& height);
         void setSource(const std::string& figure, const int& x, const int& y, const int& w, const int& h);
+        void setMatrixSize(const std::pair<int,int>& value);
 
     private:
         std::unordered_map<std::string,SDL_Texture*> textures;
@@ -33,7 +34,8 @@ class RenderHelper
         int windowWidth;
         int windowHeight;
         int lastDivisions;
-        void calcMap(const std::pair<int,int>& matrix);
+        std::pair<int,int> matrixSize;
+        void calcMap();
         Measures calcRoom(const double& numDivisions);
 };
 
