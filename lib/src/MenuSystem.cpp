@@ -253,9 +253,17 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 {
                     if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                     {
+                        //Medidas del Cuarto antes de hacer Resize por Window Event
+                        Measures measuresRoom = helper.get()->getMeasuresRoom();
+                        double widthTile = static_cast<int>(std::get<0>(measuresRoom));
+                        double heightTile = static_cast<int>(std::get<1>(measuresRoom));
+                        double shrinkX = static_cast<int>(std::get<2>(measuresRoom));
+                        double shrinkY = static_cast<int>(std::get<3>(measuresRoom));
+
                         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
                         helper.get()->handleWindowResize(windowWidth,windowHeight);
-                        level.handleResizeWindow();
+                        level.handleWindowResize();
+                        player.handleWindowResize((player.getBounds().x-shrinkX)/widthTile,(player.getBounds().y-shrinkY)/heightTile);
                     } 
                 }  
             }
@@ -306,6 +314,8 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 SDL_RenderClear(renderer);
                 level.startRenderRoom(renderer,player.getBounds());
                 player.renderPlayer(renderer);
+                player.renderAttackHitbox(renderer);
+                player.renderDebugBounds(renderer);
                 enemies.render(renderer);
                 level.finishRenderRoom(renderer,player.getBounds());
                 SDL_RenderPresent(renderer);

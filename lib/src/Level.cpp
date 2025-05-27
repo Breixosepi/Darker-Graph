@@ -107,7 +107,7 @@ void Level::setCurrentIndex(const int& value)
     calcPosInMap();
 }
 
-void Level::handleResizeWindow()
+void Level::handleWindowResize()
 {
     setShapesMap();
     calcPosInMap();
@@ -123,7 +123,7 @@ void Level::setRenderHelper(HelperPtr value)
     helper = value;
     animated.setRenderHelper(value);
     setSources();
-    handleResizeWindow();
+    handleWindowResize();
 }
 
 //Actualiza el vector de figuras a dibujar para mostrar el mapa del presente nivel.

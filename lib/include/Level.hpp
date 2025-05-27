@@ -28,7 +28,7 @@ class Level
         void setRenderHelper(HelperPtr value);
         void setDeltaTime(DeltaTime value);
         void printMapConsole();
-        void handleResizeWindow();
+        void handleWindowResize();
         void renderMap(SDL_Renderer* renderer);
         void startRenderRoom(SDL_Renderer* renderer, const SDL_Rect& player);
         void finishRenderRoom(SDL_Renderer* renderer, const SDL_Rect& player);

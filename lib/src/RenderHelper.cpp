@@ -125,7 +125,11 @@ void RenderHelper::handleWindowResize(const int& width, const int& height)
     windowWidth = width;
     windowHeight = height;
     calcMap();
-    if(!measuresRoom.empty()){measuresRoom.clear();}
+    if(!measuresRoom.empty())
+    {
+        measuresRoom.clear();
+        middlePoints.clear();
+    }
 }
 
 void RenderHelper::calcMap()

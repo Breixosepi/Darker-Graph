@@ -11,6 +11,17 @@ void Player::setRenderHelper(HelperPtr value){helper = value;}
 
 void Player::setDeltaTime(DeltaTime value){deltaTime = value;}
 
+void Player::handleWindowResize(const double& factorX, const double& factorY)
+{
+    Measures measures = helper.get()->getMeasuresRoom();
+    double widthTile = static_cast<int>(std::get<0>(measures));
+    double heightTile = static_cast<int>(std::get<1>(measures));
+    destRect.w = static_cast<int>(widthTile*0.5);
+    destRect.h = static_cast<int>(heightTile*0.85);
+    destRect.x = std::get<2>(measures)+factorX*widthTile;
+    destRect.y = std::get<3>(measures)+factorY*heightTile;
+}
+
 void Player::initAnimation(SDL_Renderer* renderer) 
 {
     healthBar.init(renderer, helper.get()->getTexture("assets/sprites/Health.png",renderer));
@@ -28,7 +39,7 @@ void Player::initAnimation(SDL_Renderer* renderer)
     frameWidth = (textureWidth/5)-(removePixelsInX); // para los otros sprites hay que dividirlo dependiendo de la cantidad de columnas
     frameHeight = (textureHeight/9)-(removePixelsInY); // lo mismo aca pero de filas
     srcRect = {0, 0, frameWidth, frameHeight};
-    destRect = {0, 0, frameWidth*6, frameHeight*6};
+    destRect = {0, 0, static_cast<int>(std::get<0>(helper.get()->getMeasuresRoom())*0.5), static_cast<int>(std::get<1>(helper.get()->getMeasuresRoom())*0.85)};
 }
 
 int Player::getAnimationRow() const 
@@ -195,7 +206,15 @@ void Player::update()
     }
     else if (isMoving) 
     {
-        float moveAmount = 200.0f * (*deltaTime);
+        float moveAmount = -1.f;
+        if(currentDirection==Direction::UP||currentDirection==Direction::DOWN)
+        {
+            moveAmount = std::get<1>(helper.get()->getMeasuresRoom()) * (*deltaTime);
+        }
+        else
+        {
+            moveAmount = std::get<0>(helper.get()->getMeasuresRoom()) * (*deltaTime);
+        } 
         double borderX = std::get<2>(helper.get()->getMeasuresRoom());
         double borderY = std::get<3>(helper.get()->getMeasuresRoom());
         int width = helper.get()->getWindowWitdth();
@@ -218,7 +237,7 @@ void Player::update()
                     isInBound[static_cast<int>(Direction::UP)] = true;
                 }
             } 
-                break;
+            break;
 
             case Direction::DOWN:  
             {
@@ -233,7 +252,7 @@ void Player::update()
                     isInBound[static_cast<int>(Direction::DOWN)] = true;
                 }
             } 
-                break;
+            break;
 
             case Direction::LEFT:  
             {
@@ -248,7 +267,7 @@ void Player::update()
                     isInBound[static_cast<int>(Direction::LEFT)] = true;
                 }
             }
-                break;
+            break;
 
             case Direction::RIGHT: 
             {
@@ -263,13 +282,11 @@ void Player::update()
                     isInBound[static_cast<int>(Direction::RIGHT)] = true;
                 }
             }
-                break;
+            break;
         }
     }
     updateAnimation();
-
     healthBar.update(lives, *deltaTime);
-
 }
 
 void Player::updateAnimation() 
@@ -361,30 +378,30 @@ SDL_Rect Player::getAttackHitbox() const
         return {0, 0, 0, 0};
     }
 
-    const int baseWidth = frameWidth * 6;  
-    const int baseHeight = frameHeight * 6; 
+    //const int baseWidth = frameWidth * 6;  
+    //const int baseHeight = frameHeight * 6; 
     
     SDL_Rect attackHitbox = {0, 0, 0, 0};
     const int attackRange = 60; 
-    const int hitboxWidth = baseWidth * 0.6f;
-    const int hitboxHeight = baseHeight * 0.6f;
+    const int hitboxWidth = destRect.w * 0.6f;
+    const int hitboxHeight = destRect.h * 0.6f;
 
     switch (currentDirection) 
     {
         case Direction::RIGHT:
-            attackHitbox = { destRect.x + baseWidth , destRect.y + baseHeight/3, attackRange, hitboxHeight};
+            attackHitbox = { destRect.x + destRect.w , destRect.y + destRect.h/3, attackRange, hitboxHeight};
             break;
 
         case Direction::LEFT:
-            attackHitbox = { destRect.x - attackRange , destRect.y + baseHeight/3, attackRange, hitboxHeight};
+            attackHitbox = { destRect.x - attackRange , destRect.y + destRect.h/3, attackRange, hitboxHeight};
             break;
 
         case Direction::UP:
-            attackHitbox = { destRect.x + baseWidth/4 , destRect.y - attackRange , hitboxWidth , attackRange};
+            attackHitbox = { destRect.x + destRect.w/4 , destRect.y - attackRange , hitboxWidth , attackRange};
             break;
 
         case Direction::DOWN:
-            attackHitbox = { destRect.x + baseWidth/4 , destRect.y + baseHeight , hitboxWidth , attackRange };
+            attackHitbox = { destRect.x + destRect.w/4 , destRect.y + destRect.h , hitboxWidth , attackRange };
             break;
     }
 
