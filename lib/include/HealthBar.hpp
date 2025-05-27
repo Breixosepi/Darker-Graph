@@ -7,16 +7,15 @@ class HealthBar
 
         HealthBar();
 
-        void init(SDL_Renderer* renderer, const std::string& texturePath);
+        void init(SDL_Renderer* renderer, SDL_Texture* texture);
         void update(int currentLives, float deltaTime);
-        void render(SDL_Renderer* renderer);
+        void render(SDL_Renderer* renderer, SDL_Texture* texture);
         void takeDamage();
         void handleWindowResize(int screenWidth, int screenHeight);
         void setBaseSize(int referenceWidth, int referenceHeight);
         
     private:
 
-        SDL_Texture* texture;
         SDL_Rect srcRect;
         SDL_Rect destRect;
         

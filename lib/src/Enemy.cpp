@@ -3,7 +3,6 @@
 #include <Combat.hpp>
 
 Enemy::Enemy() :
-    texture(nullptr),
     currentDirection(EnemyDirection::LEFT),
     currentState(EnemyState::PATROLLING)
 {
@@ -11,10 +10,8 @@ Enemy::Enemy() :
     destRect = {0, 0, 0, 0};
 }
 
-void Enemy::initAnimation(SDL_Renderer* renderer, const TexturePtr& tex)
+void Enemy::initAnimation(SDL_Renderer* renderer, SDL_Texture* texture)
 {
-    texture = tex.get();
-
     int textureWidth, textureHeight;
     SDL_QueryTexture(texture, nullptr, nullptr, &textureWidth, &textureHeight);
 
@@ -133,7 +130,7 @@ int Enemy::getAnimationRow() const
     }
 }
 
-void Enemy::renderEnemy(SDL_Renderer* renderer)
+void Enemy::renderEnemy(SDL_Renderer* renderer, SDL_Texture* texture)
 {
     SDL_RendererFlip flip = (currentDirection == EnemyDirection::LEFT) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
     SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0, nullptr, flip);

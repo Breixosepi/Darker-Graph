@@ -20,12 +20,12 @@ class Player
     public:
 
         Player();
-        void initAnimation(SDL_Renderer* renderer, const TexturePtr &texture);
+        void initAnimation(SDL_Renderer* renderer);
         void renderPlayer(SDL_Renderer* renderer);
-        void update(float deltaTime);
+        void update();
         void setPosition(int x, int y);
         void setPosition(std::pair<int,int> value);
-        void updateAnimation(float deltaTime);
+        void updateAnimation();
         void setState(State newState);
         void handleImput(const SDL_Event& event);
         void renderAttackHitbox(SDL_Renderer* renderer) const; //helper para ver el hitbox de ataque
@@ -36,6 +36,7 @@ class Player
         void takeDamage(int damage);
         void handleWindowResize(int newWidth, int newHeight);
         void setRenderHelper(HelperPtr value);
+        void setDeltaTime(DeltaTime value);
 
         int getAnimationRow() const;
         int getCurrentFrame() const;
@@ -53,7 +54,8 @@ class Player
 
     private:
         HelperPtr helper;
-        SDL_Texture* texture;
+        DeltaTime deltaTime;
+
         SDL_Rect srcRect;
         SDL_Rect destRect;
         Direction currentDirection;

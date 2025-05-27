@@ -11,7 +11,6 @@
 #include <graph.hpp>
 #include <random>
 
-
 struct SDL_Deleter 
 {
     SDL_Deleter() = default;
@@ -43,6 +42,7 @@ struct SDL_Deleter
     }
 };
 
+using DeltaTime = std::shared_ptr<float>;
 using WindowPtr = std::unique_ptr<SDL_Window, SDL_Deleter>;
 using RendererPtr = std::unique_ptr<SDL_Renderer, SDL_Deleter>;
 using TexturePtr = std::unique_ptr<SDL_Texture, SDL_Deleter>;

@@ -15,9 +15,11 @@ AnimatedFigure::~AnimatedFigure(){}
 
 void AnimatedFigure::setRenderHelper(HelperPtr value){helper = value;}
 
-SDL_Rect* AnimatedFigure::updatePortal(const float& deltaTime)
+void AnimatedFigure::setDeltaTime(DeltaTime value){deltaTime = value;}
+
+SDL_Rect* AnimatedFigure::updatePortal()
 {
-    portalTimer+=deltaTime;
+    portalTimer+=*deltaTime;
     if(portalTimer>=0.05f)
     {
         portalTimer = 0.0f;
@@ -32,12 +34,12 @@ SDL_Rect* AnimatedFigure::updatePortal(const float& deltaTime)
     return &sourcePortal;
 }
 
-void AnimatedFigure::renderPortal(const SDL_Rect& dest, SDL_Renderer* renderer, const float& deltaTime)
+void AnimatedFigure::renderPortal(const SDL_Rect& dest, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/portalRings.png",renderer),updatePortal(deltaTime),&dest);
+    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/portalRings.png",renderer),updatePortal(),&dest);
 }
 
-SDL_Rect* AnimatedFigure::updateParticles(const float& deltaTime)
+SDL_Rect* AnimatedFigure::updateParticles()
 {
     sourceParticles.x += 100;
     if(sourceParticles.x==100*8)
@@ -49,14 +51,14 @@ SDL_Rect* AnimatedFigure::updateParticles(const float& deltaTime)
     return &sourceParticles;
 }
 
-void AnimatedFigure::renderParticles(const SDL_Rect& dest, SDL_Renderer* renderer, const float& deltaTime)
+void AnimatedFigure::renderParticles(const SDL_Rect& dest, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/blueParticles.png",renderer),updateParticles(deltaTime),&dest);   
+    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/blueParticles.png",renderer),updateParticles(),&dest);   
 }
 
-SDL_Rect* AnimatedFigure::updateCircularPortal(const float& deltaTime)
+SDL_Rect* AnimatedFigure::updateCircularPortal()
 {
-    circularTimer+=deltaTime;
+    circularTimer+=*deltaTime;
     if(circularTimer>=0.2f)
     {
         circularTimer = 0.0f;
@@ -71,14 +73,14 @@ SDL_Rect* AnimatedFigure::updateCircularPortal(const float& deltaTime)
     return &sourceCircularPortal;
 }
 
-void AnimatedFigure::renderCircularPortal(const SDL_Rect& dest, SDL_Renderer* renderer, const float& deltaTime)
+void AnimatedFigure::renderCircularPortal(const SDL_Rect& dest, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/circularPortal.png",renderer),updateCircularPortal(deltaTime),&dest);
+    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/circularPortal.png",renderer),updateCircularPortal(),&dest);
 }
 
-SDL_Rect* AnimatedFigure::updateCampfire(const float& deltaTime)
+SDL_Rect* AnimatedFigure::updateCampfire()
 {
-    campfireTimer+=deltaTime;
+    campfireTimer+=*deltaTime;
     if(campfireTimer>=0.15f)
     {
         campfireTimer = 0.0f;
@@ -91,8 +93,8 @@ SDL_Rect* AnimatedFigure::updateCampfire(const float& deltaTime)
     return &sourceCampfire;
 }
 
-void AnimatedFigure::renderCampfire(const SDL_Rect& dest, SDL_Renderer* renderer, const float& deltaTime)
+void AnimatedFigure::renderCampfire(const SDL_Rect& dest, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/campfire.png",renderer),updateCampfire(deltaTime),&dest);
+    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/campfire.png",renderer),updateCampfire(),&dest);
 }
 

@@ -25,18 +25,17 @@ class MenuSystem
         SDL_Renderer* renderer;
         TexturePtr inputTexture;
         HelperPtr helper;
+        DeltaTime deltaTime;
 
         TTF_Font* font;
         std::vector<std::unique_ptr<Widget>> widgets;
         Widget* head;
         Widget* tail;
         Widget* current;
-        MyGraph creator;
-        Level level;
-        EnemyManager enemyManager;
-        std::queue<Level> levels;
-        std::vector<std::pair<std::string, int>> highScores;
 
+        MyGraph creator;
+
+        std::vector<std::pair<std::string, int>> highScores;
 
         int windowWidth;
         int windowHeight;

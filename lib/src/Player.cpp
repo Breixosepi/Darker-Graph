@@ -2,18 +2,18 @@
 #include <Enemy.hpp>
 #include <Combat.hpp>
 
-Player::Player() : texture(nullptr), currentDirection(Direction::RIGHT), currentState(State::IDLE), lives(3)
+Player::Player() : currentDirection(Direction::RIGHT), currentState(State::IDLE), lives(3)
 {
     isInBound = {false,false,false,false};
 }
 
 void Player::setRenderHelper(HelperPtr value){helper = value;}
 
-void Player::initAnimation(SDL_Renderer* renderer, const TexturePtr &texture) 
-{
-    this->texture = texture.get();
+void Player::setDeltaTime(DeltaTime value){deltaTime = value;}
 
-    healthBar.init(renderer, "assets/sprites/Health.png");
+void Player::initAnimation(SDL_Renderer* renderer) 
+{
+    healthBar.init(renderer, helper.get()->getTexture("assets/sprites/Health.png",renderer));
 
     int textureWidth, textureHeight;
     int removePixelsInX = 16; //8 pixeles por cada costado horizontalmente
@@ -23,7 +23,7 @@ void Player::initAnimation(SDL_Renderer* renderer, const TexturePtr &texture)
     SDL_GetRendererOutputSize(renderer, &screenWidth, &screenHeight);
     healthBar.setBaseSize(screenWidth, screenHeight);
 
-    SDL_QueryTexture(texture.get(), NULL, NULL, &textureWidth, &textureHeight);
+    SDL_QueryTexture(helper.get()->getTexture("assets/sprites/dwarf.png",renderer), NULL, NULL, &textureWidth, &textureHeight);
 
     frameWidth = (textureWidth/5)-(removePixelsInX); // para los otros sprites hay que dividirlo dependiendo de la cantidad de columnas
     frameHeight = (textureHeight/9)-(removePixelsInY); // lo mismo aca pero de filas
@@ -182,11 +182,11 @@ void Player::handleImput(const SDL_Event &event)
     }
 }
 
-void Player::update(float deltaTime) 
+void Player::update() 
 {
     if (currentState == State::TAKING_DAMAGE) 
     {
-        damageCooldown += deltaTime;
+        damageCooldown += *deltaTime;
         if (damageCooldown >= DAMAGE_COOLDOWN_TIME) 
         {
             damageCooldown = 0.0f;
@@ -195,7 +195,7 @@ void Player::update(float deltaTime)
     }
     else if (isMoving) 
     {
-        float moveAmount = 200.0f * deltaTime;
+        float moveAmount = 200.0f * (*deltaTime);
         double borderX = std::get<2>(helper.get()->getMeasuresRoom());
         double borderY = std::get<3>(helper.get()->getMeasuresRoom());
         int width = helper.get()->getWindowWitdth();
@@ -266,16 +266,16 @@ void Player::update(float deltaTime)
                 break;
         }
     }
-    updateAnimation(deltaTime);
+    updateAnimation();
 
-    healthBar.update(lives, deltaTime);
+    healthBar.update(lives, *deltaTime);
 
 }
 
-void Player::updateAnimation(float deltaTime) 
+void Player::updateAnimation() 
 {
     float animSpeed = 0.1f; 
-    animTimer += deltaTime;
+    animTimer += *deltaTime;
 
     if (animTimer >= animSpeed) 
     {
@@ -323,8 +323,8 @@ void Player::updateAnimation(float deltaTime)
 void Player::renderPlayer(SDL_Renderer* renderer) 
 {
     SDL_RendererFlip flip = (currentDirection == Direction::LEFT) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-    SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, 0, nullptr, flip);
-    healthBar.render(renderer);
+    SDL_RenderCopyEx(renderer, helper.get()->getTexture("assets/sprites/dwarf.png",renderer), &srcRect, &destRect, 0, nullptr, flip);
+    healthBar.render(renderer, helper.get()->getTexture("assets/sprites/Health.png",renderer));
 }
 
 void Player::setPosition(int x, int y) 

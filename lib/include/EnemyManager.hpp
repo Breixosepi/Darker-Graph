@@ -12,9 +12,10 @@ private:
         std::vector<std::unique_ptr<Enemy>> enemies;
     };
     
+    HelperPtr helper;
+    DeltaTime deltaTime;
     std::vector<RoomData> roomsEnemies;
-    TexturePtr enemyTexture;
-    SDL_Renderer* renderer;
+    std::string texturePath;
 
     int currentRoomIndex;
     int score;
@@ -22,12 +23,15 @@ private:
 public:
     EnemyManager();
     ~EnemyManager();
+
     
-    void init(SDL_Renderer* renderer, const std::string& texturePath);
-    void addEnemy(int roomIndex, int x, int y);
+    void setTexturePathEnemies(const std::string& path);
+    void setRenderHelper(HelperPtr value);
+    void setDeltaTime(DeltaTime value);
+    void addEnemy(SDL_Renderer* renderer, int roomIndex, int x, int y);
     void setCurrentRoom(int roomIndex);
-    void update(float deltaTime, Player& player);
-    void render();
+    void update(Player& player);
+    void render(SDL_Renderer* renderer);
     void handlePlayerAttack(Player& player);
     void setScore(int newScore) ;
 

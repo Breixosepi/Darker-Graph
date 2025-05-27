@@ -26,11 +26,12 @@ class Level
         void setEulerianPath(const Designar::Graph<Room>& value);
         void setMatrix(const std::vector<std::vector<int>>& value);
         void setRenderHelper(HelperPtr value);
+        void setDeltaTime(DeltaTime value);
         void printMapConsole();
         void handleResizeWindow();
         void renderMap(SDL_Renderer* renderer);
-        void renderRoom(SDL_Renderer* renderer, const float& deltaTime);
-        void renderRoomLastFrame(SDL_Renderer* renderer, const float& deltaTime);
+        void renderRoom(SDL_Renderer* renderer);
+        void renderRoomLastFrame(SDL_Renderer* renderer);
         
         const std::pair<int,int> getMatrixSize();
         std::pair<int,int> verifyPassRoom(int direction, const SDL_Rect& rectPlayer);
@@ -57,7 +58,6 @@ class Level
         std::unordered_map<std::string,std::pair<int,int>> dimensionsMap;
         std::unordered_map<std::string,std::pair<int,int>> dimensionsRoom;
 
-        
         SDL_Rect playerInMap;
         AnimatedFigure animated;
         HelperPtr helper;
@@ -68,7 +68,7 @@ class Level
         void setDesignRoom();
         void setCurrentIndex(const int& value);
         void draw(const std::vector<PosShape>& shapes, const std::unordered_map<std::string,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);
-        void drawDoors(SDL_Renderer* renderer, const float& deltaTime);
+        void drawDoors(SDL_Renderer* renderer);
         void markArc(const int& comp);
         
         const std::pair<int,int> getPosNeighbor(const int& direction);

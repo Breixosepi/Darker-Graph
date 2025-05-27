@@ -16,8 +16,8 @@ class Enemy
 {
 public:
     Enemy();
-    void initAnimation(SDL_Renderer* renderer, const TexturePtr &texture);
-    void renderEnemy(SDL_Renderer* renderer);
+    void initAnimation(SDL_Renderer* renderer, SDL_Texture* texture);
+    void renderEnemy(SDL_Renderer* renderer, SDL_Texture* texture);
     void update(float deltaTime);
     void setPosition(int x, int y);
     void setState(EnemyState newState);
@@ -44,7 +44,7 @@ public:
  
 
 private:
-    SDL_Texture* texture;
+
     SDL_Rect srcRect;
     SDL_Rect destRect;
 

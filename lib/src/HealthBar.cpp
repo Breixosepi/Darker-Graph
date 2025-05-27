@@ -2,27 +2,21 @@
 #include <SDL2/SDL_image.h>
 #include <algorithm>
 
-HealthBar::HealthBar() : texture(nullptr),frameWidth(0),frameHeight(0),baseScreenWidth(1280),  baseScreenHeight(720),scaleFactor(1.0f),isAnimating(false),animationTimer(0.0f),animationDuration(0.6f),currentLives(3),targetLives(3)
+HealthBar::HealthBar() : frameWidth(0),frameHeight(0),baseScreenWidth(1280),  baseScreenHeight(720),scaleFactor(1.0f),isAnimating(false),animationTimer(0.0f),animationDuration(0.6f),currentLives(3),targetLives(3)
 {}
 
 
-void HealthBar::init(SDL_Renderer* renderer, const std::string& texturePath) 
+void HealthBar::init(SDL_Renderer* renderer, SDL_Texture* texture) 
 {
-    SDL_Surface* surface = IMG_Load(texturePath.c_str());
-    if (surface) 
-    {
-        texture = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_FreeSurface(surface);
-        int textureWidth, textureHeight;
-        SDL_QueryTexture(texture, NULL, NULL, &textureWidth, &textureHeight);
-        frameWidth = textureWidth / 3;
-        frameHeight = textureHeight / 7;
-        destRect.w = frameWidth * 6;
-        destRect.h = frameHeight * 2;
-        destRect.x = 40;
-        destRect.y = 20;
-        srcRect = {0, 0, frameWidth * 3, frameHeight};
-    }
+    int textureWidth, textureHeight;
+    SDL_QueryTexture(texture, NULL, NULL, &textureWidth, &textureHeight);
+    frameWidth = textureWidth / 3;
+    frameHeight = textureHeight / 7;
+    destRect.w = frameWidth * 6;
+    destRect.h = frameHeight * 2;
+    destRect.x = 40;
+    destRect.y = 20;
+    srcRect = {0, 0, frameWidth * 3, frameHeight};
 }
 
 void HealthBar::setBaseSize(int referenceWidth, int referenceHeight) 
@@ -100,9 +94,9 @@ void HealthBar::update(int currentLives, float deltaTime)
     srcRect = {0, currentRow * frameHeight, frameWidth * 3, frameHeight};
 }
 
-void HealthBar::render(SDL_Renderer* renderer) 
+void HealthBar::render(SDL_Renderer* renderer, SDL_Texture* texture) 
 {
-    if (!texture || !renderer) 
+    if (!renderer) 
     {
         return;
     }

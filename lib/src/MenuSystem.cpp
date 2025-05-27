@@ -8,6 +8,7 @@ MenuSystem::MenuSystem()
     tail = nullptr;
     current = nullptr;
     helper = std::make_shared<RenderHelper>();
+    deltaTime = std::make_shared<float>();
 }
 
 MenuSystem::MenuSystem(SDL_Renderer* render, TTF_Font* fonts, SDL_Window* wind)
@@ -19,6 +20,7 @@ MenuSystem::MenuSystem(SDL_Renderer* render, TTF_Font* fonts, SDL_Window* wind)
     tail = nullptr;
     current = nullptr;
     helper = std::make_shared<RenderHelper>();
+    deltaTime = std::make_shared<float>();
     setMainMenu(this);
     SDL_GetWindowSize(window, &windowWidth, &windowHeight);
 }
@@ -167,19 +169,21 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
         SDL_GetWindowSize(window,&windowWidth,&windowHeight);
         helper.get()->handleWindowResize(windowWidth,windowHeight,level.getMatrixSize());
         level.setRenderHelper(helper);
+        level.setDeltaTime(deltaTime);
 
       // Player setup
-        SDL_Surface* playerSurface = IMG_Load("assets/sprites/dwarf.png");
-        TexturePtr playerTexture(SDL_CreateTextureFromSurface(renderer, playerSurface));
-        SDL_FreeSurface(playerSurface);
         Player player;
-        player.initAnimation(renderer, playerTexture);
-        player.setPosition(400, 300); 
         player.setRenderHelper(helper);
-
-      // Enemy setup 
+        player.setDeltaTime(deltaTime);
+        player.initAnimation(renderer);
+        player.setPosition(helper.get()->getMiddlePointInX()/2, helper.get()->getMiddlePointInY()-(player.getBounds().h)/2); 
+        
+      // Enemy setup
         EnemyManager enemies;
-        enemies.init(renderer, "assets/sprites/Orc.png");
+        enemies.setTexturePathEnemies("assets/sprites/Orc.png");
+        enemies.setRenderHelper(helper);
+        enemies.setDeltaTime(deltaTime);
+
         auto* dungeonGraph = level.getMap();
         if (dungeonGraph) 
         {
@@ -198,12 +202,12 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 {
                     std::uniform_int_distribution<> xDist(0, 500);
                     std::uniform_int_distribution<> yDist(-150, 370);
-                    enemies.addEnemy(roomIndex, xDist(gen), yDist(gen));
+                    enemies.addEnemy(renderer, roomIndex, xDist(gen), yDist(gen));
                 }
             }
             return true;
         });
-    }
+        }
 
         bool running = true;
         bool showMap = false;
@@ -213,7 +217,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
         while (running) 
         {
             Uint32 currentTime = SDL_GetTicks();
-            float deltaTime = (currentTime - lastTime) / 1000.0f; 
+            *deltaTime = (currentTime - lastTime) / 1000.0f; 
             lastTime = currentTime;
 
             while (SDL_PollEvent(&event)) 
@@ -259,8 +263,8 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 int currentRoomIndex = *level.getCurrentRoom()->getIndex();
                 enemies.setCurrentRoom(currentRoomIndex);
                 // Actualización de objetos
-                player.update(deltaTime);
-                enemies.update(deltaTime, player);
+                player.update();
+                enemies.update(player);
                 enemies.handlePlayerAttack(player);
 
                 //Comprueba si despues de moverse se encuentra en los limites del cuarto actual
@@ -298,10 +302,10 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 // Renderizado
                 SDL_SetRenderDrawColor(renderer, 30, 30, 50, 255); 
                 SDL_RenderClear(renderer);
-                level.renderRoom(renderer,deltaTime);
+                level.renderRoom(renderer);
                 player.renderPlayer(renderer);
-                enemies.render();
-                level.renderRoomLastFrame(renderer,deltaTime);
+                enemies.render(renderer);
+                level.renderRoomLastFrame(renderer);
                 SDL_RenderPresent(renderer);
                 if(!player.isAlive())
                 {

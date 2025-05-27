@@ -116,6 +116,8 @@ void Level::handleResizeWindow()
 
 void Level::setMatrix(const std::vector<std::vector<int>>& value){matrix = value;}
 
+void Level::setDeltaTime(DeltaTime value){animated.setDeltaTime(value);}
+
 void Level::setRenderHelper(HelperPtr value)
 {
     helper = value;
@@ -315,17 +317,17 @@ void Level::renderMap(SDL_Renderer* renderer)
     SDL_RenderPresent(renderer);
 }
 
-void Level::renderRoom(SDL_Renderer* renderer, const float& deltaTime)
+void Level::renderRoom(SDL_Renderer* renderer)
 {
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
     draw(shapesRoom,dimensionsRoom,renderer);
-    drawDoors(renderer,deltaTime);
+    drawDoors(renderer);
     if(currentIndex==1) //Fogata
     {
         double widthTile = std::get<0>(helper.get()->getMeasuresRoom());
         double heightTile = std::get<1>(helper.get()->getMeasuresRoom());
         SDL_Rect destCampfire = {helper.get()->getMiddlePointInX()-widthTile/4.0,helper.get()->getMiddlePointInY()-heightTile/4.0,widthTile/2.0,heightTile/2.0};
-        animated.renderCampfire(destCampfire,renderer,deltaTime);
+        animated.renderCampfire(destCampfire,renderer);
     }
     if(currentIndex==map.get_num_nodes()) //Escaleras
     {
@@ -343,7 +345,7 @@ void Level::renderRoom(SDL_Renderer* renderer, const float& deltaTime)
     }
 }
 
-void Level::drawDoors(SDL_Renderer* renderer, const float& deltaTime)
+void Level::drawDoors(SDL_Renderer* renderer)
 {
     SDL_Rect destDoor;
     SDL_Rect destBonus;
@@ -359,7 +361,7 @@ void Level::drawDoors(SDL_Renderer* renderer, const float& deltaTime)
                 SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("verticalDoor"),&destDoor);
                 if(getIndexNeighbor(i)<0)
                 {
-                    animated.renderCircularPortal(destDoor,renderer,deltaTime);
+                    animated.renderCircularPortal(destDoor,renderer);
                 }
             }
             else
@@ -371,14 +373,14 @@ void Level::drawDoors(SDL_Renderer* renderer, const float& deltaTime)
                 }
                 else if(getIndexNeighbor(i)<0)
                 {
-                    animated.renderPortal(destDoor,renderer,deltaTime);
+                    animated.renderPortal(destDoor,renderer);
                 } 
             }
         }
     }
 }
 
-void Level::renderRoomLastFrame(SDL_Renderer* renderer, const float& deltaTime)
+void Level::renderRoomLastFrame(SDL_Renderer* renderer)
 {
     draw(lowerFrameRoom,dimensionsRoom,renderer);
     int i = 3;
@@ -393,7 +395,7 @@ void Level::renderRoomLastFrame(SDL_Renderer* renderer, const float& deltaTime)
         }
         else if(getIndexNeighbor(i)<0)
         {
-            animated.renderPortal(destDoor,renderer,deltaTime);
+            animated.renderPortal(destDoor,renderer);
         }
     }
 }

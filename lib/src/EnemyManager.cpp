@@ -13,16 +13,13 @@ EnemyManager::~EnemyManager()
     // Destructor
 }
 
-void EnemyManager::init(SDL_Renderer* renderer, const std::string& texturePath)
-{
-    this->renderer= renderer;
-    SDL_Surface* surface = IMG_Load(texturePath.c_str());
-    enemyTexture.reset(SDL_CreateTextureFromSurface(renderer, surface));
-    SDL_FreeSurface(surface);
+void EnemyManager::setTexturePathEnemies(const std::string& path){texturePath = path;}
 
-}
+void EnemyManager::setRenderHelper(HelperPtr value){helper = value;}
 
-void EnemyManager::addEnemy(int roomIndex, int x, int y) 
+void EnemyManager::setDeltaTime(DeltaTime value){deltaTime = value;}
+
+void EnemyManager::addEnemy(SDL_Renderer* renderer, int roomIndex, int x, int y) 
 {
     auto it = std::find_if(roomsEnemies.begin(), roomsEnemies.end(),[roomIndex](const RoomData& rd) 
     { 
@@ -36,7 +33,7 @@ void EnemyManager::addEnemy(int roomIndex, int x, int y)
     }
     
     std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>();
-    newEnemy->initAnimation(renderer, enemyTexture);
+    newEnemy->initAnimation(renderer, helper.get()->getTexture(texturePath, renderer));
     newEnemy->setPosition(x, y);
     newEnemy->setHealth(2);
     newEnemy->setState(EnemyState::PATROLLING);
@@ -50,7 +47,7 @@ void EnemyManager::setCurrentRoom(int roomIndex)
     currentRoomIndex = roomIndex;
 }
 
-void EnemyManager::update(float deltaTime, Player& player) 
+void EnemyManager::update(Player& player) 
 {
     auto it = std::find_if(roomsEnemies.begin(), roomsEnemies.end(),[this](const RoomData& rd) 
     { 
@@ -65,7 +62,7 @@ void EnemyManager::update(float deltaTime, Player& player)
             enemy->detectPlayer(player.getBounds());
             if (enemy->getState() != EnemyState::DEAD || !enemy->isDeathAnimationComplete()) 
             {
-                enemy->update(deltaTime);
+                enemy->update(*deltaTime);
                 
                 if (enemy->getState() == EnemyState::ATTACKING) 
                 {
@@ -92,7 +89,7 @@ void EnemyManager::update(float deltaTime, Player& player)
     }
 }
 
-void EnemyManager::render() 
+void EnemyManager::render(SDL_Renderer* renderer) 
 {
     auto it = std::find_if(roomsEnemies.begin(), roomsEnemies.end(),[this](const RoomData& rd) 
     { 
@@ -105,7 +102,7 @@ void EnemyManager::render()
         {
             if (enemy->getState() != EnemyState::DEAD || !enemy->isDeathAnimationComplete()) 
             {
-                enemy->renderEnemy(renderer);
+                enemy->renderEnemy(renderer, helper.get()->getTexture(texturePath,renderer));
                 // enemy->renderDebugBounds(renderer);      
                 // enemy->renderAttackHitbox(renderer);     
             }
