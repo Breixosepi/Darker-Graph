@@ -317,11 +317,11 @@ void Level::renderMap(SDL_Renderer* renderer)
     SDL_RenderPresent(renderer);
 }
 
-void Level::renderRoom(SDL_Renderer* renderer)
+void Level::startRenderRoom(SDL_Renderer* renderer, const SDL_Rect& player)
 {
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
     draw(shapesRoom,dimensionsRoom,renderer);
-    drawDoors(renderer);
+    drawDoors(renderer,player,0,3);
     if(currentIndex==1) //Fogata
     {
         double widthTile = std::get<0>(helper.get()->getMeasuresRoom());
@@ -345,11 +345,17 @@ void Level::renderRoom(SDL_Renderer* renderer)
     }
 }
 
-void Level::drawDoors(SDL_Renderer* renderer)
+void Level::finishRenderRoom(SDL_Renderer* renderer, const SDL_Rect& player)
+{
+    draw(lowerFrameRoom,dimensionsRoom,renderer);
+    drawDoors(renderer,player,3,4);
+}
+
+void Level::drawDoors(SDL_Renderer* renderer, const SDL_Rect& player, const int& init, const int& finish)
 {
     SDL_Rect destDoor;
     SDL_Rect destBonus;
-    for(int i=0; i<3; ++i)
+    for(int i=init; i<finish; ++i)
     {
         if((*getCurrentRoom()->getPaths())[i])
         {
@@ -361,7 +367,7 @@ void Level::drawDoors(SDL_Renderer* renderer)
                 SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("verticalDoor"),&destDoor);
                 if(getIndexNeighbor(i)<0)
                 {
-                    animated.renderCircularPortal(destDoor,renderer);
+                    animated.renderCircularPortal(destDoor,player,renderer);
                 }
             }
             else
@@ -373,33 +379,14 @@ void Level::drawDoors(SDL_Renderer* renderer)
                 }
                 else if(getIndexNeighbor(i)<0)
                 {
-                    animated.renderPortal(destDoor,renderer);
+                    animated.renderPortal(destDoor,player,renderer);
                 } 
             }
         }
     }
 }
 
-void Level::renderRoomLastFrame(SDL_Renderer* renderer)
-{
-    draw(lowerFrameRoom,dimensionsRoom,renderer);
-    int i = 3;
-    if((*getCurrentRoom()->getPaths())[i])
-    {
-        SDL_Rect destDoor = fillRect(doors[i*2+1],dimensionsRoom);
-        SDL_Rect destBonus = fillRect(doors[i*2],dimensionsRoom);
-        if(getIndexNeighbor(i)>0)
-        {
-            SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("darkness"),&destBonus);
-            SDL_RenderCopy(renderer,helper.get()->getTexture("assets/screenshots/tileSet.png",renderer),helper.get()->getSource("horizontalDoor"),&destDoor);
-        }
-        else if(getIndexNeighbor(i)<0)
-        {
-            animated.renderPortal(destDoor,renderer);
-        }
-    }
-}
-
+//Recibe un vector de posiciones de figuras y a partir de el busca el ancho y alto necesarios en dimensions
 void Level::draw(const std::vector<PosShape>& shapes, const std::unordered_map<std::string,std::pair<int,int>>& dimensions, SDL_Renderer* renderer)
 {
     SDL_Rect destTileSet;

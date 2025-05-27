@@ -9,9 +9,9 @@ class AnimatedFigure
         AnimatedFigure();
         ~AnimatedFigure();
 
-        void renderPortal(const SDL_Rect& dest, SDL_Renderer* renderer);
+        void renderPortal(const SDL_Rect& dest, const SDL_Rect& player, SDL_Renderer* renderer);
         void renderParticles(const SDL_Rect& dest, SDL_Renderer* renderer);
-        void renderCircularPortal(const SDL_Rect& dest, SDL_Renderer* renderer);
+        void renderCircularPortal(const SDL_Rect& dest, const SDL_Rect& player, SDL_Renderer* renderer);
         void renderCampfire(const SDL_Rect& dest, SDL_Renderer* renderer);
         void setRenderHelper(HelperPtr value);
         void setDeltaTime(DeltaTime value);
@@ -32,4 +32,6 @@ class AnimatedFigure
         SDL_Rect* updateParticles();
         SDL_Rect* updateCircularPortal();
         SDL_Rect* updateCampfire();
+
+        bool calcProximity(const SDL_Rect& dest, const SDL_Rect& player);
 };

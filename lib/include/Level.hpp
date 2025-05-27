@@ -30,8 +30,8 @@ class Level
         void printMapConsole();
         void handleResizeWindow();
         void renderMap(SDL_Renderer* renderer);
-        void renderRoom(SDL_Renderer* renderer);
-        void renderRoomLastFrame(SDL_Renderer* renderer);
+        void startRenderRoom(SDL_Renderer* renderer, const SDL_Rect& player);
+        void finishRenderRoom(SDL_Renderer* renderer, const SDL_Rect& player);
         
         const std::pair<int,int> getMatrixSize();
         std::pair<int,int> verifyPassRoom(int direction, const SDL_Rect& rectPlayer);
@@ -51,10 +51,13 @@ class Level
         std::vector<std::vector<int>> matrix;
         std::vector<Designar::Graph<Room>::Node*> roomsReference;
         std::unordered_set<Designar::Graph<Room>::Arc*> visitedArcs;
+
         std::vector<PosShape> shapesMap;
         std::vector<PosShape> shapesRoom;
+
         std::vector<PosShape> doors;
         std::vector<PosShape> lowerFrameRoom;
+
         std::unordered_map<std::string,std::pair<int,int>> dimensionsMap;
         std::unordered_map<std::string,std::pair<int,int>> dimensionsRoom;
 
@@ -68,7 +71,7 @@ class Level
         void setDesignRoom();
         void setCurrentIndex(const int& value);
         void draw(const std::vector<PosShape>& shapes, const std::unordered_map<std::string,std::pair<int,int>>& dimensions, SDL_Renderer* renderer);
-        void drawDoors(SDL_Renderer* renderer);
+        void drawDoors(SDL_Renderer* renderer, const SDL_Rect& player, const int& init, const int& finish);
         void markArc(const int& comp);
         
         const std::pair<int,int> getPosNeighbor(const int& direction);

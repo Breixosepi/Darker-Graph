@@ -276,6 +276,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                     if(index!=*level.getCurrentRoom()->getIndex())
                     {
                         std::cout<<"you advanced to room number: "<<*level.getCurrentRoom()->getIndex()<<" you come from room number: "<<index<<std::endl;
+                        SDL_Delay(300);
                     }
                 }
                 //Si esta en la Ultima sala, comprueba que este sobre la escalera para avanzar de nivel
@@ -303,10 +304,10 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 // Renderizado
                 SDL_SetRenderDrawColor(renderer, 30, 30, 50, 255); 
                 SDL_RenderClear(renderer);
-                level.renderRoom(renderer);
+                level.startRenderRoom(renderer,player.getBounds());
                 player.renderPlayer(renderer);
                 enemies.render(renderer);
-                level.renderRoomLastFrame(renderer);
+                level.finishRenderRoom(renderer,player.getBounds());
                 SDL_RenderPresent(renderer);
                 if(!player.isAlive())
                 {

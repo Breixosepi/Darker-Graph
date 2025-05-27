@@ -17,6 +17,16 @@ void AnimatedFigure::setRenderHelper(HelperPtr value){helper = value;}
 
 void AnimatedFigure::setDeltaTime(DeltaTime value){deltaTime = value;}
 
+bool AnimatedFigure::calcProximity(const SDL_Rect& dest, const SDL_Rect& player)
+{
+    int n = 2;
+    if(std::abs((dest.y+dest.h)-(player.y+player.h))<=std::get<1>(helper.get()->getMeasuresRoom())*n)
+    {
+        return std::abs((dest.x+dest.w/2)-(player.x+player.w/2))<=std::get<0>(helper.get()->getMeasuresRoom())*n;
+    }
+    return false;
+}
+
 SDL_Rect* AnimatedFigure::updatePortal()
 {
     portalTimer+=*deltaTime;
@@ -34,9 +44,17 @@ SDL_Rect* AnimatedFigure::updatePortal()
     return &sourcePortal;
 }
 
-void AnimatedFigure::renderPortal(const SDL_Rect& dest, SDL_Renderer* renderer)
+void AnimatedFigure::renderPortal(const SDL_Rect& dest, const SDL_Rect& player, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/portalRings.png",renderer),updatePortal(),&dest);
+    if(calcProximity(dest,player))
+    {
+        SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/portalRings.png",renderer),updatePortal(),&dest);
+    }
+    else
+    {
+        SDL_Rect source = {0,32*4,32,32};
+        SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/portalRings.png",renderer),&source,&dest);
+    }
 }
 
 SDL_Rect* AnimatedFigure::updateParticles()
@@ -73,9 +91,25 @@ SDL_Rect* AnimatedFigure::updateCircularPortal()
     return &sourceCircularPortal;
 }
 
-void AnimatedFigure::renderCircularPortal(const SDL_Rect& dest, SDL_Renderer* renderer)
+void AnimatedFigure::renderCircularPortal(const SDL_Rect& dest, const SDL_Rect& player, SDL_Renderer* renderer)
 {
-    SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/circularPortal.png",renderer),updateCircularPortal(),&dest);
+    if(calcProximity(dest,player))
+    {
+        SDL_RenderCopy(renderer,helper.get()->getTexture("assets/sprites/circularPortal.png",renderer),updateCircularPortal(),&dest);
+    }
+    else
+    {
+        SDL_Rect destParticles = dest;
+        if(helper.get()->getWindowWitdth()/2>=dest.x) //Lado izquierdo de la pantalla
+        {
+            destParticles.x += destParticles.w/2;
+        }
+        else //Lado derecho de la Pantalla
+        {
+            destParticles.x -= destParticles.w/2;
+        }
+        renderParticles(destParticles,renderer);
+    }
 }
 
 SDL_Rect* AnimatedFigure::updateCampfire()
