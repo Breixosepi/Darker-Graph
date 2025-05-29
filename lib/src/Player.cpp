@@ -36,7 +36,7 @@ void Player::initAnimation(SDL_Renderer* renderer)
 
     frameWidth = (textureWidth/5); // para los otros sprites hay que dividirlo dependiendo de la cantidad de columnas
     frameHeight = (textureHeight/9); // lo mismo aca pero de filas
-    srcRect = {0, 0, 24, 24};
+    srcRect = {0, 0, 16, 18};
     destRect = {0, 0, static_cast<int>(std::get<0>(helper.get()->getMeasuresRoom())*0.5), static_cast<int>(std::get<1>(helper.get()->getMeasuresRoom())*0.85)};
 }
 
@@ -222,21 +222,6 @@ void Player::update()
         int width = helper.get()->getWindowWitdth();
         int height = helper.get()->getWindowHeight();
 
-        if(bounds.x+bounds.w>width-borderX) //Arreglo aproximado de bug visual de paredes a los costados
-        {
-            if(currentDirection==Direction::LEFT)
-            {
-                destRect.x -= bounds.w;
-            }
-        }
-        else if(bounds.x<borderX)
-        {
-            if(currentDirection!=Direction::LEFT)
-            {
-                destRect.x += bounds.w;
-            }
-        }
-
         switch (currentDirection) 
         {
             case Direction::UP:    
@@ -266,7 +251,7 @@ void Player::update()
                 }
                 else
                 {
-                    destRect.y = height-static_cast<float>(borderY)-destRect.h;
+                    destRect.y = height-static_cast<float>(borderY)-destRect.h+(bounds.y-destRect.y);
                     isInBound[static_cast<int>(Direction::DOWN)] = true;
                 }
             } 
@@ -281,7 +266,7 @@ void Player::update()
                 }
                 else
                 {
-                    destRect.x = static_cast<float>(borderX)-bounds.w;
+                    destRect.x = static_cast<float>(borderX)-(bounds.x-destRect.x);
                     isInBound[static_cast<int>(Direction::LEFT)] = true;
                 }
             }
@@ -347,14 +332,33 @@ void Player::updateAnimation()
                 currentFrame = 0;
         }
     }
-    srcRect.x = currentFrame * frameWidth + 8; //Se borran 9 pixeles horizontales entre frame y frame
-    srcRect.y = getAnimationRow() * frameHeight + 8; //Se borran 32 pixeles horizontales entre frame y frame
+    srcRect.x = currentFrame * frameWidth + 8; //Se borran 8 pixeles horizontales entre frame y frame
+    srcRect.y = getAnimationRow() * frameHeight + 14; //Se borran 14 pixeles horizontales entre frame y frame
 }
 
 void Player::renderPlayer(SDL_Renderer* renderer) 
 {
     SDL_RendererFlip flip = (currentDirection == Direction::LEFT) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-    SDL_RenderCopyEx(renderer, helper.get()->getTexture("assets/sprites/dwarf.png",renderer), &srcRect, &destRect, 0, nullptr, flip);
+    if(currentState!=State::ATTACKING)
+    {
+        SDL_RenderCopyEx(renderer, helper.get()->getTexture("assets/sprites/dwarf.png",renderer), &srcRect, &destRect, 0, nullptr, flip);
+    }
+    else
+    {
+        SDL_Rect newSrc = srcRect;
+        newSrc.y -= 6;
+        newSrc.h += 6;
+        newSrc.w += 6;
+        SDL_Rect newDest = destRect;
+        newDest.w *= static_cast<double>(newSrc.w)/srcRect.w;
+        newDest.h *= static_cast<double>(newSrc.h)/srcRect.h;
+        newDest.y -= (newDest.h - destRect.h);
+        if(currentDirection==Direction::LEFT)
+        {
+            newDest.x -= (newDest.w - destRect.w);
+        }
+        SDL_RenderCopyEx(renderer, helper.get()->getTexture("assets/sprites/dwarf.png",renderer), &newSrc, &newDest, 0, nullptr, flip);
+    }
     healthBar.render(renderer, helper.get()->getTexture("assets/sprites/Health.png",renderer));
 }
 
@@ -385,19 +389,12 @@ SDL_Rect Player::getDest() const{return destRect;}
 SDL_Rect Player::getBounds() const
 {
     SDL_Rect bounds = destRect;
-    bounds.w *= 0.5;
-    bounds.h *= 0.65;
-    //Left es el unico caso con calculos especificos ya que alli es donde se hace flip
-    if(currentDirection==Direction::LEFT)
-    {
-        bounds.x += destRect.w*0.4;
-        bounds.y += destRect.h*0.3;
-    }
-    else
-    {
-        bounds.x += destRect.w*0.1;
-        bounds.y += destRect.h*0.3;
-    }
+    double difInX = destRect.w*0.1;
+    double difInY = destRect.h*0.225;
+    bounds.x += difInX;
+    bounds.w -= difInX*1.5;
+    bounds.y += difInY;
+    bounds.h -= difInY*1.5;
     return bounds;
 }
 
@@ -407,32 +404,29 @@ SDL_Rect Player::getAttackHitbox() const
     {
         return {0, 0, 0, 0};
     }
-
-    //const int baseWidth = frameWidth * 6;  
-    //const int baseHeight = frameHeight * 6; 
     
     SDL_Rect attackHitbox = {0, 0, 0, 0};
     const SDL_Rect dest = getBounds();
-    const int attackRange = 60; 
-    const int hitboxWidth = destRect.w * 0.7f;
-    const int hitboxHeight = destRect.h * 0.7f;
+    const int hitboxWidth = dest.w * 0.5f;
+    const int hitboxHeight = dest.h * 1.0f;
+    const int attackRange = hitboxHeight * 0.75f; 
 
     switch (currentDirection) 
     {
         case Direction::RIGHT:
-            attackHitbox = { dest.x + dest.w, dest.y, attackRange, hitboxHeight};
+            attackHitbox = { dest.x + dest.w, dest.y, hitboxWidth, hitboxHeight};
             break;
 
         case Direction::LEFT:
-            attackHitbox = { dest.x - attackRange, dest.y, attackRange, hitboxHeight};
+            attackHitbox = { dest.x - hitboxWidth, dest.y, hitboxWidth, hitboxHeight};
             break;
 
         case Direction::UP:
-            attackHitbox = { dest.x - dest.w/4, dest.y - attackRange, hitboxWidth, attackRange};
+            attackHitbox = { dest.x, dest.y - attackRange, hitboxWidth, attackRange};
             break;
 
         case Direction::DOWN:
-            attackHitbox = { dest.x - dest.w/4, dest.y + dest.h, hitboxWidth, attackRange};
+            attackHitbox = { dest.x + dest.w/2, dest.y + dest.h, hitboxWidth, attackRange};
             break;
     }
     return attackHitbox;

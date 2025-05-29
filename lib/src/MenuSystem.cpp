@@ -284,7 +284,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                     if(index!=*level.getCurrentRoom()->getIndex())
                     {
                         std::cout<<"you advanced to room number: "<<*level.getCurrentRoom()->getIndex()<<" you come from room number: "<<index<<std::endl;
-                        SDL_Delay(300);
+                        SDL_Delay(100);
                     }
                 }
                 //Si esta en la Ultima sala, comprueba que este sobre la escalera para avanzar de nivel
@@ -306,7 +306,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                         std::cout<<"Loading New Level!"<<std::endl;
                         running = false;
                         creator.levelUp();
-                        SDL_Delay(650);
+                        SDL_Delay(250);
                     }
                 }
                 // Renderizado

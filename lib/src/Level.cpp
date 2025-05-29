@@ -450,13 +450,13 @@ std::pair<int,int> Level::passRoom(int direction, const SDL_Rect& rectPlayer)
         int Y = std::get<1>(doors[direction*2+1]);
         switch (direction)
         {
-        case 0:
+        case 0: //Cruzando a la derecha
             playerPos = std::make_pair(X+rectPlayer.w, Y+(dimensionsRoom.at("verticalDoor").second-rectPlayer.h)/2);
             break;
         case 1:
             playerPos = std::make_pair(X+(dimensionsRoom.at("horizontalDoor").first-rectPlayer.w)/2, Y+rectPlayer.h);
             break;
-        case 2:
+        case 2: //Cruzando a la izquierda
             playerPos = std::make_pair(X-dimensionsRoom.at("verticalDoor").first-rectPlayer.w, Y+(dimensionsRoom.at("verticalDoor").second-rectPlayer.h)/2);
             break;
         case 3:
