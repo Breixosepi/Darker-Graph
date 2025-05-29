@@ -48,6 +48,7 @@ class Player
         bool getHasHit() const;
 
         SDL_Rect getAttackHitbox() const;
+        SDL_Rect getDest() const;
         SDL_Rect getBounds() const;
         State getState() const { return currentState; }
         Direction getDirection() const {return currentDirection;}

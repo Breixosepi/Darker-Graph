@@ -31,10 +31,13 @@ void EnemyManager::addEnemy(SDL_Renderer* renderer, int roomIndex, int x, int y)
         roomsEnemies.push_back({roomIndex, {}});
         it = roomsEnemies.end() - 1;
     }
-    
+
+    double widthTile = std::get<0>(helper.get()->getMeasuresRoom());
+    double heightTile = std::get<1>(helper.get()->getMeasuresRoom());
     std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>();
     newEnemy->initAnimation(renderer, helper.get()->getTexture(texturePath, renderer));
     newEnemy->setPosition(x, y);
+    newEnemy->setDestSize(widthTile,heightTile);
     newEnemy->setHealth(2);
     newEnemy->setState(EnemyState::PATROLLING);
     
@@ -103,8 +106,8 @@ void EnemyManager::render(SDL_Renderer* renderer)
             if (enemy->getState() != EnemyState::DEAD || !enemy->isDeathAnimationComplete()) 
             {
                 enemy->renderEnemy(renderer, helper.get()->getTexture(texturePath,renderer));
-                // enemy->renderDebugBounds(renderer);      
-                // enemy->renderAttackHitbox(renderer);     
+                enemy->renderDebugBounds(renderer);      
+                enemy->renderAttackHitbox(renderer);     
             }
         }
     }

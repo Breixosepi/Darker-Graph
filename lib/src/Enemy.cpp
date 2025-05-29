@@ -15,11 +15,16 @@ void Enemy::initAnimation(SDL_Renderer* renderer, SDL_Texture* texture)
     int textureWidth, textureHeight;
     SDL_QueryTexture(texture, nullptr, nullptr, &textureWidth, &textureHeight);
 
-    frameWidth = textureWidth / 8;   // 8 columnas
-    frameHeight = textureHeight / 6; // 6 filas
+    frameWidth = (textureWidth / 8);   // 8 columnas
+    frameHeight = (textureHeight / 6); // 6 filas
 
-    srcRect = {0, 0, frameWidth, frameHeight};
-    destRect = {0, 0, frameWidth * 6, frameHeight * 6};
+    srcRect = {0, 0, 38, 32};
+}
+
+void Enemy::setDestSize(const double& width, const double& height)
+{
+    destRect.w = width;
+    destRect.h = height;
 }
 
 void Enemy::setPosition(int x, int y)
@@ -113,8 +118,8 @@ void Enemy::updateAnimation(float deltaTime)
             }
         }
     }
-    srcRect.x = currentFrame * frameWidth;
-    srcRect.y = getAnimationRow() * frameHeight;
+    srcRect.x = currentFrame * frameWidth + 36; //Se borran 36 pixeles horizontales entre frame y frame
+    srcRect.y = getAnimationRow() * frameHeight + 32; //Se borran 32 pixeles horizontales entre frame y frame
 }
 
 int Enemy::getAnimationRow() const
@@ -168,16 +173,15 @@ void Enemy::setState(EnemyState newState)
 
 SDL_Rect Enemy::getBounds() const
 {
-
-    const int enemyWidth = frameWidth ;  
-    const int enemyHeight = frameHeight ; 
-    
-    return {
-        destRect.x + (destRect.w -frameWidth) / 2 , 
-        destRect.y + (destRect.h - frameHeight) / 2,
-        enemyWidth,
-        enemyHeight
-    };
+    //Reajusta los bordes a lo que se ve visualmente
+    //Originalmente el Rectangulo de Destino ocupa mas espacio debido al tamano de los sprites atacando
+    SDL_Rect bounds = destRect;
+    //Como su animacion de movimiento tiene el arma afuera, tambien se considera como hitbox
+    bounds.w *= 0.65;
+    bounds.h *= 0.65;
+    bounds.x += destRect.w*0.175;
+    bounds.y += destRect.h*0.3;
+    return bounds;
 }
 
 
@@ -259,21 +263,22 @@ SDL_Rect Enemy::getAttackHitbox() const
         return {0, 0, 0, 0};
     }
 
-    int baseWidth = frameWidth * 6;  
-    int baseHeight = frameHeight * 6; 
+    //int baseWidth = frameWidth * 6;  
+    //int baseHeight = frameHeight * 6; 
     
     SDL_Rect attackHitbox = {0, 0, 0, 0};
+    SDL_Rect dest = getBounds();
     int attackRange = 60; 
-    int hitboxWidth = baseWidth * 0.6f;
-    int hitboxHeight = baseHeight * 0.6f;
+    int hitboxWidth = destRect.w * 0.6f;
+    int hitboxHeight = destRect.h * 0.6f;
 
     if (currentDirection == EnemyDirection::RIGHT) 
     {
-        attackHitbox = { destRect.x + baseWidth/2 + attackRange, destRect.y + baseHeight/3, attackRange, hitboxHeight/2};
+        attackHitbox = { dest.x + dest.w, dest.y + dest.h/4, attackRange, hitboxHeight};
     } 
     else 
     {
-        attackHitbox = { destRect.x + attackRange*3, destRect.y + baseHeight/3, attackRange, hitboxHeight/2};
+        attackHitbox = { dest.x - attackRange, dest.y + dest.h/4, attackRange, hitboxHeight};
     }
 
     return attackHitbox;

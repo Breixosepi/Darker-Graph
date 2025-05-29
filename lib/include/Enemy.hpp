@@ -21,6 +21,7 @@ public:
     void update(float deltaTime);
     void setPosition(int x, int y);
     void setState(EnemyState newState);
+    void setDestSize(const double& width, const double& height);
     void patrol(float deltaTime);
     void updateAnimation(float deltaTime);
     void detectPlayer(const SDL_Rect& playerRect);

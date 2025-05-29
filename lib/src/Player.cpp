@@ -27,8 +27,6 @@ void Player::initAnimation(SDL_Renderer* renderer)
     healthBar.init(renderer, helper.get()->getTexture("assets/sprites/Health.png",renderer));
 
     int textureWidth, textureHeight;
-    int removePixelsInX = 16; //8 pixeles por cada costado horizontalmente
-    int removePixelsInY = 14; //14 pixeles de la parte superior del sprite
 
     int screenWidth, screenHeight;
     SDL_GetRendererOutputSize(renderer, &screenWidth, &screenHeight);
@@ -36,9 +34,9 @@ void Player::initAnimation(SDL_Renderer* renderer)
 
     SDL_QueryTexture(helper.get()->getTexture("assets/sprites/dwarf.png",renderer), NULL, NULL, &textureWidth, &textureHeight);
 
-    frameWidth = (textureWidth/5)-(removePixelsInX); // para los otros sprites hay que dividirlo dependiendo de la cantidad de columnas
-    frameHeight = (textureHeight/9)-(removePixelsInY); // lo mismo aca pero de filas
-    srcRect = {0, 0, frameWidth, frameHeight};
+    frameWidth = (textureWidth/5); // para los otros sprites hay que dividirlo dependiendo de la cantidad de columnas
+    frameHeight = (textureHeight/9); // lo mismo aca pero de filas
+    srcRect = {0, 0, 24, 24};
     destRect = {0, 0, static_cast<int>(std::get<0>(helper.get()->getMeasuresRoom())*0.5), static_cast<int>(std::get<1>(helper.get()->getMeasuresRoom())*0.85)};
 }
 
@@ -206,7 +204,8 @@ void Player::update()
     }
     else if (isMoving) 
     {
-        float moveAmount = -1.f;
+        float moveAmount = -1.0f;
+        
         if(currentDirection==Direction::UP||currentDirection==Direction::DOWN)
         {
             moveAmount = std::get<1>(helper.get()->getMeasuresRoom()) * (*deltaTime);
@@ -214,26 +213,45 @@ void Player::update()
         else
         {
             moveAmount = std::get<0>(helper.get()->getMeasuresRoom()) * (*deltaTime);
-        } 
+        }
+        
+        SDL_Rect bounds = getBounds();
+        
         double borderX = std::get<2>(helper.get()->getMeasuresRoom());
         double borderY = std::get<3>(helper.get()->getMeasuresRoom());
         int width = helper.get()->getWindowWitdth();
         int height = helper.get()->getWindowHeight();
+
+        if(bounds.x+bounds.w>width-borderX) //Arreglo aproximado de bug visual de paredes a los costados
+        {
+            if(currentDirection==Direction::LEFT)
+            {
+                destRect.x -= bounds.w;
+            }
+        }
+        else if(bounds.x<borderX)
+        {
+            if(currentDirection!=Direction::LEFT)
+            {
+                destRect.x += bounds.w;
+            }
+        }
+
         switch (currentDirection) 
         {
             case Direction::UP:    
             {
                 //deduccion: se necesita de unos pixeles vacios por encima de cada sprite
                 //y cuando se reescala se multiplica dicho vacio
-                //para evitar ese error visual se le impide que suba mucho al multiplicar por 0.75
-                if(static_cast<float>(borderY)-destRect.h*0.75<=destRect.y-moveAmount)
+                //para evitar ese error visual se le impide que suba mucho al multiplicar por 0.85
+                if(static_cast<float>(borderY)<=bounds.y+bounds.h*0.85-moveAmount)
                 {
                     destRect.y -= moveAmount;
                     isInBound[static_cast<int>(Direction::UP)] = false;
                 }
                 else
                 {
-                    destRect.y = static_cast<float>(borderY)-destRect.h*0.75;
+                    destRect.y = static_cast<float>(borderY)-destRect.h*0.85;
                     isInBound[static_cast<int>(Direction::UP)] = true;
                 }
             } 
@@ -241,7 +259,7 @@ void Player::update()
 
             case Direction::DOWN:  
             {
-                if(height-static_cast<float>(borderY)>=destRect.y+destRect.h+moveAmount)
+                if(height-static_cast<float>(borderY)-bounds.h>=bounds.y+moveAmount)
                 {
                     destRect.y += moveAmount;
                     isInBound[static_cast<int>(Direction::DOWN)] = false;
@@ -256,14 +274,14 @@ void Player::update()
 
             case Direction::LEFT:  
             {
-                if(static_cast<float>(borderX)<=destRect.x-moveAmount)
+                if(static_cast<float>(borderX)<=bounds.x-moveAmount)
                 {
                     destRect.x -= moveAmount;
                     isInBound[static_cast<int>(Direction::LEFT)] = false;
                 }
                 else
                 {
-                    destRect.x = static_cast<float>(borderX);
+                    destRect.x = static_cast<float>(borderX)-bounds.w;
                     isInBound[static_cast<int>(Direction::LEFT)] = true;
                 }
             }
@@ -271,14 +289,14 @@ void Player::update()
 
             case Direction::RIGHT: 
             {
-                if(width-static_cast<float>(borderX)>=destRect.x+destRect.w+moveAmount)
+                if(width-static_cast<float>(borderX)>=bounds.x+bounds.w+moveAmount)
                 {
                     destRect.x += moveAmount;
                     isInBound[static_cast<int>(Direction::RIGHT)] = false;
                 }
                 else
                 {
-                    destRect.x = width-static_cast<float>(borderX)-destRect.w;
+                    destRect.x = width-static_cast<float>(borderX)-bounds.w;
                     isInBound[static_cast<int>(Direction::RIGHT)] = true;
                 }
             }
@@ -329,12 +347,8 @@ void Player::updateAnimation()
                 currentFrame = 0;
         }
     }
-    
-    int row = getAnimationRow();
-    //este 8 y 14 representan los pixeles borrados
-    srcRect.x = currentFrame*frameWidth + 8*(currentFrame+1);
-    if(currentFrame!=0){srcRect.x += 8*currentFrame;}
-    srcRect.y = 14*(row+1)+frameHeight*(row);
+    srcRect.x = currentFrame * frameWidth + 8; //Se borran 9 pixeles horizontales entre frame y frame
+    srcRect.y = getAnimationRow() * frameHeight + 8; //Se borran 32 pixeles horizontales entre frame y frame
 }
 
 void Player::renderPlayer(SDL_Renderer* renderer) 
@@ -366,9 +380,25 @@ void Player::setState(State newState)
     }
 }
 
+SDL_Rect Player::getDest() const{return destRect;}
+
 SDL_Rect Player::getBounds() const
 {
-    return destRect;
+    SDL_Rect bounds = destRect;
+    bounds.w *= 0.5;
+    bounds.h *= 0.65;
+    //Left es el unico caso con calculos especificos ya que alli es donde se hace flip
+    if(currentDirection==Direction::LEFT)
+    {
+        bounds.x += destRect.w*0.4;
+        bounds.y += destRect.h*0.3;
+    }
+    else
+    {
+        bounds.x += destRect.w*0.1;
+        bounds.y += destRect.h*0.3;
+    }
+    return bounds;
 }
 
 SDL_Rect Player::getAttackHitbox() const 
@@ -382,29 +412,29 @@ SDL_Rect Player::getAttackHitbox() const
     //const int baseHeight = frameHeight * 6; 
     
     SDL_Rect attackHitbox = {0, 0, 0, 0};
+    const SDL_Rect dest = getBounds();
     const int attackRange = 60; 
-    const int hitboxWidth = destRect.w * 0.6f;
-    const int hitboxHeight = destRect.h * 0.6f;
+    const int hitboxWidth = destRect.w * 0.7f;
+    const int hitboxHeight = destRect.h * 0.7f;
 
     switch (currentDirection) 
     {
         case Direction::RIGHT:
-            attackHitbox = { destRect.x + destRect.w , destRect.y + destRect.h/3, attackRange, hitboxHeight};
+            attackHitbox = { dest.x + dest.w, dest.y, attackRange, hitboxHeight};
             break;
 
         case Direction::LEFT:
-            attackHitbox = { destRect.x - attackRange , destRect.y + destRect.h/3, attackRange, hitboxHeight};
+            attackHitbox = { dest.x - attackRange, dest.y, attackRange, hitboxHeight};
             break;
 
         case Direction::UP:
-            attackHitbox = { destRect.x + destRect.w/4 , destRect.y - attackRange , hitboxWidth , attackRange};
+            attackHitbox = { dest.x - dest.w/4, dest.y - attackRange, hitboxWidth, attackRange};
             break;
 
         case Direction::DOWN:
-            attackHitbox = { destRect.x + destRect.w/4 , destRect.y + destRect.h , hitboxWidth , attackRange };
+            attackHitbox = { dest.x - dest.w/4, dest.y + dest.h, hitboxWidth, attackRange};
             break;
     }
-
     return attackHitbox;
 }
 

@@ -177,7 +177,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
         player.setRenderHelper(helper);
         player.setDeltaTime(deltaTime);
         player.initAnimation(renderer);
-        player.setPosition(helper.get()->getMiddlePointInX()/2, helper.get()->getMiddlePointInY()-(player.getBounds().h)/2); 
+        player.setPosition(helper.get()->getMiddlePointInX()-player.getBounds().w, helper.get()->getMiddlePointInY()-player.getBounds().h); 
         
       // Enemy setup
         EnemyManager enemies;
@@ -263,7 +263,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
                         helper.get()->handleWindowResize(windowWidth,windowHeight);
                         level.handleWindowResize();
-                        player.handleWindowResize((player.getBounds().x-shrinkX)/widthTile,(player.getBounds().y-shrinkY)/heightTile);
+                        player.handleWindowResize((player.getDest().x+-shrinkX)/widthTile,(player.getDest().y-shrinkY)/heightTile);
                     } 
                 }  
             }
@@ -280,7 +280,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 if(player.getIsInBound()&&player.getState()==State::RUNNING)
                 {
                     int index = *level.getCurrentRoom()->getIndex();
-                    player.setPosition(level.verifyPassRoom(static_cast<int>(player.getDirection()),player.getBounds()));
+                    player.setPosition(level.verifyPassRoom(static_cast<int>(player.getDirection()),player.getDest()));
                     if(index!=*level.getCurrentRoom()->getIndex())
                     {
                         std::cout<<"you advanced to room number: "<<*level.getCurrentRoom()->getIndex()<<" you come from room number: "<<index<<std::endl;
