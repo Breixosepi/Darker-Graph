@@ -31,6 +31,7 @@ void Enemy::setPosition(int x, int y)
 {
     destRect.x = x;
     destRect.y = y;
+    //Hay que hacer un setter aparte para el Start, tiene un conflicto cuando se hace resize
     startX = x;
 }
 
@@ -171,16 +172,24 @@ void Enemy::setState(EnemyState newState)
     }
 }
 
+SDL_Rect Enemy::getDest() const{return destRect;}
+
 SDL_Rect Enemy::getBounds() const
 {
     //Reajusta los bordes a lo que se ve visualmente
     //Originalmente el Rectangulo de Destino ocupa mas espacio debido al tamano de los sprites atacando
-    SDL_Rect bounds = destRect;
     //Como su animacion de movimiento tiene el arma afuera, tambien se considera como hitbox
-    bounds.w *= 0.65;
-    bounds.h *= 0.65;
-    bounds.x += destRect.w*0.175;
-    bounds.y += destRect.h*0.3;
+    SDL_Rect bounds = destRect;
+    double difInX = destRect.w*0.235;
+    double difInY = destRect.h*0.315;
+    bounds.x += difInX;
+    bounds.w -= difInX*3;
+    bounds.y += difInY;
+    bounds.h -= difInY*1.5;
+    if(currentDirection==EnemyDirection::LEFT)
+    {
+        bounds.x += (bounds.x-destRect.x);
+    }
     return bounds;
 }
 
@@ -263,22 +272,18 @@ SDL_Rect Enemy::getAttackHitbox() const
         return {0, 0, 0, 0};
     }
 
-    //int baseWidth = frameWidth * 6;  
-    //int baseHeight = frameHeight * 6; 
-    
     SDL_Rect attackHitbox = {0, 0, 0, 0};
-    SDL_Rect dest = getBounds();
-    int attackRange = 60; 
-    int hitboxWidth = destRect.w * 0.6f;
-    int hitboxHeight = destRect.h * 0.6f;
+    SDL_Rect bounds = getBounds();
+    int hitboxWidth = bounds.w * 1.80f;
+    int hitboxHeight = bounds.h * 1.50f;
 
     if (currentDirection == EnemyDirection::RIGHT) 
     {
-        attackHitbox = { dest.x + dest.w, dest.y + dest.h/4, attackRange, hitboxHeight};
+        attackHitbox = { bounds.x + 3*bounds.w/4, bounds.y - bounds.h/4, hitboxWidth, hitboxHeight};
     } 
     else 
     {
-        attackHitbox = { dest.x - attackRange, dest.y + dest.h/4, attackRange, hitboxHeight};
+        attackHitbox = { bounds.x - bounds.w/4, bounds.y - bounds.h/4, hitboxWidth, hitboxHeight};
     }
 
     return attackHitbox;

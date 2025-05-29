@@ -137,6 +137,34 @@ void EnemyManager::handlePlayerAttack(Player& player)
     }
 }
 
+void EnemyManager::handleWindowResize(const Measures& lastMeasures)
+{
+    auto it = std::find_if(roomsEnemies.begin(), roomsEnemies.end(),[this](const RoomData& rd) 
+    { 
+        return rd.roomIndex == currentRoomIndex; 
+    });
+    
+    if (it != roomsEnemies.end()) 
+    {
+        double widthTile = static_cast<int>(std::get<0>(lastMeasures));
+        double heightTile = static_cast<int>(std::get<1>(lastMeasures));
+        double shrinkX = static_cast<int>(std::get<2>(lastMeasures));
+        double shrinkY = static_cast<int>(std::get<3>(lastMeasures));
+
+        Measures measures = helper.get()->getMeasuresRoom();
+
+        for (auto& enemy : it->enemies) 
+        {
+            double factorX = (enemy->getDest().x-shrinkX)/widthTile;
+            double factorY = (enemy->getDest().y-shrinkY)/heightTile;
+            double X = std::get<2>(measures)+factorX*std::get<0>(measures);
+            double Y = std::get<3>(measures)+factorY*std::get<1>(measures);
+            enemy->setDestSize(std::get<0>(measures),std::get<1>(measures));
+            enemy->setPosition(X,Y);
+        }
+    }
+}
+
 int EnemyManager::getScore() const
 {
     return score;

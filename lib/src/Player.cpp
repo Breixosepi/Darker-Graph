@@ -406,27 +406,27 @@ SDL_Rect Player::getAttackHitbox() const
     }
     
     SDL_Rect attackHitbox = {0, 0, 0, 0};
-    const SDL_Rect dest = getBounds();
-    const int hitboxWidth = dest.w * 0.5f;
-    const int hitboxHeight = dest.h * 1.0f;
+    const SDL_Rect bounds = getBounds();
+    const int hitboxWidth = bounds.w * 0.5f;
+    const int hitboxHeight = bounds.h * 1.0f;
     const int attackRange = hitboxHeight * 0.75f; 
 
     switch (currentDirection) 
     {
         case Direction::RIGHT:
-            attackHitbox = { dest.x + dest.w, dest.y, hitboxWidth, hitboxHeight};
+            attackHitbox = { bounds.x + bounds.w, bounds.y, hitboxWidth, hitboxHeight};
             break;
 
         case Direction::LEFT:
-            attackHitbox = { dest.x - hitboxWidth, dest.y, hitboxWidth, hitboxHeight};
+            attackHitbox = { bounds.x - hitboxWidth, bounds.y, hitboxWidth, hitboxHeight};
             break;
 
         case Direction::UP:
-            attackHitbox = { dest.x, dest.y - attackRange, hitboxWidth, attackRange};
+            attackHitbox = { bounds.x, bounds.y - attackRange, hitboxWidth, attackRange};
             break;
 
         case Direction::DOWN:
-            attackHitbox = { dest.x + dest.w/2, dest.y + dest.h, hitboxWidth, attackRange};
+            attackHitbox = { bounds.x + bounds.w/2, bounds.y + bounds.h, hitboxWidth, attackRange};
             break;
     }
     return attackHitbox;

@@ -39,6 +39,7 @@ public:
     bool isDeathAnimationComplete() const;
 
     EnemyState getState();
+    SDL_Rect getDest() const;
     SDL_Rect getBounds() const;
     SDL_Rect getAttackHitbox() const; 
 

@@ -33,6 +33,7 @@ public:
     void update(Player& player);
     void render(SDL_Renderer* renderer);
     void handlePlayerAttack(Player& player);
+    void handleWindowResize(const Measures& lastMeasures);
     void setScore(int newScore) ;
 
     int getScore() const;

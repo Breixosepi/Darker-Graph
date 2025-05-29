@@ -263,7 +263,8 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
                         helper.get()->handleWindowResize(windowWidth,windowHeight);
                         level.handleWindowResize();
-                        player.handleWindowResize((player.getDest().x+-shrinkX)/widthTile,(player.getDest().y-shrinkY)/heightTile);
+                        player.handleWindowResize((player.getDest().x-shrinkX)/widthTile,(player.getDest().y-shrinkY)/heightTile);
+                        enemies.handleWindowResize(measuresRoom);
                     } 
                 }  
             }
