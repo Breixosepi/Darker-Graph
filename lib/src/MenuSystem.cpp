@@ -115,21 +115,14 @@ void MenuSystem::handleEvent(const SDL_Event& event)
     }
 }
 
-//Hay un Bug para los Orcos que aparecen de la mitad de la pantalla hacia abajo
-//Y de la mitad hacia la derecha
 void MenuSystem::handleWindowResize(Level& level, Player& player, EnemyManager& enemies)
 {
     //Medidas del Cuarto antes de hacer Resize por Window Event
-    Measures measuresRoom = helper.get()->getMeasuresRoom();
-    double widthTile = static_cast<int>(std::get<0>(measuresRoom));
-    double heightTile = static_cast<int>(std::get<1>(measuresRoom));
-    double shrinkX = static_cast<int>(std::get<2>(measuresRoom));
-    double shrinkY = static_cast<int>(std::get<3>(measuresRoom));
-
+    Measures measuresRoom = helper->truncMeasuresRoom();
     SDL_GetWindowSize(window, &windowWidth, &windowHeight);
     helper.get()->handleWindowResize(windowWidth,windowHeight);
     level.handleWindowResize();
-    player.handleWindowResize((player.getDest().x-shrinkX)/widthTile,(player.getDest().y-shrinkY)/heightTile);
+    player.handleWindowResize(measuresRoom);
     enemies.handleWindowResize(measuresRoom);
 }
 
@@ -230,7 +223,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
 
         bool running = true;
         bool showMap = false;
-        bool lockWindowResize = false;
+        bool update = true;
         SDL_Event event;
         Uint32 lastTime = SDL_GetTicks();
 
@@ -272,7 +265,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                         {
                             SDL_SetWindowSize(window, 1280, 720);
                             handleWindowResize(level,player,enemies);
-                            lockWindowResize = true;
+                            update = false;
                         }
                         break;
                     case SDLK_x: //Con la tecla X -> Resolucion 1280x1024
@@ -280,7 +273,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                         {
                             SDL_SetWindowSize(window, 1280, 1024);
                             handleWindowResize(level,player,enemies);
-                            lockWindowResize = true;
+                            update = false;
                         } 
                         break; 
                     case SDLK_c: //Con la tecla C -> Resolucion 1920x1080
@@ -288,6 +281,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                         {
                             SDL_SetWindowSize(window, 1920, 1080);
                             handleWindowResize(level,player,enemies);
+                            update = false;
                         }
                         break;
                     case SDLK_F11: //Con la tecla F11 -> Pantalla Completa
@@ -303,10 +297,11 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                             std::cout<<"Error setting Fullscreen"<<std::endl;
                         }
                         handleWindowResize(level,player,enemies);
-                        lockWindowResize = true;
+                        update = false;
                         break;
                     case SDLK_p:
-                        lockWindowResize = false;
+                        if(update){update = false;}
+                        else{update = true;}
                         break;
                     }
                 }
@@ -315,49 +310,53 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                     if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                     {
                         handleWindowResize(level,player,enemies);
+                        update = false;
                     } 
                 }  
             }
-            if(!showMap&&!lockWindowResize)
+            if(!showMap)
             {
-                int currentRoomIndex = *level.getCurrentRoom()->getIndex();
-                enemies.setCurrentRoom(currentRoomIndex);
-                // Actualización de objetos
-                player.update();
-                enemies.update(player);
-                enemies.handlePlayerAttack(player);
+                if(update)
+                {
+                    int currentRoomIndex = *level.getCurrentRoom()->getIndex();
+                    enemies.setCurrentRoom(currentRoomIndex);
+                    // Actualización de objetos
+                    player.update();
+                    enemies.update(player);
+                    enemies.handlePlayerAttack(player);
 
-                //Comprueba si despues de moverse se encuentra en los limites del cuarto actual
-                if(player.getIsInBound()&&player.getState()==State::RUNNING)
-                {
-                    int index = *level.getCurrentRoom()->getIndex();
-                    player.setPosition(level.verifyPassRoom(static_cast<int>(player.getDirection()),player.getDest()));
-                    if(index!=*level.getCurrentRoom()->getIndex())
+                    //Comprueba si despues de moverse se encuentra en los limites del cuarto actual
+                    if(player.getIsInBound()&&player.getState()==State::RUNNING)
                     {
-                        std::cout<<"you advanced to room number: "<<*level.getCurrentRoom()->getIndex()<<" you come from room number: "<<index<<std::endl;
-                        SDL_Delay(100);
-                    }
-                }
-                //Si esta en la Ultima sala, comprueba que este sobre la escalera para avanzar de nivel
-                else if(*level.getCurrentRoom()->getIndex()==level.getMap()->get_num_nodes())
-                {
-                    int middleX = helper.get()->getMiddlePointInX();
-                    int middleY = helper.get()->getMiddlePointInY();
-                    SDL_Rect dest = player.getBounds();
-                    if(std::abs(middleX-(dest.x+dest.w/2))<=dest.w/2&&std::abs(middleY-(dest.y+dest.h))<=dest.h/4)
-                    {
-                        bool result = level.IsEulerianPath(); //retorna true si se hizo correctamente un camino euleriano
-                        if(result)
+                        int index = *level.getCurrentRoom()->getIndex();
+                        player.setPosition(level.verifyPassRoom(static_cast<int>(player.getDirection()),player.getDest()));
+                        if(index!=*level.getCurrentRoom()->getIndex())
                         {
-                            // std::cout<<"score x2, score actual:" <<enemies.getScore() <<std::endl;
-                            enemies.setScore(enemies.getScore()*2);
-                            // std::cout<<"nuevo score:" <<enemies.getScore() <<std::endl;
-
+                            std::cout<<"you advanced to room number: "<<*level.getCurrentRoom()->getIndex()<<" you come from room number: "<<index<<std::endl;
+                            SDL_Delay(100);
                         }
-                        std::cout<<"Loading New Level!"<<std::endl;
-                        running = false;
-                        creator.levelUp();
-                        SDL_Delay(250);
+                    }
+                    //Si esta en la Ultima sala, comprueba que este sobre la escalera para avanzar de nivel
+                    else if(*level.getCurrentRoom()->getIndex()==level.getMap()->get_num_nodes())
+                    {
+                        int middleX = helper.get()->getMiddlePointInX();
+                        int middleY = helper.get()->getMiddlePointInY();
+                        SDL_Rect dest = player.getBounds();
+                        if(std::abs(middleX-(dest.x+dest.w/2))<=dest.w/2&&std::abs(middleY-(dest.y+dest.h))<=dest.h/4)
+                        {
+                            bool result = level.IsEulerianPath(); //retorna true si se hizo correctamente un camino euleriano
+                            if(result)
+                            {
+                                // std::cout<<"score x2, score actual:" <<enemies.getScore() <<std::endl;
+                                enemies.setScore(enemies.getScore()*2);
+                                // std::cout<<"nuevo score:" <<enemies.getScore() <<std::endl;
+
+                            }
+                            std::cout<<"Loading New Level!"<<std::endl;
+                            running = false;
+                            creator.levelUp();
+                            SDL_Delay(250);
+                        }
                     }
                 }
                 // Renderizado
@@ -370,13 +369,14 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 enemies.render(renderer);
                 level.finishRenderRoom(renderer,player.getBounds());
                 SDL_RenderPresent(renderer);
+                
                 if(!player.isAlive())
                 {
                     showGameOverScreen(enemies.getScore());
                     running = false;
                     gameOver = true;
                 }
-                SDL_Delay(16); 
+                SDL_Delay(16);
             }
             else if(showMap){level.renderMap(renderer);}
         }

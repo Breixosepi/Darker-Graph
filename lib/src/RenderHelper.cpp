@@ -44,6 +44,23 @@ const Measures& RenderHelper::getMeasuresRoom()
     return (*it).second;
 }
 
+const int RenderHelper::widthTile(){return static_cast<int>(std::get<0>(getMeasuresRoom()));}
+
+const int RenderHelper::heightTile(){return static_cast<int>(std::get<1>(getMeasuresRoom()));}
+
+const int RenderHelper::shrinkX(){return static_cast<int>(std::get<2>(getMeasuresRoom()));}
+
+const int RenderHelper::shrinkY(){return static_cast<int>(std::get<3>(getMeasuresRoom()));}
+
+const int RenderHelper::resizeX(){return static_cast<int>(std::get<4>(getMeasuresRoom()));}
+
+const int RenderHelper::resizeY(){return static_cast<int>(std::get<5>(getMeasuresRoom()));}
+
+const Measures RenderHelper::truncMeasuresRoom()
+{
+    return std::make_tuple(widthTile(),heightTile(),shrinkX(),shrinkY(),resizeX(),resizeY());
+}
+
 const int& RenderHelper::getMiddlePointInX()
 {
     auto it = middlePoints.find(lastDivisions);

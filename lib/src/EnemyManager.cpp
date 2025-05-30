@@ -32,8 +32,8 @@ void EnemyManager::addEnemy(SDL_Renderer* renderer, int roomIndex, int x, int y)
         it = roomsEnemies.end() - 1;
     }
 
-    double widthTile = std::get<0>(helper.get()->getMeasuresRoom());
-    double heightTile = std::get<1>(helper.get()->getMeasuresRoom());
+    double widthTile = static_cast<int>(std::get<0>(helper.get()->getMeasuresRoom()));
+    double heightTile = static_cast<int>(std::get<1>(helper.get()->getMeasuresRoom()));
     std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>();
     newEnemy->initAnimation(renderer, helper.get()->getTexture(texturePath, renderer));
     newEnemy->setPosition(x,y);
@@ -147,26 +147,22 @@ void EnemyManager::handleWindowResize(const Measures& lastMeasures)
     
     if (it != roomsEnemies.end()) 
     {
-        double widthTile = static_cast<int>(std::get<0>(lastMeasures));
-        double heightTile = static_cast<int>(std::get<1>(lastMeasures));
-        double shrinkX = static_cast<int>(std::get<2>(lastMeasures));
-        double shrinkY = static_cast<int>(std::get<3>(lastMeasures));
-
-        Measures measures = helper.get()->getMeasuresRoom();
+        double widthTile = std::get<0>(lastMeasures);
+        double heightTile = std::get<1>(lastMeasures);
+        double shrinkX = std::get<2>(lastMeasures);
+        double shrinkY = std::get<3>(lastMeasures);
 
         for (auto& enemy : it->enemies) 
         {
             double factorStart = (enemy->getStartX()-shrinkX)/widthTile;
             double factorX = (enemy->getDest().x-shrinkX)/widthTile;
             double factorY = (enemy->getDest().y-shrinkY)/heightTile;
-
-            //
-            double X = std::get<2>(measures)+factorX*std::get<0>(measures);
-            double Y = std::get<3>(measures)+factorY*std::get<1>(measures);
-            enemy->setDestSize(std::get<0>(measures),std::get<1>(measures));
+            int X = helper->shrinkX()+factorX*helper->widthTile();
+            int Y = helper->shrinkY()+factorY*helper->heightTile();
+            enemy->setDestSize(helper->widthTile(),helper->heightTile());
             enemy->setPosition(X,Y);
-            enemy->setStartX(std::get<2>(measures)+factorStart*std::get<0>(measures));
-            enemy->setPatrolRange((helper->getDivisions()/2)*std::get<0>(measures));
+            enemy->setStartX(helper->shrinkX()+factorStart*helper->widthTile());
+            enemy->setPatrolRange((helper->getDivisions()/2)*helper->widthTile());
         }
     }
 }

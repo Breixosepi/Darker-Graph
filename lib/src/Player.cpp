@@ -11,15 +11,18 @@ void Player::setRenderHelper(HelperPtr value){helper = value;}
 
 void Player::setDeltaTime(DeltaTime value){deltaTime = value;}
 
-void Player::handleWindowResize(const double& factorX, const double& factorY)
+void Player::handleWindowResize(const Measures& lastMeasures)
 {
-    Measures measures = helper.get()->getMeasuresRoom();
-    double widthTile = static_cast<int>(std::get<0>(measures));
-    double heightTile = static_cast<int>(std::get<1>(measures));
-    destRect.w = static_cast<int>(widthTile*0.5);
-    destRect.h = static_cast<int>(heightTile*0.85);
-    destRect.x = std::get<2>(measures)+factorX*widthTile;
-    destRect.y = std::get<3>(measures)+factorY*heightTile;
+    double widthTile = std::get<0>(lastMeasures);
+    double heightTile = std::get<1>(lastMeasures);
+    double shrinkX = std::get<2>(lastMeasures);
+    double shrinkY = std::get<3>(lastMeasures);
+    double factorX = (destRect.x-shrinkX)/widthTile;
+    double factorY = (destRect.y-shrinkY)/heightTile;
+    destRect.w = helper->widthTile()*0.5;
+    destRect.h = helper->heightTile()*0.85;
+    destRect.x = helper->shrinkX()+factorX*helper->widthTile();
+    destRect.y = helper->shrinkY()+factorY*helper->heightTile();
 }
 
 void Player::initAnimation(SDL_Renderer* renderer) 

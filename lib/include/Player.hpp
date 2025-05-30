@@ -37,7 +37,7 @@ class Player
         void handleWindowResize(int newWidth, int newHeight);
         void setRenderHelper(HelperPtr value);
         void setDeltaTime(DeltaTime value);
-        void handleWindowResize(const double& factorX, const double& factorY);
+        void handleWindowResize(const Measures& lastMeasures);
 
         int getAnimationRow() const;
         int getCurrentFrame() const;
