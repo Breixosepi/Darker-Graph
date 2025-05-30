@@ -115,6 +115,24 @@ void MenuSystem::handleEvent(const SDL_Event& event)
     }
 }
 
+//Hay un Bug para los Orcos que aparecen de la mitad de la pantalla hacia abajo
+//Y de la mitad hacia la derecha
+void MenuSystem::handleWindowResize(Level& level, Player& player, EnemyManager& enemies)
+{
+    //Medidas del Cuarto antes de hacer Resize por Window Event
+    Measures measuresRoom = helper.get()->getMeasuresRoom();
+    double widthTile = static_cast<int>(std::get<0>(measuresRoom));
+    double heightTile = static_cast<int>(std::get<1>(measuresRoom));
+    double shrinkX = static_cast<int>(std::get<2>(measuresRoom));
+    double shrinkY = static_cast<int>(std::get<3>(measuresRoom));
+
+    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+    helper.get()->handleWindowResize(windowWidth,windowHeight);
+    level.handleWindowResize();
+    player.handleWindowResize((player.getDest().x-shrinkX)/widthTile,(player.getDest().y-shrinkY)/heightTile);
+    enemies.handleWindowResize(measuresRoom);
+}
+
 void MenuSystem::render()  
 {
     if (!renderer) return;
@@ -212,11 +230,13 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
 
         bool running = true;
         bool showMap = false;
+        bool lockWindowResize = false;
         SDL_Event event;
         Uint32 lastTime = SDL_GetTicks();
 
         while (running) 
         {
+            
             Uint32 currentTime = SDL_GetTicks();
             *deltaTime = (currentTime - lastTime) / 1000.0f; 
             lastTime = currentTime;
@@ -243,32 +263,62 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                             
                         } 
                         break;
-                    case SDLK_m: //Con la tecla 'm' se muestra el mapa de la dungeon
+                    case SDLK_m: //Con la tecla M -> mostrar mapa de la dungeon
                         if(showMap){showMap = false;}
                         else{showMap = true;}
                         break;
-                    }  
+                    case SDLK_z: //Con la tecla Z -> Resolucion 1280x720
+                        if(!((SDL_GetWindowFlags(window))&SDL_WINDOW_FULLSCREEN_DESKTOP))
+                        {
+                            SDL_SetWindowSize(window, 1280, 720);
+                            handleWindowResize(level,player,enemies);
+                            lockWindowResize = true;
+                        }
+                        break;
+                    case SDLK_x: //Con la tecla X -> Resolucion 1280x1024
+                        if(!((SDL_GetWindowFlags(window))&SDL_WINDOW_FULLSCREEN_DESKTOP))
+                        {
+                            SDL_SetWindowSize(window, 1280, 1024);
+                            handleWindowResize(level,player,enemies);
+                            lockWindowResize = true;
+                        } 
+                        break; 
+                    case SDLK_c: //Con la tecla C -> Resolucion 1920x1080
+                        if(!((SDL_GetWindowFlags(window))&SDL_WINDOW_FULLSCREEN_DESKTOP))
+                        {
+                            SDL_SetWindowSize(window, 1920, 1080);
+                            handleWindowResize(level,player,enemies);
+                        }
+                        break;
+                    case SDLK_F11: //Con la tecla F11 -> Pantalla Completa
+                        if(((SDL_GetWindowFlags(window))&SDL_WINDOW_FULLSCREEN_DESKTOP))
+                        {
+                            if(SDL_SetWindowFullscreen(window, 0)!=0)
+                            {
+                                std::cout<<"Error setting Windowed mode"<<std::endl;
+                            }
+                        }
+                        else if(SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP)!=0)
+                        {
+                            std::cout<<"Error setting Fullscreen"<<std::endl;
+                        }
+                        handleWindowResize(level,player,enemies);
+                        lockWindowResize = true;
+                        break;
+                    case SDLK_p:
+                        lockWindowResize = false;
+                        break;
+                    }
                 }
                 else if(event.type == SDL_WINDOWEVENT)
                 {
                     if (event.window.event == SDL_WINDOWEVENT_RESIZED) 
                     {
-                        //Medidas del Cuarto antes de hacer Resize por Window Event
-                        Measures measuresRoom = helper.get()->getMeasuresRoom();
-                        double widthTile = static_cast<int>(std::get<0>(measuresRoom));
-                        double heightTile = static_cast<int>(std::get<1>(measuresRoom));
-                        double shrinkX = static_cast<int>(std::get<2>(measuresRoom));
-                        double shrinkY = static_cast<int>(std::get<3>(measuresRoom));
-
-                        SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-                        helper.get()->handleWindowResize(windowWidth,windowHeight);
-                        level.handleWindowResize();
-                        player.handleWindowResize((player.getDest().x-shrinkX)/widthTile,(player.getDest().y-shrinkY)/heightTile);
-                        enemies.handleWindowResize(measuresRoom);
+                        handleWindowResize(level,player,enemies);
                     } 
                 }  
             }
-            if(!showMap)
+            if(!showMap&&!lockWindowResize)
             {
                 int currentRoomIndex = *level.getCurrentRoom()->getIndex();
                 enemies.setCurrentRoom(currentRoomIndex);
@@ -328,7 +378,7 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 }
                 SDL_Delay(16); 
             }
-            else{level.renderMap(renderer);}
+            else if(showMap){level.renderMap(renderer);}
         }
         }     
     }); 

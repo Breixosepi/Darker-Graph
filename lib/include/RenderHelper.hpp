@@ -21,6 +21,7 @@ class RenderHelper
         const int& getMiddlePointInY();
         const int& getWindowWitdth();
         const int& getWindowHeight();
+        const int& getDivisions();
         void handleWindowResize(const int& width, const int& height);
         void setSource(const std::string& figure, const int& x, const int& y, const int& w, const int& h);
         void setMatrixSize(const std::pair<int,int>& value);

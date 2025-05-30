@@ -22,6 +22,8 @@ public:
     void setPosition(int x, int y);
     void setState(EnemyState newState);
     void setDestSize(const double& width, const double& height);
+    void setStartX(const int& value);
+    void setPatrolRange(const int& value);
     void patrol(float deltaTime);
     void updateAnimation(float deltaTime);
     void detectPlayer(const SDL_Rect& playerRect);
@@ -42,7 +44,7 @@ public:
     SDL_Rect getDest() const;
     SDL_Rect getBounds() const;
     SDL_Rect getAttackHitbox() const; 
-
+    int getStartX() const;
  
 
 private:

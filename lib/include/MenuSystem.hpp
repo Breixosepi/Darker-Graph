@@ -15,6 +15,7 @@ class MenuSystem
         MenuSystem& operator=(const MenuSystem&) = delete;  
 
         void handleEvent(const SDL_Event& event);
+        void handleWindowResize(Level& level, Player& player, EnemyManager& enemies);
         void render();
         void showGameOverScreen(int score);
         void updateInputTexture(const std::string& text, SDL_Color color) ;

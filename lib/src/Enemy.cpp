@@ -27,12 +27,14 @@ void Enemy::setDestSize(const double& width, const double& height)
     destRect.h = height;
 }
 
+void Enemy::setStartX(const int& value){startX = value;}
+
+void Enemy::setPatrolRange(const int& value){patrolRange = value;}
+
 void Enemy::setPosition(int x, int y)
 {
     destRect.x = x;
     destRect.y = y;
-    //Hay que hacer un setter aparte para el Start, tiene un conflicto cuando se hace resize
-    startX = x;
 }
 
 void Enemy::update(float deltaTime)
@@ -283,7 +285,7 @@ SDL_Rect Enemy::getAttackHitbox() const
     } 
     else 
     {
-        attackHitbox = { bounds.x - bounds.w/4, bounds.y - bounds.h/4, hitboxWidth, hitboxHeight};
+        attackHitbox = { bounds.x + bounds.w/4 - hitboxWidth, bounds.y - bounds.h/4, hitboxWidth, hitboxHeight};
     }
 
     return attackHitbox;
@@ -328,6 +330,11 @@ void Enemy::setHasHit(bool hit)
 int Enemy::getHealth() const 
 {
     return health;
+}
+
+int Enemy::getStartX() const
+{
+    return startX;
 }
 
 void Enemy::setHealth(int health) 

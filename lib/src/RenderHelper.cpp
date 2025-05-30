@@ -12,6 +12,8 @@ const int& RenderHelper::getWindowWitdth(){return windowWidth;}
 
 const int& RenderHelper::getWindowHeight(){return windowHeight;}
 
+const int& RenderHelper::getDivisions(){return lastDivisions;}
+
 //Get<0>=WidthTile, Get<1>=HeightTile, Get<2>=ShrinkX, Get<3>=ShrinkY, Get<4>=ResizeX, Get<5>=ResizeY
 const Measures& RenderHelper::getMeasuresMap(){return measuresMap;}
 

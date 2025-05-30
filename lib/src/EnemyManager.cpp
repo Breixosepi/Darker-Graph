@@ -36,11 +36,12 @@ void EnemyManager::addEnemy(SDL_Renderer* renderer, int roomIndex, int x, int y)
     double heightTile = std::get<1>(helper.get()->getMeasuresRoom());
     std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>();
     newEnemy->initAnimation(renderer, helper.get()->getTexture(texturePath, renderer));
-    newEnemy->setPosition(x, y);
+    newEnemy->setPosition(x,y);
+    newEnemy->setStartX(x);
     newEnemy->setDestSize(widthTile,heightTile);
     newEnemy->setHealth(2);
     newEnemy->setState(EnemyState::PATROLLING);
-    
+    newEnemy->setPatrolRange((helper->getDivisions()/2)*widthTile);
     it->enemies.push_back(std::move(newEnemy));
     // std::cout << "Enemy added in room " << roomIndex << " at: " << x << ", " << y << std::endl;
 }
@@ -155,12 +156,17 @@ void EnemyManager::handleWindowResize(const Measures& lastMeasures)
 
         for (auto& enemy : it->enemies) 
         {
+            double factorStart = (enemy->getStartX()-shrinkX)/widthTile;
             double factorX = (enemy->getDest().x-shrinkX)/widthTile;
             double factorY = (enemy->getDest().y-shrinkY)/heightTile;
+
+            //
             double X = std::get<2>(measures)+factorX*std::get<0>(measures);
             double Y = std::get<3>(measures)+factorY*std::get<1>(measures);
             enemy->setDestSize(std::get<0>(measures),std::get<1>(measures));
             enemy->setPosition(X,Y);
+            enemy->setStartX(std::get<2>(measures)+factorStart*std::get<0>(measures));
+            enemy->setPatrolRange((helper->getDivisions()/2)*std::get<0>(measures));
         }
     }
 }
