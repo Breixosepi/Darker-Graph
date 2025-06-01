@@ -16,8 +16,9 @@ Un juego de ventana donde **los grafos gobiernan todo**: potenciado por la gener
 - **Videojuego de escritorio con uso de Ventana**
 
 ## 🛠️ Instalación
-Ubuntu: sudo apt update, 
-sudo apt-get install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev
+Ubuntu: 
+- sudo apt update
+- sudo apt-get install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev
 
 # Compilación 
 make
