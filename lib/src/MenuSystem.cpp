@@ -195,32 +195,8 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
         enemies.setTexturePathEnemies("assets/sprites/Orc.png");
         enemies.setRenderHelper(helper);
         enemies.setDeltaTime(deltaTime);
-
-        auto* dungeonGraph = level.getMap();
-        if (dungeonGraph) 
-        {
-        dungeonGraph->enum_for_each_node([&](Designar::nat_t index, auto* node) 
-        {
-            if (node) 
-            {
-                int roomIndex = index;
-                
-                std::random_device rd;
-                std::mt19937 gen(rd());
-                std::uniform_int_distribution<> countDist(1, 5);
-                int enemyCount = countDist(gen);
-                
-                for (int i = 0; i < enemyCount; ++i) 
-                {
-                    std::uniform_int_distribution<> xDist(0, 500);
-                    std::uniform_int_distribution<> yDist(-150, 370);
-                    enemies.addEnemy(renderer, roomIndex, xDist(gen), yDist(gen));
-                }
-            }
-            return true;
-        });
-        }
-
+        enemies.generate(renderer,level.getMap());
+        
         bool running = true;
         bool showMap = false;
         bool update = true;
@@ -364,8 +340,8 @@ void MenuSystem::setMainMenu(MenuSystem* menu)
                 SDL_RenderClear(renderer);
                 level.startRenderRoom(renderer,player.getBounds());
                 player.renderPlayer(renderer);
-                player.renderAttackHitbox(renderer);
-                player.renderDebugBounds(renderer);
+                //player.renderAttackHitbox(renderer);
+                //player.renderDebugBounds(renderer);
                 enemies.render(renderer);
                 level.finishRenderRoom(renderer,player.getBounds());
                 SDL_RenderPresent(renderer);

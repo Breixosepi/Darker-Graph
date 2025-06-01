@@ -17,12 +17,12 @@ class RenderHelper
         const Measures& getMeasuresMap();
         const Measures& getMeasuresRoom();
         const Measures& getMeasuresRoom(const int& numDivisions);
-        const int widthTile();
-        const int heightTile();
-        const int shrinkX();
-        const int shrinkY();
-        const int resizeX();
-        const int resizeY();
+        const double widthTile();
+        const double heightTile();
+        const double shrinkX();
+        const double shrinkY();
+        const double resizeX();
+        const double resizeY();
         const Measures truncMeasuresRoom();
         const int& getMiddlePointInX();
         const int& getMiddlePointInY();

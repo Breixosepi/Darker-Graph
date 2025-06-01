@@ -44,17 +44,17 @@ const Measures& RenderHelper::getMeasuresRoom()
     return (*it).second;
 }
 
-const int RenderHelper::widthTile(){return static_cast<int>(std::get<0>(getMeasuresRoom()));}
+const double RenderHelper::widthTile(){return std::ceil(std::get<0>(getMeasuresRoom()));}
 
-const int RenderHelper::heightTile(){return static_cast<int>(std::get<1>(getMeasuresRoom()));}
+const double RenderHelper::heightTile(){return std::ceil(std::get<1>(getMeasuresRoom()));}
 
-const int RenderHelper::shrinkX(){return static_cast<int>(std::get<2>(getMeasuresRoom()));}
+const double RenderHelper::shrinkX(){return std::ceil(std::get<2>(getMeasuresRoom()));}
 
-const int RenderHelper::shrinkY(){return static_cast<int>(std::get<3>(getMeasuresRoom()));}
+const double RenderHelper::shrinkY(){return std::ceil(std::get<3>(getMeasuresRoom()));}
 
-const int RenderHelper::resizeX(){return static_cast<int>(std::get<4>(getMeasuresRoom()));}
+const double RenderHelper::resizeX(){return std::ceil(std::get<4>(getMeasuresRoom()));}
 
-const int RenderHelper::resizeY(){return static_cast<int>(std::get<5>(getMeasuresRoom()));}
+const double RenderHelper::resizeY(){return std::ceil(std::get<5>(getMeasuresRoom()));}
 
 const Measures RenderHelper::truncMeasuresRoom()
 {

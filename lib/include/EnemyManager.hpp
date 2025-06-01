@@ -28,13 +28,13 @@ public:
     void setTexturePathEnemies(const std::string& path);
     void setRenderHelper(HelperPtr value);
     void setDeltaTime(DeltaTime value);
-    void addEnemy(SDL_Renderer* renderer, int roomIndex, int x, int y);
+    void addEnemy(SDL_Renderer* renderer, int roomIndex, SDL_Rect dest, double resize, int tilesToPatrol);
     void setCurrentRoom(int roomIndex);
     void update(Player& player);
     void render(SDL_Renderer* renderer);
     void handlePlayerAttack(Player& player);
     void handleWindowResize(const Measures& lastMeasures);
-    void setScore(int newScore) ;
-
+    void setScore(int newScore);
+    void generate(SDL_Renderer* renderer, const Designar::Graph<Room>* map);
     int getScore() const;
 };

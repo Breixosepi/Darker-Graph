@@ -33,6 +33,9 @@ public:
     void setHealth(int health);
     void renderDebugBounds(SDL_Renderer* renderer) const; //helper para ver el rect del enemigo
     
+    void setResize(const double& value);
+    void setTilesToPatrol(const int& value);
+
     int getAnimationRow() const;
     int getCurrentFrame() const;
     int getHealth() const;
@@ -46,6 +49,8 @@ public:
     SDL_Rect getAttackHitbox() const; 
     int getStartX() const;
  
+    const double& getResize();
+    const int& getTilesToPatrol();
 
 private:
 
@@ -62,4 +67,7 @@ private:
     float cooldownTimer = 0.0f;
     bool attackInProgress = false, hasHit = false, deathCompleted = false;
     int health = 2;
+
+    double resize;
+    int numTilesToPatrol;
 };

@@ -19,7 +19,7 @@ void EnemyManager::setRenderHelper(HelperPtr value){helper = value;}
 
 void EnemyManager::setDeltaTime(DeltaTime value){deltaTime = value;}
 
-void EnemyManager::addEnemy(SDL_Renderer* renderer, int roomIndex, int x, int y) 
+void EnemyManager::addEnemy(SDL_Renderer* renderer, int roomIndex, SDL_Rect dest, double resize, int tilesToPatrol) 
 {
     auto it = std::find_if(roomsEnemies.begin(), roomsEnemies.end(),[roomIndex](const RoomData& rd) 
     { 
@@ -32,16 +32,17 @@ void EnemyManager::addEnemy(SDL_Renderer* renderer, int roomIndex, int x, int y)
         it = roomsEnemies.end() - 1;
     }
 
-    double widthTile = static_cast<int>(std::get<0>(helper.get()->getMeasuresRoom()));
-    double heightTile = static_cast<int>(std::get<1>(helper.get()->getMeasuresRoom()));
     std::unique_ptr<Enemy> newEnemy = std::make_unique<Enemy>();
     newEnemy->initAnimation(renderer, helper.get()->getTexture(texturePath, renderer));
-    newEnemy->setPosition(x,y);
-    newEnemy->setStartX(x);
-    newEnemy->setDestSize(widthTile,heightTile);
+    newEnemy->setPosition(dest.x,dest.y);
+    newEnemy->setStartX(dest.x);
+    newEnemy->setDestSize(dest.w,dest.h);
+    newEnemy->setResize(resize);
     newEnemy->setHealth(2);
     newEnemy->setState(EnemyState::PATROLLING);
-    newEnemy->setPatrolRange((helper->getDivisions()/2)*widthTile);
+    int patrolRange = tilesToPatrol*helper->widthTile() + (helper->widthTile()-dest.w);
+    newEnemy->setPatrolRange(patrolRange);
+    newEnemy->setTilesToPatrol(tilesToPatrol);
     it->enemies.push_back(std::move(newEnemy));
     // std::cout << "Enemy added in room " << roomIndex << " at: " << x << ", " << y << std::endl;
 }
@@ -107,8 +108,8 @@ void EnemyManager::render(SDL_Renderer* renderer)
             if (enemy->getState() != EnemyState::DEAD || !enemy->isDeathAnimationComplete()) 
             {
                 enemy->renderEnemy(renderer, helper.get()->getTexture(texturePath,renderer));
-                enemy->renderDebugBounds(renderer);      
-                enemy->renderAttackHitbox(renderer);     
+                //enemy->renderDebugBounds(renderer);      
+                //enemy->renderAttackHitbox(renderer);     
             }
         }
     }
@@ -157,12 +158,18 @@ void EnemyManager::handleWindowResize(const Measures& lastMeasures)
             double factorStart = (enemy->getStartX()-shrinkX)/widthTile;
             double factorX = (enemy->getDest().x-shrinkX)/widthTile;
             double factorY = (enemy->getDest().y-shrinkY)/heightTile;
+
             int X = helper->shrinkX()+factorX*helper->widthTile();
             int Y = helper->shrinkY()+factorY*helper->heightTile();
-            enemy->setDestSize(helper->widthTile(),helper->heightTile());
+
+            int width = helper->widthTile()*enemy->getResize();
+            int height = helper->heightTile()*enemy->getResize();
+            int patrolRange = enemy->getTilesToPatrol()*helper->widthTile() + (helper->widthTile()-width);
+            
+            enemy->setDestSize(width,height);
             enemy->setPosition(X,Y);
             enemy->setStartX(helper->shrinkX()+factorStart*helper->widthTile());
-            enemy->setPatrolRange((helper->getDivisions()/2)*helper->widthTile());
+            enemy->setPatrolRange(patrolRange);
         }
     }
 }
@@ -175,4 +182,38 @@ int EnemyManager::getScore() const
 void EnemyManager::setScore(int newScore)
 {
     score = newScore;
+}
+
+void EnemyManager::generate(SDL_Renderer* renderer, const Designar::Graph<Room>* map)
+{
+    if (map) 
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> countEnemies(1, 5);
+        std::uniform_real_distribution<> enemySize(1, 1.75);
+        map->enum_for_each_node([&](Designar::nat_t index, Designar::Graph<Room>::Node* node) 
+        {
+            if (node&&index!=1&&index!=map->get_num_nodes()) 
+            {
+                int roomIndex = index;
+                int enemyCount = countEnemies(gen);
+                int numDivisions = *node->get_info().getDivisions();
+                std::uniform_int_distribution<> numTiles(1,numDivisions-1);
+                for (int i = 0; i < enemyCount; ++i) 
+                {
+                    double resize = enemySize(gen);
+                    int width = helper->widthTile()*resize;
+                    int height = helper->heightTile()*resize;
+                    int num = numTiles(gen);
+
+                    std::uniform_int_distribution<> xDist(helper->shrinkX(), helper->shrinkX()+(numDivisions-num-1)*helper->widthTile());
+                    std::uniform_int_distribution<> yDist(helper->shrinkY(), helper->shrinkY()+numDivisions*helper->heightTile()-height);
+
+                    addEnemy(renderer, roomIndex, {xDist(gen),yDist(gen),width,height}, resize, num);
+                }
+            }
+            return true;
+        });
+    }
 }

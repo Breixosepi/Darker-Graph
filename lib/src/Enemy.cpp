@@ -345,3 +345,11 @@ bool Enemy::isDeathAnimationComplete() const
 {
     return deathCompleted;
 }
+
+void Enemy::setResize(const double& value){resize = value;}
+    
+void Enemy::setTilesToPatrol(const int& value){numTilesToPatrol = value;}
+
+const double& Enemy::getResize(){return resize;}
+
+const int& Enemy::getTilesToPatrol(){return numTilesToPatrol;}
