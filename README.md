@@ -25,3 +25,19 @@ make
 # Ejecutar
 ./DarkerGraph
 
+## Controles
+- Teclas de Direcciones : Mover guerrero
+- 'A' : Moverse hacia la izquierda
+- 'D' : Moverse hacia la derecha
+- 'W' : Moverse hacia arriba
+- 'S' : Mover hacia abajo
+- Barra Espaciadora : Atacar
+- 'M' : Abrir Mapa del Calabozo
+- 'P' : Activar o Desactivar Pausa
+  
+## Atajos
+- 'Z' : Establecer Resolucion de Pantalla en 1280x720
+- 'X' : Establecer Resolucion de Pantalla en 1280x1024
+- 'C' : Establecer Resolucion de Pantalla en 1920x1080
+- 'F11' : Pantalla Completa
+- 'Esc' : Retroceder o Salir
